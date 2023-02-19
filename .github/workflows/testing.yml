@@ -1,0 +1,22 @@
+name: Tut Testing
+
+on:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Setup Go
+        uses: actions/setup-go@v3
+        with:
+          go-version: '>=1.20.0'
+
+      - name: Go Build
+        run: go build
+
+      - name: Go Test
+        run: go test ./... -v
