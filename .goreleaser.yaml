@@ -40,10 +40,10 @@ changelog:
       - '^test:'
 
 brews:
-  tap:
-    owner: Creaft-JP
-    name: homebrew-tap
-    token: {{ secrets.TAKECHAN_ACCESS_TOKEN }}
+  - tap:
+      owner: Creaft-JP
+      name: homebrew-tap
+      token: "{{ secrets.TAKECHAN_ACCESS_TOKEN }}"
     description: a Git-Like CLI creating tutrials
 
 # The lines beneath this are called `modelines`. See `:help modeline`
