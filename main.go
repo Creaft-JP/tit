@@ -3,5 +3,5 @@ package main
 import "fmt"
 
 func main() {
-	fmt.Println("Hello, continuous delivery!!")
+	fmt.Println("Hello, Homebrew tap!!")
 }
