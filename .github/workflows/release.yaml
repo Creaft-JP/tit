@@ -19,3 +19,4 @@ jobs:
           args: release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAKECHAN_ACCESS_TOKEN: ${{ secrets.TAKECHAN_ACCESS_TOKEN }}
