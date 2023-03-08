@@ -1,3 +1,3 @@
-module github.com/Creaft-JP/tut
+module github.com/Creaft-JP/tit
 
 go 1.20
