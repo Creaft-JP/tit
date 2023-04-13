@@ -95,12 +95,7 @@ func TestSecondRemoteRegister(t *testing.T) {
 
 	var configJson types.Config
 	if err := json.Unmarshal(writer.Bytes(), &configJson); err != nil {
-		t.Errorf(`
-JSON parse Failed
-Reason: %s
-Got:
-%s
-`, err.Error(), writer.String())
+		t.Errorf("JSON parse failed.  %s", err.Error())
 		return
 	}
 
