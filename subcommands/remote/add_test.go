@@ -33,8 +33,7 @@ func TestFirstRemoteRegister(t *testing.T) {
 	}
 
 	var configJson types.Config
-	err := json.Unmarshal(writer.Bytes(), &configJson)
-	if err != nil {
+	if err := json.Unmarshal(writer.Bytes(), &configJson); err != nil {
 		t.Errorf("JSON parse failed, %s", err.Error())
 		return
 	}
@@ -79,17 +78,7 @@ func TestSecondRemoteRegister(t *testing.T) {
 	setUp()
 	args := []string{"origin1", "https://api.tithub.tech/creaft/repo1"}
 
-	initialConfig, err := json.Marshal(types.Config{
-		Remotes: []config.Remote{
-			{"origin", "https://api.tithub.tech/creaft/repository"},
-		},
-	})
-	if err != nil {
-		t.Error(err.Error())
-	}
-
-	emptyReader = bytes.NewReader(initialConfig)
-	if err := Add(args, emptyReader, writer); err != nil {
+	if err := Add(args, reader, writer); err != nil {
 		t.Errorf(err.Error())
 	}
 
