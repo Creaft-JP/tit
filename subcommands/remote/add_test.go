@@ -30,6 +30,7 @@ func TestFirstRemoteRegister(t *testing.T) {
 	args := []string{"origin", "https://api.tithub.tech/creaft/repository"}
 	if err := Add(args, emptyReader, writer); err != nil {
 		t.Errorf(err.Error())
+		return
 	}
 
 	var configJson types.Config
@@ -53,6 +54,7 @@ func TestLackOfArgumentsError(t *testing.T) {
 	err := Add(args, emptyReader, writer)
 	if err == nil {
 		t.Error("An Error should be thrown, but was not.")
+		return
 	}
 	want := "args should be 2, but received 1"
 	got := err.Error()
@@ -66,6 +68,7 @@ func TestTooManyArgumentsError(t *testing.T) {
 	err := Add(args, emptyReader, writer)
 	if err == nil {
 		t.Error("An Error should be thrown, but was not.")
+		return
 	}
 	want := "args should be 2, but received 3"
 	got := err.Error()
@@ -80,6 +83,7 @@ func TestSecondRemoteRegister(t *testing.T) {
 
 	if err := Add(args, reader, writer); err != nil {
 		t.Errorf(err.Error())
+		return
 	}
 
 	var configJson types.Config
@@ -105,6 +109,7 @@ func TestBlockReplace(t *testing.T) {
 	err := Add(args, reader, writer)
 	if err == nil {
 		t.Error("an error should be thrown, but was not.")
+		return
 	}
 	want := "remote origin already exists"
 	got := err.Error()
