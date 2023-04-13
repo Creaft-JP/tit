@@ -20,9 +20,9 @@ var reader io.Reader
 var writer *bytes.Buffer
 
 func setUp() {
-	writer = bytes.NewBuffer([]byte{})
 	emptyReader = bytes.NewReader(emptyInitialConfig)
 	reader = bytes.NewReader(initialConfig)
+	writer = bytes.NewBuffer([]byte{})
 }
 
 func TestFirstRemoteRegister(t *testing.T) {
