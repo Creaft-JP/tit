@@ -20,7 +20,7 @@ var reader io.Reader
 var writer *bytes.Buffer
 
 func setUp() {
-	writer = &bytes.Buffer{}
+	writer = bytes.NewBuffer([]byte{})
 	emptyReader = bytes.NewReader(emptyInitialConfig)
 	reader = bytes.NewReader(initialConfig)
 }
