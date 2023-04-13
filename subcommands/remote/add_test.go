@@ -5,8 +5,8 @@ import (
 	"encoding/json"
 	"github.com/Creaft-JP/tit/types"
 	"github.com/Creaft-JP/tit/types/config"
-	"github.com/google/go-cmp/cmp"
 	"io"
+	"reflect"
 	"testing"
 )
 
@@ -43,9 +43,8 @@ func TestFirstRemoteRegister(t *testing.T) {
 		{Name: "origin", Url: "https://api.tithub.tech/creaft/repository"},
 	}
 	got := configJson.Remotes
-
-	if diff := cmp.Diff(want, got); diff != "" {
-		t.Errorf("got is not equals got, diff: \n%s", diff)
+	if !reflect.DeepEqual(want, got) {
+		t.Errorf("remotes shouled be %s, but got %s.", want, got)
 	}
 }
 
@@ -111,8 +110,8 @@ Got:
 	}
 
 	got := configJson.Remotes
-	if diff := cmp.Diff(want, got); diff != "" {
-		t.Errorf("got is not equals got, diff: \n%s", diff)
+	if !reflect.DeepEqual(want, got) {
+		t.Errorf("remotes shouled be %s, but got %s.", want, got)
 	}
 }
 
