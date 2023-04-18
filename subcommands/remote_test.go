@@ -9,40 +9,44 @@ import (
 	"testing"
 )
 
-var consoleWriter *bytes.Buffer
-var configReader io.Reader
+type remoteTestingValue struct {
+	configReader  io.Reader
+	consoleWriter *bytes.Buffer
+}
 
-func setUp() {
+func setUpRemoteTest() remoteTestingValue {
 	configBytes, _ := json.Marshal(types.Config{Remotes: []config.Remote{
 		{"origin", "https://tithub.tech/user/repository"},
 		{"test", "https://tithub.tech/test/repository"},
 	}})
-	configReader = bytes.NewReader(configBytes)
-	consoleWriter = bytes.NewBuffer([]byte{})
+	return remoteTestingValue{
+		configReader:  bytes.NewReader(configBytes),
+		consoleWriter: bytes.NewBuffer([]byte{}),
+	}
 }
 
 func TestNoArgs(t *testing.T) {
-	setUp()
-	if err := Remote([]string{}, configReader, consoleWriter); err != nil {
+	tv := setUpRemoteTest()
+	if err := Remote([]string{}, tv.configReader, tv.consoleWriter); err != nil {
 		t.Error(err.Error())
 		return
 	}
 	want := "origin\ntest\n"
-	got := consoleWriter.String()
+	got := tv.consoleWriter.String()
 	if want != got {
 		t.Errorf("console output should be \"%s\", but got \"%s\".", want, got)
 	}
 }
 func testVerbose(t *testing.T, args []string) {
-	setUp()
-	if err := Remote(args, configReader, consoleWriter); err != nil {
+	tv := setUpRemoteTest()
+	if err := Remote(args, tv.configReader, tv.consoleWriter); err != nil {
 		t.Error(err.Error())
 		return
 	}
 	want := `origin https://tithub.tech/user/repository
 test https://tithub.tech/test/repository
 `
-	got := consoleWriter.String()
+	got := tv.consoleWriter.String()
 	if want != got {
 		t.Errorf("console output should be \"%s\", but got \"%s\".", want, got)
 	}
