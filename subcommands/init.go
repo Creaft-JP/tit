@@ -1,0 +1,72 @@
+package subcommands
+
+import (
+	"encoding/json"
+	"errors"
+	"fmt"
+	"github.com/Creaft-JP/tit/types"
+	"github.com/Creaft-JP/tit/types/config"
+	"io"
+	"os"
+)
+
+type fileDirectoryCreator interface {
+	mkdir(name string, perm os.FileMode) error
+	create(filename string) (*os.File, error)
+}
+
+type osFileDirectoryCreator struct {
+}
+
+func (_ *osFileDirectoryCreator) mkdir(name string, perm os.FileMode) error {
+	return os.Mkdir(name, perm)
+}
+func (_ *osFileDirectoryCreator) create(filename string) (*os.File, error) {
+	return os.Create(filename)
+}
+
+type fileDirectoryStatusReader interface {
+	stat(name string) (os.FileInfo, error)
+}
+
+type osFileDirectoryStatusReader struct{}
+
+func (_ *osFileDirectoryStatusReader) stat(name string) (os.FileInfo, error) {
+	return os.Stat(name)
+}
+
+func Init(args []string, consoleWriter io.Writer, configWriter io.Writer) error {
+	if _, err := fmt.Fprintln(consoleWriter, "Initialized empty Tit repository in ./.tit/"); err != nil {
+		return err
+	}
+	if err := json.NewEncoder(configWriter).Encode(types.Config{Remotes: []config.Remote{}}); err != nil {
+		return err
+	}
+	return nil
+}
+func initConfig(writer io.Writer) error {
+	return json.NewEncoder(writer).Encode(types.Config{Remotes: []config.Remote{}})
+}
+func initMessage(writer io.Writer) error {
+	_, err := fmt.Fprintln(writer, "Initialized empty Tit repository in ./.tit/")
+	return err
+}
+func checkAlreadyInitialized(reader fileDirectoryStatusReader) error {
+	_, err := reader.stat(".tit")
+	if err == nil {
+		return errors.New("tit repository already exists")
+	}
+	if os.IsNotExist(err) {
+		return nil
+	}
+	return err
+}
+func createFiles(creator fileDirectoryCreator) error {
+	if err := creator.mkdir(".tit", os.FileMode(0755)); err != nil {
+		return err
+	}
+	if _, err := creator.create(".tit/config.json"); err != nil {
+		return err
+	}
+	return nil
+}
