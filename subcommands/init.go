@@ -69,7 +69,7 @@ func createFiles(creator fileDirectoryCreator) error {
 	if err := creator.mkdir(types.RepositoryDirectoryName, os.FileMode(0755)); err != nil {
 		return err
 	}
-	if _, err := creator.create(fmt.Sprintf("%s/config.json", types.RepositoryDirectoryName)); err != nil {
+	if _, err := creator.create(types.ConfigFilepath); err != nil {
 		return err
 	}
 	return nil
