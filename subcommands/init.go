@@ -43,6 +43,12 @@ func CreateRepository() error {
 		return err
 	}
 	return nil
+}
+func Init(consoleWriter io.Writer, configWriter io.Writer) error {
+	if err := initConfig(configWriter); err != nil {
+		return err
+	}
+	if err := initMessage(consoleWriter); err != nil {
 		return err
 	}
 	return nil
