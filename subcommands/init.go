@@ -35,15 +35,14 @@ func (_ *osFileDirectoryStatusReader) stat(name string) (os.FileInfo, error) {
 	return os.Stat(name)
 }
 
-func Init(args []string, consoleWriter io.Writer, configWriter io.Writer) error {
-	if _, err := fmt.Fprintf(
-		consoleWriter,
-		"Initialized empty Tit repository in ./%s/\n",
-		types.RepositoryDirectoryName,
-	); err != nil {
+func CreateRepository() error {
+	if err := checkAlreadyInitialized(&osFileDirectoryStatusReader{}); err != nil {
 		return err
 	}
-	if err := json.NewEncoder(configWriter).Encode(types.Config{Remotes: []config.Remote{}}); err != nil {
+	if err := createFiles(&osFileDirectoryCreator{}); err != nil {
+		return err
+	}
+	return nil
 		return err
 	}
 	return nil
