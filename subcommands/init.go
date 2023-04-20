@@ -36,7 +36,11 @@ func (_ *osFileDirectoryStatusReader) stat(name string) (os.FileInfo, error) {
 }
 
 func Init(args []string, consoleWriter io.Writer, configWriter io.Writer) error {
-	if _, err := fmt.Fprintln(consoleWriter, "Initialized empty Tit repository in ./.tit/"); err != nil {
+	if _, err := fmt.Fprintf(
+		consoleWriter,
+		"Initialized empty Tit repository in ./%s/\n",
+		types.RepositoryDirectoryName,
+	); err != nil {
 		return err
 	}
 	if err := json.NewEncoder(configWriter).Encode(types.Config{Remotes: []config.Remote{}}); err != nil {
@@ -48,11 +52,11 @@ func initConfig(writer io.Writer) error {
 	return json.NewEncoder(writer).Encode(types.Config{Remotes: []config.Remote{}})
 }
 func initMessage(writer io.Writer) error {
-	_, err := fmt.Fprintln(writer, "Initialized empty Tit repository in ./.tit/")
+	_, err := fmt.Fprintf(writer, "Initialized empty Tit repository in ./%s/\n", types.RepositoryDirectoryName)
 	return err
 }
 func checkAlreadyInitialized(reader fileDirectoryStatusReader) error {
-	_, err := reader.stat(".tit")
+	_, err := reader.stat(types.RepositoryDirectoryName)
 	if err == nil {
 		return errors.New("tit repository already exists")
 	}
@@ -62,10 +66,10 @@ func checkAlreadyInitialized(reader fileDirectoryStatusReader) error {
 	return err
 }
 func createFiles(creator fileDirectoryCreator) error {
-	if err := creator.mkdir(".tit", os.FileMode(0755)); err != nil {
+	if err := creator.mkdir(types.RepositoryDirectoryName, os.FileMode(0755)); err != nil {
 		return err
 	}
-	if _, err := creator.create(".tit/config.json"); err != nil {
+	if _, err := creator.create(fmt.Sprintf("%s/config.json", types.RepositoryDirectoryName)); err != nil {
 		return err
 	}
 	return nil
