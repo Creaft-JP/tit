@@ -8,19 +8,19 @@ import (
 	"io"
 )
 
-func Add(args []string, reader io.Reader, writer io.Writer) error {
+func Add(args []string, configReader io.Reader, configWriter io.Writer) error {
 	name := args[0]
 
 	if len(args) != 2 {
 		return fmt.Errorf("args should be 2, but received %d", len(args))
 	}
 
-	decoder := json.NewDecoder(reader)
+	decoder := json.NewDecoder(configReader)
 	var configContent types.Config
 	if err := decoder.Decode(&configContent); err != nil {
 		return err
 	}
-	encoder := json.NewEncoder(writer)
+	encoder := json.NewEncoder(configWriter)
 
 	for _, remote := range configContent.Remotes {
 		if remote.Name == name {
