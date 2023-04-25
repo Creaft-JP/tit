@@ -2,4 +2,4 @@ module github.com/Creaft-JP/tit
 
 go 1.20
 
-require github.com/google/go-cmp v0.5.9
+require go.uber.org/multierr v1.11.0

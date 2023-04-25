@@ -6,6 +6,7 @@ import (
 	"github.com/Creaft-JP/tit/subcommands"
 	"github.com/Creaft-JP/tit/subcommands/remote"
 	"github.com/Creaft-JP/tit/types"
+	"go.uber.org/multierr"
 	"os"
 )
 
@@ -29,7 +30,7 @@ func route(args []string) error {
 	panic("Not Found")
 }
 
-func initRoute() error {
+func initRoute() (err error) {
 	if err := subcommands.CreateRepository(); err != nil {
 		return err
 	}
@@ -37,13 +38,13 @@ func initRoute() error {
 	if err != nil {
 		return err
 	}
-	defer func(writer *os.File) {
-		_ = writer.Close()
-	}(configWriter)
+	defer func() {
+		err = multierr.Append(err, configWriter.Close())
+	}()
 	return subcommands.Init(os.Stdout, configWriter)
 }
 
-func remoteRoute(args []string) error {
+func remoteRoute(args []string) (err error) {
 	if len(args) > 0 {
 		switch args[0] {
 		case "add":
@@ -54,20 +55,20 @@ func remoteRoute(args []string) error {
 	if err != nil {
 		return err
 	}
-	defer func(reader *os.File) {
-		_ = reader.Close()
-	}(configReader)
+	defer func() {
+		err = multierr.Append(err, configReader.Close())
+	}()
 	return subcommands.Remote(args, configReader, os.Stdout)
 }
 
-func remoteAddRoute(args []string) error {
+func remoteAddRoute(args []string) (err error) {
 	configReader, err := os.Open(types.ConfigFilepath)
 	if err != nil {
 		return err
 	}
-	defer func(file *os.File) {
-		_ = file.Close()
-	}(configReader)
+	defer func() {
+		err = multierr.Append(err, configReader.Close())
+	}()
 	configWriter := bytes.NewBuffer([]byte{})
 	if err := remote.Add(args, configReader, configWriter); err != nil {
 		return err
@@ -76,9 +77,9 @@ func remoteAddRoute(args []string) error {
 	if err != nil {
 		return err
 	}
-	defer func(writer *os.File) {
-		_ = writer.Close()
-	}(configFile)
+	defer func() {
+		err = multierr.Append(err, configFile.Close())
+	}()
 	if _, err := configFile.Write(configWriter.Bytes()); err != nil {
 		return err
 	}
