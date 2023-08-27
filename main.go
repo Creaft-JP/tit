@@ -14,8 +14,8 @@ import (
 func main() {
 	args := os.Args
 	if err := route(args[1:]); err != nil {
-		fmt.Println(err.Error())
-		return
+		e.Handle(err)
+		os.Exit(1)
 	}
 }
 
