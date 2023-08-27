@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"github.com/Creaft-JP/tit/types"
 	"github.com/Creaft-JP/tit/types/config"
+	"github.com/morikuni/failure"
 	"io"
 	"reflect"
 	"testing"
@@ -57,7 +58,7 @@ func TestLackOfArgumentsError(t *testing.T) {
 		return
 	}
 	want := "args should be 2, but received 1"
-	got := err.Error()
+	got, _ := failure.MessageOf(err)
 	if got != want {
 		t.Errorf("thrown error message should be \"%s\", but got \"%s\"", want, got)
 	}
@@ -71,7 +72,7 @@ func TestTooManyArgumentsError(t *testing.T) {
 		return
 	}
 	want := "args should be 2, but received 3"
-	got := err.Error()
+	got, _ := failure.MessageOf(err)
 	if got != want {
 		t.Errorf("thrown error message should be \"%s\", but got \"%s\"", want, got)
 	}
@@ -112,7 +113,7 @@ func TestBlockReplace(t *testing.T) {
 		return
 	}
 	want := "remote origin already exists"
-	got := err.Error()
+	got, _ := failure.MessageOf(err)
 	if got != want {
 		t.Errorf("error message should be \"%s\", but got \"%s\".", want, got)
 	}
