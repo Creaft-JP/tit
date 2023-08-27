@@ -6,6 +6,7 @@ import (
 	"errors"
 	"github.com/Creaft-JP/tit/types"
 	"github.com/Creaft-JP/tit/types/config"
+	"github.com/morikuni/failure"
 	"os"
 	"reflect"
 	"testing"
@@ -108,7 +109,7 @@ func TestCheckAlreadyInitialized(t *testing.T) {
 		return
 	}
 	want := "tit repository already exists"
-	got := err.Error()
+	got, _ := failure.MessageOf(err)
 	if want != got {
 		t.Errorf("error should be \"%s\", but got \"%s\".", want, got)
 	}

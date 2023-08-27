@@ -2,10 +2,11 @@ package subcommands
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
+	e "github.com/Creaft-JP/tit/error"
 	"github.com/Creaft-JP/tit/types"
 	"github.com/Creaft-JP/tit/types/config"
+	"github.com/morikuni/failure"
 	"io"
 	"os"
 )
@@ -19,10 +20,17 @@ type osFileDirectoryCreator struct {
 }
 
 func (_ *osFileDirectoryCreator) mkdir(name string, perm os.FileMode) error {
-	return os.Mkdir(name, perm)
+	if err := os.Mkdir(name, perm); err != nil {
+		return failure.Translate(err, e.File)
+	}
+	return nil
 }
 func (_ *osFileDirectoryCreator) create(filename string) (*os.File, error) {
-	return os.Create(filename)
+	file, err := os.Create(filename)
+	if err != nil {
+		return nil, failure.Translate(err, e.File)
+	}
+	return file, nil
 }
 
 type fileDirectoryStatusReader interface {
@@ -32,50 +40,59 @@ type fileDirectoryStatusReader interface {
 type osFileDirectoryStatusReader struct{}
 
 func (_ *osFileDirectoryStatusReader) stat(name string) (os.FileInfo, error) {
-	return os.Stat(name)
+	fileInfo, err := os.Stat(name)
+	if err != nil {
+		return nil, failure.Translate(err, e.File)
+	}
+	return fileInfo, nil
 }
 
 func CreateRepository() error {
 	if err := checkAlreadyInitialized(&osFileDirectoryStatusReader{}); err != nil {
-		return err
+		return failure.Wrap(err)
 	}
 	if err := createFiles(&osFileDirectoryCreator{}); err != nil {
-		return err
+		return failure.Wrap(err)
 	}
 	return nil
 }
 func Init(consoleWriter io.Writer, configWriter io.Writer) error {
 	if err := initConfig(configWriter); err != nil {
-		return err
+		return failure.Wrap(err)
 	}
 	if err := initMessage(consoleWriter); err != nil {
-		return err
+		return failure.Wrap(err)
 	}
 	return nil
 }
 func initConfig(writer io.Writer) error {
-	return json.NewEncoder(writer).Encode(types.Config{Remotes: []config.Remote{}})
+	if err := json.NewEncoder(writer).Encode(types.Config{Remotes: []config.Remote{}}); err != nil {
+		return failure.Translate(err, e.File)
+	}
+	return nil
 }
 func initMessage(writer io.Writer) error {
-	_, err := fmt.Fprintf(writer, "Initialized empty Tit repository in ./%s/\n", types.RepositoryDirectoryName)
-	return err
+	if _, err := fmt.Fprintf(writer, "Initialized empty Tit repository in ./%s/\n", types.RepositoryDirectoryName); err != nil {
+		return failure.Translate(err, e.File)
+	}
+	return nil
 }
 func checkAlreadyInitialized(reader fileDirectoryStatusReader) error {
 	_, err := reader.stat(types.RepositoryDirectoryName)
 	if err == nil {
-		return errors.New("tit repository already exists")
+		return failure.New(e.Operation, failure.Message("tit repository already exists"))
 	}
 	if os.IsNotExist(err) {
 		return nil
 	}
-	return err
+	return failure.Translate(err, e.File)
 }
 func createFiles(creator fileDirectoryCreator) error {
 	if err := creator.mkdir(types.RepositoryDirectoryName, os.FileMode(0755)); err != nil {
-		return err
+		return failure.Wrap(err)
 	}
 	if _, err := creator.create(types.ConfigFilepath); err != nil {
-		return err
+		return failure.Wrap(err)
 	}
 	return nil
 }
