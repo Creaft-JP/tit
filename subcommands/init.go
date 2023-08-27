@@ -41,10 +41,13 @@ type osFileDirectoryStatusReader struct{}
 
 func (_ *osFileDirectoryStatusReader) stat(name string) (os.FileInfo, error) {
 	fileInfo, err := os.Stat(name)
-	if err != nil {
-		return nil, failure.Translate(err, e.File)
+	if err == nil {
+		return fileInfo, nil
 	}
-	return fileInfo, nil
+	if os.IsNotExist(err) {
+		return nil, failure.Translate(err, e.FileNotFound)
+	}
+	return nil, failure.Translate(err, e.File)
 }
 
 func CreateRepository() error {
@@ -82,10 +85,10 @@ func checkAlreadyInitialized(reader fileDirectoryStatusReader) error {
 	if err == nil {
 		return failure.New(e.Operation, failure.Message("tit repository already exists"))
 	}
-	if os.IsNotExist(err) {
+	if code, _ := failure.CodeOf(err); code == e.FileNotFound {
 		return nil
 	}
-	return failure.Translate(err, e.File)
+	return failure.Wrap(err)
 }
 func createFiles(creator fileDirectoryCreator) error {
 	if err := creator.mkdir(types.RepositoryDirectoryName, os.FileMode(0755)); err != nil {
