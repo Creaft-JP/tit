@@ -134,7 +134,7 @@ func TestOtherErrorByStat(t *testing.T) {
 	}
 	want := otherError
 	got := err
-	if want != got {
+	if !errors.Is(got, want) {
 		t.Errorf("Error should be %s, but got %s.", want, got)
 	}
 }
