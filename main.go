@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"context"
 	e "github.com/Creaft-JP/tit/error"
 	"github.com/Creaft-JP/tit/subcommands"
 	"github.com/Creaft-JP/tit/subcommands/remote"
@@ -13,17 +14,18 @@ import (
 
 func main() {
 	args := os.Args
-	if err := route(args[1:]); err != nil {
+	ctx := context.Background()
+	if err := route(args[1:], ctx); err != nil {
 		e.Handle(err)
 		os.Exit(1)
 	}
 }
 
-func route(args []string) error {
+func route(args []string, ctx context.Context) error {
 	if len(args) > 0 {
 		switch args[0] {
 		case "init":
-			return initRoute()
+			return initRoute(ctx)
 		case "remote":
 			return remoteRoute(args[1:])
 		}
@@ -31,8 +33,8 @@ func route(args []string) error {
 	panic("Not Found")
 }
 
-func initRoute() (err error) {
-	return subcommands.Init()
+func initRoute(ctx context.Context) (err error) {
+	return failure.Wrap(subcommands.Init(ctx))
 }
 
 func remoteRoute(args []string) (err error) {
