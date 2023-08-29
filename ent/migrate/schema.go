@@ -11,6 +11,8 @@ var (
 	// RemotesColumns holds the columns for the "remotes" table.
 	RemotesColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "name", Type: field.TypeString, Unique: true},
+		{Name: "url", Type: field.TypeString},
 	}
 	// RemotesTable holds the schema information for the "remotes" table.
 	RemotesTable = &schema.Table{

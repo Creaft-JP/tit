@@ -27,6 +27,18 @@ func (ru *RemoteUpdate) Where(ps ...predicate.Remote) *RemoteUpdate {
 	return ru
 }
 
+// SetName sets the "name" field.
+func (ru *RemoteUpdate) SetName(s string) *RemoteUpdate {
+	ru.mutation.SetName(s)
+	return ru
+}
+
+// SetURL sets the "url" field.
+func (ru *RemoteUpdate) SetURL(s string) *RemoteUpdate {
+	ru.mutation.SetURL(s)
+	return ru
+}
+
 // Mutation returns the RemoteMutation object of the builder.
 func (ru *RemoteUpdate) Mutation() *RemoteMutation {
 	return ru.mutation
@@ -59,7 +71,25 @@ func (ru *RemoteUpdate) ExecX(ctx context.Context) {
 	}
 }
 
+// check runs all checks and user-defined validators on the builder.
+func (ru *RemoteUpdate) check() error {
+	if v, ok := ru.mutation.Name(); ok {
+		if err := remote.NameValidator(v); err != nil {
+			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "Remote.name": %w`, err)}
+		}
+	}
+	if v, ok := ru.mutation.URL(); ok {
+		if err := remote.URLValidator(v); err != nil {
+			return &ValidationError{Name: "url", err: fmt.Errorf(`ent: validator failed for field "Remote.url": %w`, err)}
+		}
+	}
+	return nil
+}
+
 func (ru *RemoteUpdate) sqlSave(ctx context.Context) (n int, err error) {
+	if err := ru.check(); err != nil {
+		return n, err
+	}
 	_spec := sqlgraph.NewUpdateSpec(remote.Table, remote.Columns, sqlgraph.NewFieldSpec(remote.FieldID, field.TypeInt))
 	if ps := ru.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
@@ -67,6 +97,12 @@ func (ru *RemoteUpdate) sqlSave(ctx context.Context) (n int, err error) {
 				ps[i](selector)
 			}
 		}
+	}
+	if value, ok := ru.mutation.Name(); ok {
+		_spec.SetField(remote.FieldName, field.TypeString, value)
+	}
+	if value, ok := ru.mutation.URL(); ok {
+		_spec.SetField(remote.FieldURL, field.TypeString, value)
 	}
 	if n, err = sqlgraph.UpdateNodes(ctx, ru.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
@@ -86,6 +122,18 @@ type RemoteUpdateOne struct {
 	fields   []string
 	hooks    []Hook
 	mutation *RemoteMutation
+}
+
+// SetName sets the "name" field.
+func (ruo *RemoteUpdateOne) SetName(s string) *RemoteUpdateOne {
+	ruo.mutation.SetName(s)
+	return ruo
+}
+
+// SetURL sets the "url" field.
+func (ruo *RemoteUpdateOne) SetURL(s string) *RemoteUpdateOne {
+	ruo.mutation.SetURL(s)
+	return ruo
 }
 
 // Mutation returns the RemoteMutation object of the builder.
@@ -133,7 +181,25 @@ func (ruo *RemoteUpdateOne) ExecX(ctx context.Context) {
 	}
 }
 
+// check runs all checks and user-defined validators on the builder.
+func (ruo *RemoteUpdateOne) check() error {
+	if v, ok := ruo.mutation.Name(); ok {
+		if err := remote.NameValidator(v); err != nil {
+			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "Remote.name": %w`, err)}
+		}
+	}
+	if v, ok := ruo.mutation.URL(); ok {
+		if err := remote.URLValidator(v); err != nil {
+			return &ValidationError{Name: "url", err: fmt.Errorf(`ent: validator failed for field "Remote.url": %w`, err)}
+		}
+	}
+	return nil
+}
+
 func (ruo *RemoteUpdateOne) sqlSave(ctx context.Context) (_node *Remote, err error) {
+	if err := ruo.check(); err != nil {
+		return _node, err
+	}
 	_spec := sqlgraph.NewUpdateSpec(remote.Table, remote.Columns, sqlgraph.NewFieldSpec(remote.FieldID, field.TypeInt))
 	id, ok := ruo.mutation.ID()
 	if !ok {
@@ -158,6 +224,12 @@ func (ruo *RemoteUpdateOne) sqlSave(ctx context.Context) (_node *Remote, err err
 				ps[i](selector)
 			}
 		}
+	}
+	if value, ok := ruo.mutation.Name(); ok {
+		_spec.SetField(remote.FieldName, field.TypeString, value)
+	}
+	if value, ok := ruo.mutation.URL(); ok {
+		_spec.SetField(remote.FieldURL, field.TypeString, value)
 	}
 	_node = &Remote{config: ruo.config}
 	_spec.Assign = _node.assignValues

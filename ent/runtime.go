@@ -2,8 +2,23 @@
 
 package ent
 
+import (
+	"github.com/Creaft-JP/tit/ent/remote"
+	"github.com/Creaft-JP/tit/ent/schema"
+)
+
 // The init function reads all schema descriptors with runtime code
 // (default values, validators, hooks and policies) and stitches it
 // to their package variables.
 func init() {
+	remoteFields := schema.Remote{}.Fields()
+	_ = remoteFields
+	// remoteDescName is the schema descriptor for name field.
+	remoteDescName := remoteFields[0].Descriptor()
+	// remote.NameValidator is a validator for the "name" field. It is called by the builders before save.
+	remote.NameValidator = remoteDescName.Validators[0].(func(string) error)
+	// remoteDescURL is the schema descriptor for url field.
+	remoteDescURL := remoteFields[1].Descriptor()
+	// remote.URLValidator is a validator for the "url" field. It is called by the builders before save.
+	remote.URLValidator = remoteDescURL.Validators[0].(func(string) error)
 }

@@ -1,6 +1,9 @@
 package schema
 
-import "entgo.io/ent"
+import (
+	"entgo.io/ent"
+	"entgo.io/ent/schema/field"
+)
 
 // Remote holds the schema definition for the Remote entity.
 type Remote struct {
@@ -9,7 +12,7 @@ type Remote struct {
 
 // Fields of the Remote.
 func (Remote) Fields() []ent.Field {
-	return nil
+	return []ent.Field{field.String("name").NotEmpty().Unique(), field.String("url").NotEmpty()}
 }
 
 // Edges of the Remote.

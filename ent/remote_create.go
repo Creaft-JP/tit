@@ -4,6 +4,7 @@ package ent
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"entgo.io/ent/dialect/sql/sqlgraph"
@@ -16,6 +17,18 @@ type RemoteCreate struct {
 	config
 	mutation *RemoteMutation
 	hooks    []Hook
+}
+
+// SetName sets the "name" field.
+func (rc *RemoteCreate) SetName(s string) *RemoteCreate {
+	rc.mutation.SetName(s)
+	return rc
+}
+
+// SetURL sets the "url" field.
+func (rc *RemoteCreate) SetURL(s string) *RemoteCreate {
+	rc.mutation.SetURL(s)
+	return rc
 }
 
 // Mutation returns the RemoteMutation object of the builder.
@@ -52,6 +65,22 @@ func (rc *RemoteCreate) ExecX(ctx context.Context) {
 
 // check runs all checks and user-defined validators on the builder.
 func (rc *RemoteCreate) check() error {
+	if _, ok := rc.mutation.Name(); !ok {
+		return &ValidationError{Name: "name", err: errors.New(`ent: missing required field "Remote.name"`)}
+	}
+	if v, ok := rc.mutation.Name(); ok {
+		if err := remote.NameValidator(v); err != nil {
+			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "Remote.name": %w`, err)}
+		}
+	}
+	if _, ok := rc.mutation.URL(); !ok {
+		return &ValidationError{Name: "url", err: errors.New(`ent: missing required field "Remote.url"`)}
+	}
+	if v, ok := rc.mutation.URL(); ok {
+		if err := remote.URLValidator(v); err != nil {
+			return &ValidationError{Name: "url", err: fmt.Errorf(`ent: validator failed for field "Remote.url": %w`, err)}
+		}
+	}
 	return nil
 }
 
@@ -78,6 +107,14 @@ func (rc *RemoteCreate) createSpec() (*Remote, *sqlgraph.CreateSpec) {
 		_node = &Remote{config: rc.config}
 		_spec = sqlgraph.NewCreateSpec(remote.Table, sqlgraph.NewFieldSpec(remote.FieldID, field.TypeInt))
 	)
+	if value, ok := rc.mutation.Name(); ok {
+		_spec.SetField(remote.FieldName, field.TypeString, value)
+		_node.Name = value
+	}
+	if value, ok := rc.mutation.URL(); ok {
+		_spec.SetField(remote.FieldURL, field.TypeString, value)
+		_node.URL = value
+	}
 	return _node, _spec
 }
 

@@ -11,6 +11,7 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"github.com/Creaft-JP/tit/ent/predicate"
+	"github.com/Creaft-JP/tit/ent/remote"
 )
 
 const (
@@ -31,6 +32,8 @@ type RemoteMutation struct {
 	op            Op
 	typ           string
 	id            *int
+	name          *string
+	url           *string
 	clearedFields map[string]struct{}
 	done          bool
 	oldValue      func(context.Context) (*Remote, error)
@@ -135,6 +138,78 @@ func (m *RemoteMutation) IDs(ctx context.Context) ([]int, error) {
 	}
 }
 
+// SetName sets the "name" field.
+func (m *RemoteMutation) SetName(s string) {
+	m.name = &s
+}
+
+// Name returns the value of the "name" field in the mutation.
+func (m *RemoteMutation) Name() (r string, exists bool) {
+	v := m.name
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldName returns the old "name" field's value of the Remote entity.
+// If the Remote object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *RemoteMutation) OldName(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldName is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldName requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldName: %w", err)
+	}
+	return oldValue.Name, nil
+}
+
+// ResetName resets all changes to the "name" field.
+func (m *RemoteMutation) ResetName() {
+	m.name = nil
+}
+
+// SetURL sets the "url" field.
+func (m *RemoteMutation) SetURL(s string) {
+	m.url = &s
+}
+
+// URL returns the value of the "url" field in the mutation.
+func (m *RemoteMutation) URL() (r string, exists bool) {
+	v := m.url
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldURL returns the old "url" field's value of the Remote entity.
+// If the Remote object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *RemoteMutation) OldURL(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldURL is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldURL requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldURL: %w", err)
+	}
+	return oldValue.URL, nil
+}
+
+// ResetURL resets all changes to the "url" field.
+func (m *RemoteMutation) ResetURL() {
+	m.url = nil
+}
+
 // Where appends a list predicates to the RemoteMutation builder.
 func (m *RemoteMutation) Where(ps ...predicate.Remote) {
 	m.predicates = append(m.predicates, ps...)
@@ -169,7 +244,13 @@ func (m *RemoteMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *RemoteMutation) Fields() []string {
-	fields := make([]string, 0, 0)
+	fields := make([]string, 0, 2)
+	if m.name != nil {
+		fields = append(fields, remote.FieldName)
+	}
+	if m.url != nil {
+		fields = append(fields, remote.FieldURL)
+	}
 	return fields
 }
 
@@ -177,6 +258,12 @@ func (m *RemoteMutation) Fields() []string {
 // return value indicates that this field was not set, or was not defined in the
 // schema.
 func (m *RemoteMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case remote.FieldName:
+		return m.Name()
+	case remote.FieldURL:
+		return m.URL()
+	}
 	return nil, false
 }
 
@@ -184,6 +271,12 @@ func (m *RemoteMutation) Field(name string) (ent.Value, bool) {
 // returned if the mutation operation is not UpdateOne, or the query to the
 // database failed.
 func (m *RemoteMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case remote.FieldName:
+		return m.OldName(ctx)
+	case remote.FieldURL:
+		return m.OldURL(ctx)
+	}
 	return nil, fmt.Errorf("unknown Remote field %s", name)
 }
 
@@ -192,6 +285,20 @@ func (m *RemoteMutation) OldField(ctx context.Context, name string) (ent.Value, 
 // type.
 func (m *RemoteMutation) SetField(name string, value ent.Value) error {
 	switch name {
+	case remote.FieldName:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetName(v)
+		return nil
+	case remote.FieldURL:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetURL(v)
+		return nil
 	}
 	return fmt.Errorf("unknown Remote field %s", name)
 }
@@ -213,6 +320,8 @@ func (m *RemoteMutation) AddedField(name string) (ent.Value, bool) {
 // the field is not defined in the schema, or if the type mismatched the field
 // type.
 func (m *RemoteMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	}
 	return fmt.Errorf("unknown Remote numeric field %s", name)
 }
 
@@ -238,6 +347,14 @@ func (m *RemoteMutation) ClearField(name string) error {
 // ResetField resets all changes in the mutation for the field with the given name.
 // It returns an error if the field is not defined in the schema.
 func (m *RemoteMutation) ResetField(name string) error {
+	switch name {
+	case remote.FieldName:
+		m.ResetName()
+		return nil
+	case remote.FieldURL:
+		m.ResetURL()
+		return nil
+	}
 	return fmt.Errorf("unknown Remote field %s", name)
 }
 

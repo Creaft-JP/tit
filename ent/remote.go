@@ -13,9 +13,13 @@ import (
 
 // Remote is the model entity for the Remote schema.
 type Remote struct {
-	config
+	config `json:"-"`
 	// ID of the ent.
-	ID           int `json:"id,omitempty"`
+	ID int `json:"id,omitempty"`
+	// Name holds the value of the "name" field.
+	Name string `json:"name,omitempty"`
+	// URL holds the value of the "url" field.
+	URL          string `json:"url,omitempty"`
 	selectValues sql.SelectValues
 }
 
@@ -26,6 +30,8 @@ func (*Remote) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case remote.FieldID:
 			values[i] = new(sql.NullInt64)
+		case remote.FieldName, remote.FieldURL:
+			values[i] = new(sql.NullString)
 		default:
 			values[i] = new(sql.UnknownType)
 		}
@@ -47,6 +53,18 @@ func (r *Remote) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field id", value)
 			}
 			r.ID = int(value.Int64)
+		case remote.FieldName:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field name", values[i])
+			} else if value.Valid {
+				r.Name = value.String
+			}
+		case remote.FieldURL:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field url", values[i])
+			} else if value.Valid {
+				r.URL = value.String
+			}
 		default:
 			r.selectValues.Set(columns[i], values[i])
 		}
@@ -82,7 +100,12 @@ func (r *Remote) Unwrap() *Remote {
 func (r *Remote) String() string {
 	var builder strings.Builder
 	builder.WriteString("Remote(")
-	builder.WriteString(fmt.Sprintf("id=%v", r.ID))
+	builder.WriteString(fmt.Sprintf("id=%v, ", r.ID))
+	builder.WriteString("name=")
+	builder.WriteString(r.Name)
+	builder.WriteString(", ")
+	builder.WriteString("url=")
+	builder.WriteString(r.URL)
 	builder.WriteByte(')')
 	return builder.String()
 }

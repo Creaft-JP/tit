@@ -257,6 +257,18 @@ func (rq *RemoteQuery) Clone() *RemoteQuery {
 
 // GroupBy is used to group vertices by one or more fields/columns.
 // It is often used with aggregate functions, like: count, max, mean, min, sum.
+//
+// Example:
+//
+//	var v []struct {
+//		Name string `json:"name,omitempty"`
+//		Count int `json:"count,omitempty"`
+//	}
+//
+//	client.Remote.Query().
+//		GroupBy(remote.FieldName).
+//		Aggregate(ent.Count()).
+//		Scan(ctx, &v)
 func (rq *RemoteQuery) GroupBy(field string, fields ...string) *RemoteGroupBy {
 	rq.ctx.Fields = append([]string{field}, fields...)
 	grbuild := &RemoteGroupBy{build: rq}
@@ -268,6 +280,16 @@ func (rq *RemoteQuery) GroupBy(field string, fields ...string) *RemoteGroupBy {
 
 // Select allows the selection one or more fields/columns for the given query,
 // instead of selecting all fields in the entity.
+//
+// Example:
+//
+//	var v []struct {
+//		Name string `json:"name,omitempty"`
+//	}
+//
+//	client.Remote.Query().
+//		Select(remote.FieldName).
+//		Scan(ctx, &v)
 func (rq *RemoteQuery) Select(fields ...string) *RemoteSelect {
 	rq.ctx.Fields = append(rq.ctx.Fields, fields...)
 	sbuild := &RemoteSelect{RemoteQuery: rq}
