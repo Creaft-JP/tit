@@ -32,17 +32,7 @@ func route(args []string) error {
 }
 
 func initRoute() (err error) {
-	if err := subcommands.CreateRepository(); err != nil {
-		return failure.Wrap(err)
-	}
-	configWriter, err := os.Create(types.ConfigFilepath)
-	if err != nil {
-		return failure.Translate(err, e.File)
-	}
-	defer func() {
-		err = multierr.Append(err, failure.Translate(configWriter.Close(), e.File))
-	}()
-	return subcommands.Init(os.Stdout, configWriter)
+	return subcommands.Init()
 }
 
 func remoteRoute(args []string) (err error) {
