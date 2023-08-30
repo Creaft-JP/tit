@@ -6,7 +6,9 @@ import (
 	"github.com/Creaft-JP/tit/ent"
 	"github.com/Creaft-JP/tit/ent/enttest"
 	"github.com/Creaft-JP/tit/ent/remote"
+	e "github.com/Creaft-JP/tit/error"
 	_ "github.com/mattn/go-sqlite3"
+	"github.com/morikuni/failure"
 	"os"
 	"testing"
 )
@@ -112,19 +114,41 @@ func TestSecondRemoteRegister(t *testing.T) {
 }
 
 func TestBlockReplace(t *testing.T) {
-	//setUp()
-	//args := []string{"origin", "https://api.tithub.tech/creaft/repo1"}
-	//err := Add(args, reader, writer)
-	//if err == nil {
-	//	t.Error("an error should be thrown, but was not.")
-	//	return
-	//}
-	//want := "remote origin already exists"
-	//got, _ := failure.MessageOf(err)
-	//if got != want {
-	//	t.Errorf("error message should be \"%s\", but got \"%s\".", want, got)
-	//}
-	//if writer.Len() > 0 {
-	//	t.Errorf("no bytes should be written, but \"%s\" were.", writer.String())
-	//}
+	// Arrange
+	client := setUp(t)
+	defer tearDown(t, client)
+
+	ctx := context.Background()
+
+	if err := Add([]string{"origin", "https://api.tithub.tech/creaft/repo"}, client, ctx); err != nil {
+		t.Fatalf("failed to Add first: %s", err.Error())
+	}
+
+	// Act
+	err := Add([]string{"origin", "https://api.tithub.tech/creaft/copy"}, client, ctx)
+
+	// Assert
+	if err == nil {
+		t.Fatal("an error should be thrown, but was not.")
+	}
+
+	code, _ := failure.CodeOf(err)
+	if code != e.Operation {
+		t.Fatalf("error code should be %s, but got %s", e.Operation, code)
+	}
+
+	message, _ := failure.MessageOf(err)
+	wantMessage := "remote origin already exists"
+	if message != wantMessage {
+		t.Fatalf("error message should be \"%s\", but got \"%s\".", wantMessage, message)
+	}
+
+	gotRemote, err := client.Remote.Query().Where(remote.Name("origin")).Only(ctx)
+	if err != nil {
+		t.Fatalf("failed to get remote: %s", err.Error())
+	}
+	wantUrl := "https://api.tithub.tech/creaft/repo"
+	if gotRemote.URL != wantUrl {
+		t.Fatalf("remote URL should be %s, but got: %s", wantUrl, gotRemote.URL)
+	}
 }
