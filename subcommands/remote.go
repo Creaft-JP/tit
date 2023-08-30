@@ -1,11 +1,9 @@
 package subcommands
 
 import (
-	"encoding/json"
 	"flag"
 	"fmt"
 	e "github.com/Creaft-JP/tit/error"
-	"github.com/Creaft-JP/tit/types"
 	"github.com/Creaft-JP/tit/types/config"
 	"github.com/morikuni/failure"
 	"io"
@@ -23,8 +21,8 @@ func printRemote(writer io.Writer, remote config.Remote, verbose bool) error {
 	}
 	return nil
 }
-func Remote(args []string, configReader io.Reader, consoleWriter io.Writer) error {
-	flagSet := flag.NewFlagSet("remote", flag.ContinueOnError)
+func Remote(args []string /*configReader io.Reader, */, consoleWriter io.Writer) error {
+	/*flagSet := flag.NewFlagSet("remote", flag.ContinueOnError)
 	var verbose bool
 	setVerbose(flagSet, &verbose, "verbose")
 	setVerbose(flagSet, &verbose, "v")
@@ -41,6 +39,7 @@ func Remote(args []string, configReader io.Reader, consoleWriter io.Writer) erro
 			return failure.Wrap(err)
 		}
 	}
+	*/
 	return nil
 }
 
