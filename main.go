@@ -22,15 +22,17 @@ func main() {
 }
 
 func route(args []string, ctx context.Context) error {
-	if len(args) > 0 {
-		switch args[0] {
-		case "init":
-			return initRoute(ctx)
-		case "remote":
-			return remoteRoute(args[1:])
-		}
+	if len(args) == 0 {
+		return failure.New(e.Operation, failure.Message("subcommand must be specified"))
 	}
-	panic("Not Found")
+	switch args[0] {
+	case "init":
+		return failure.Wrap(initRoute(ctx))
+	case "remote":
+		return failure.Wrap(remoteRoute(args[1:]))
+	default:
+		return failure.New(e.Operation, failure.Messagef("subcommand: \"%s\" does not exits"))
+	}
 }
 
 func initRoute(ctx context.Context) (err error) {
@@ -41,7 +43,7 @@ func remoteRoute(args []string) (err error) {
 	if len(args) > 0 {
 		switch args[0] {
 		case "add":
-			return remoteAddRoute(args[1:])
+			return failure.Wrap(remoteAddRoute(args[1:]))
 		}
 	}
 	configReader, err := os.Open(types.ConfigFilepath)
@@ -51,7 +53,7 @@ func remoteRoute(args []string) (err error) {
 	defer func() {
 		err = multierr.Append(err, failure.Translate(configReader.Close(), e.File))
 	}()
-	return subcommands.Remote(args, configReader, os.Stdout)
+	return failure.Wrap(subcommands.Remote(args, configReader, os.Stdout))
 }
 
 func remoteAddRoute(args []string) (err error) {
