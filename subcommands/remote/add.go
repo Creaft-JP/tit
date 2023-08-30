@@ -1,37 +1,24 @@
 package remote
 
 import (
-	"encoding/json"
+	"context"
+	"github.com/Creaft-JP/tit/ent"
 	e "github.com/Creaft-JP/tit/error"
-	"github.com/Creaft-JP/tit/types"
-	"github.com/Creaft-JP/tit/types/config"
 	"github.com/morikuni/failure"
-	"io"
 )
 
-func Add(args []string, configReader io.Reader, configWriter io.Writer) error {
-	name := args[0]
+func Add(args []string, client *ent.Client, ctx context.Context) error {
 
 	if len(args) != 2 {
 		return failure.New(e.Operation, failure.Messagef("args should be 2, but received %d", len(args)))
 	}
 
-	decoder := json.NewDecoder(configReader)
-	var configContent types.Config
-	if err := decoder.Decode(&configContent); err != nil {
-		return failure.Translate(err, e.File)
-	}
-	encoder := json.NewEncoder(configWriter)
+	name := args[0]
+	url := args[1]
 
-	for _, remote := range configContent.Remotes {
-		if remote.Name == name {
-			return failure.New(e.Operation, failure.Messagef("remote %s already exists", name))
-		}
+	if _, err := client.Remote.Create().SetName(name).SetURL(url).Save(ctx); err != nil {
+		return failure.Translate(err, e.Database)
 	}
 
-	configContent.Remotes = append(configContent.Remotes, config.Remote{Name: name, Url: args[1]})
-	if err := encoder.Encode(configContent); err != nil {
-		return failure.Translate(err, e.File)
-	}
 	return nil
 }
