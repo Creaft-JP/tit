@@ -5,6 +5,7 @@ import (
 	"entgo.io/ent/dialect"
 	"github.com/Creaft-JP/tit/ent"
 	"github.com/Creaft-JP/tit/ent/enttest"
+	"github.com/Creaft-JP/tit/ent/remote"
 	_ "github.com/mattn/go-sqlite3"
 	"os"
 	"testing"
@@ -74,44 +75,40 @@ func TestLackOfArgumentsError(t *testing.T) {
 
 func TestSecondRemoteRegister(t *testing.T) {
 	// Arrange
-	//client := setUp(t)
-	//defer tearDown(t, client)
-	//
-	//ctx := context.Background()
-	//
-	//var args []string
-	//
-	//// Act
-	//err := Add(args, client, ctx)
-	//
-	//// Assert
-	//if err == nil {
-	//	t.Fatal("An Error should be thrown, but was not.")
-	//	return
-	//}
-	//setUp()
-	//args := []string{"origin1", "https://api.tithub.tech/creaft/repo1"}
-	//
-	//if err := Add(args, reader, writer); err != nil {
-	//	t.Errorf(err.Error())
-	//	return
-	//}
-	//
-	//var configJson types.Config
-	//if err := json.Unmarshal(writer.Bytes(), &configJson); err != nil {
-	//	t.Errorf("JSON parse failed.  %s", err.Error())
-	//	return
-	//}
-	//
-	//want := []config.Remote{
-	//	{"origin", "https://api.tithub.tech/creaft/repository"},
-	//	{"origin1", "https://api.tithub.tech/creaft/repo1"},
-	//}
-	//
-	//got := configJson.Remotes
-	//if !reflect.DeepEqual(want, got) {
-	//	t.Errorf("remotes shouled be %s, but got %s.", want, got)
-	//}
+	client := setUp(t)
+	defer tearDown(t, client)
+
+	ctx := context.Background()
+
+	if err := Add([]string{"origin", "https://api.tithub.tech/creaft/repo"}, client, ctx); err != nil {
+		t.Fatalf("failed to Add first: %s", err.Error())
+	}
+
+	// Act
+	if err := Add([]string{"copy", "https://api.tithub.tech/creaft/copy"}, client, ctx); err != nil {
+		t.Fatalf("failed to Add second: %s", err.Error())
+	}
+
+	// Assert
+	got, err := client.Remote.Query().Order(remote.ByName()).All(ctx)
+	if err != nil {
+		t.Fatalf("failed to get remotes: %s", err.Error())
+	}
+	if len(got) != 2 {
+		t.Fatalf("remotes count should be 2, but got: %d", len(got))
+	}
+	wantNames := []string{"copy", "origin"}
+	for i, gotRemote := range got {
+		if gotRemote.Name != wantNames[i] {
+			t.Fatalf("remote Name should be %s, but got: %s", wantNames[i], gotRemote.Name)
+		}
+	}
+	wantUrls := []string{"https://api.tithub.tech/creaft/copy", "https://api.tithub.tech/creaft/repo"}
+	for i, gotRemote := range got {
+		if gotRemote.URL != wantUrls[i] {
+			t.Fatalf("remote URL should be %s, but got: %s", wantUrls[i], gotRemote.URL)
+		}
+	}
 }
 
 func TestBlockReplace(t *testing.T) {
