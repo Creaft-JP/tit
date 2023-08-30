@@ -1,27 +1,41 @@
 package main
 
 import (
-	"bytes"
 	"context"
+	"github.com/Creaft-JP/tit/db"
+	"github.com/Creaft-JP/tit/ent"
 	e "github.com/Creaft-JP/tit/error"
 	"github.com/Creaft-JP/tit/subcommands"
 	"github.com/Creaft-JP/tit/subcommands/remote"
-	"github.com/Creaft-JP/tit/types"
 	"github.com/morikuni/failure"
-	"go.uber.org/multierr"
 	"os"
 )
 
 func main() {
 	args := os.Args
 	ctx := context.Background()
-	if err := route(args[1:], ctx); err != nil {
+
+	client, err := db.MakeClient(db.FilePath)
+	if err != nil {
 		e.Handle(err)
-		os.Exit(1)
+		return
+	}
+	defer func(client *ent.Client) {
+		e.Handle(failure.Translate(client.Close(), e.Database))
+	}(client)
+
+	if err := db.Migrate(client, ctx); err != nil {
+		e.Handle(err)
+		return
+	}
+
+	if err := route(args[1:], client, ctx); err != nil {
+		e.Handle(err)
+		return
 	}
 }
 
-func route(args []string, ctx context.Context) error {
+func route(args []string, client *ent.Client, ctx context.Context) error {
 	if len(args) == 0 {
 		return failure.New(e.Operation, failure.Message("subcommand must be specified"))
 	}
@@ -29,9 +43,9 @@ func route(args []string, ctx context.Context) error {
 	case "init":
 		return failure.Wrap(initRoute(ctx))
 	case "remote":
-		return failure.Wrap(remoteRoute(args[1:]))
+		return failure.Wrap(remoteRoute(args[1:], client, ctx))
 	default:
-		return failure.New(e.Operation, failure.Messagef("subcommand: \"%s\" does not exits"))
+		return failure.New(e.Operation, failure.Messagef("subcommand: \"%s\" does not exits", args[0]))
 	}
 }
 
@@ -39,44 +53,16 @@ func initRoute(ctx context.Context) (err error) {
 	return failure.Wrap(subcommands.Init(ctx))
 }
 
-func remoteRoute(args []string) (err error) {
+func remoteRoute(args []string, client *ent.Client, ctx context.Context) (err error) {
 	if len(args) > 0 {
 		switch args[0] {
 		case "add":
-			return failure.Wrap(remoteAddRoute(args[1:]))
+			return failure.Wrap(remoteAddRoute(args[1:], client, ctx))
 		}
 	}
-	configReader, err := os.Open(types.ConfigFilepath)
-	if err != nil {
-		return failure.Translate(err, e.File)
-	}
-	defer func() {
-		err = multierr.Append(err, failure.Translate(configReader.Close(), e.File))
-	}()
-	return failure.Wrap(subcommands.Remote(args, configReader, os.Stdout))
+	return failure.Wrap(subcommands.Remote(args, os.Stdout, client, ctx))
 }
 
-func remoteAddRoute(args []string) (err error) {
-	configReader, err := os.Open(types.ConfigFilepath)
-	if err != nil {
-		return failure.Translate(err, e.File)
-	}
-	defer func() {
-		err = multierr.Append(err, failure.Translate(configReader.Close(), e.File))
-	}()
-	configWriter := bytes.NewBuffer([]byte{})
-	if err := remote.Add(args, configReader, configWriter); err != nil {
-		return failure.Wrap(err)
-	}
-	configFile, err := os.Create(types.ConfigFilepath)
-	if err != nil {
-		return failure.Translate(err, e.File)
-	}
-	defer func() {
-		err = multierr.Append(err, failure.Translate(configFile.Close(), e.File))
-	}()
-	if _, err := configFile.Write(configWriter.Bytes()); err != nil {
-		return failure.Translate(err, e.File)
-	}
-	return nil
+func remoteAddRoute(args []string, client *ent.Client, ctx context.Context) (err error) {
+	return failure.Wrap(remote.Add(args, client, ctx))
 }

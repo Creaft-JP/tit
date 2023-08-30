@@ -26,7 +26,7 @@ func TestNoArgs(t *testing.T) {
 	setUpRemoteTest(t, client, ctx)
 
 	// Act
-	if err := Remote([]string{}, writer); err != nil {
+	if err := Remote([]string{}, writer, client, ctx); err != nil {
 		t.Fatalf("failed to act: %s", err.Error())
 		return
 	}
@@ -48,7 +48,7 @@ func testVerbose(t *testing.T, args []string) {
 	setUpRemoteTest(t, client, ctx)
 
 	// Act
-	if err := Remote(args, writer); err != nil {
+	if err := Remote(args, writer, client, ctx); err != nil {
 		t.Error(err.Error())
 		return
 	}

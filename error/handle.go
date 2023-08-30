@@ -7,6 +7,10 @@ import (
 )
 
 func Handle(err error) {
+	if err == nil {
+		return
+	}
+
 	code, _ := failure.CodeOf(err)
 	if code == Operation {
 		message, _ := failure.MessageOf(err)
