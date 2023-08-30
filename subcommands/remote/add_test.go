@@ -2,34 +2,18 @@ package remote
 
 import (
 	"context"
-	"entgo.io/ent/dialect"
-	"github.com/Creaft-JP/tit/ent"
-	"github.com/Creaft-JP/tit/ent/enttest"
 	"github.com/Creaft-JP/tit/ent/remote"
 	e "github.com/Creaft-JP/tit/error"
+	"github.com/Creaft-JP/tit/test"
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/morikuni/failure"
-	"os"
 	"testing"
 )
 
-func setUp(t *testing.T) *ent.Client {
-	return enttest.Open(t, dialect.SQLite, "./test_db?_fk=1")
-}
-
-func tearDown(t *testing.T, client *ent.Client) {
-	if err := client.Close(); err != nil {
-		t.Fatalf("failed to close client: %s", err.Error())
-	}
-	if err := os.Remove("./test_db"); err != nil {
-		t.Fatalf("failed to remove: %s", err.Error())
-	}
-}
-
 func TestFirstRemoteRegister(t *testing.T) {
 	// Arrange
-	client := setUp(t)
-	defer tearDown(t, client)
+	client, _ := test.SetUp(t)
+	defer test.TearDown(t, client)
 
 	ctx := context.Background()
 
@@ -58,8 +42,8 @@ func TestFirstRemoteRegister(t *testing.T) {
 
 func TestLackOfArgumentsError(t *testing.T) {
 	// Arrange
-	client := setUp(t)
-	defer tearDown(t, client)
+	client, _ := test.SetUp(t)
+	defer test.TearDown(t, client)
 
 	ctx := context.Background()
 
@@ -77,8 +61,8 @@ func TestLackOfArgumentsError(t *testing.T) {
 
 func TestSecondRemoteRegister(t *testing.T) {
 	// Arrange
-	client := setUp(t)
-	defer tearDown(t, client)
+	client, _ := test.SetUp(t)
+	defer test.TearDown(t, client)
 
 	ctx := context.Background()
 
@@ -115,8 +99,8 @@ func TestSecondRemoteRegister(t *testing.T) {
 
 func TestBlockReplace(t *testing.T) {
 	// Arrange
-	client := setUp(t)
-	defer tearDown(t, client)
+	client, _ := test.SetUp(t)
+	defer test.TearDown(t, client)
 
 	ctx := context.Background()
 
