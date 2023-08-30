@@ -8,6 +8,7 @@ import (
 	"github.com/Creaft-JP/tit/subcommands"
 	"github.com/Creaft-JP/tit/subcommands/remote"
 	"github.com/morikuni/failure"
+	"go.uber.org/multierr"
 	"os"
 )
 
@@ -15,33 +16,37 @@ func main() {
 	args := os.Args
 	ctx := context.Background()
 
-	client, err := db.MakeClient(db.FilePath)
-	if err != nil {
-		e.Handle(err)
-		return
-	}
-	defer func(client *ent.Client) {
-		e.Handle(failure.Translate(client.Close(), e.Database))
-	}(client)
-
-	if err := db.Migrate(client, ctx); err != nil {
-		e.Handle(err)
-		return
-	}
-
-	if err := route(args[1:], client, ctx); err != nil {
+	if err := route(args[1:], ctx); err != nil {
 		e.Handle(err)
 		return
 	}
 }
 
-func route(args []string, client *ent.Client, ctx context.Context) error {
+func route(args []string, ctx context.Context) (ret error) {
 	if len(args) == 0 {
 		return failure.New(e.Operation, failure.Message("subcommand must be specified"))
 	}
-	switch args[0] {
-	case "init":
+
+	// init is exceptional
+	if args[0] == "init" {
 		return failure.Wrap(initRoute(ctx))
+	}
+
+	// Prepare Database
+	client, err := db.MakeClient(db.FilePath)
+	if err != nil {
+		return failure.Wrap(err)
+	}
+	defer func(client *ent.Client) {
+		ret = multierr.Append(ret, failure.Translate(client.Close(), e.Database))
+	}(client)
+	if err := db.Migrate(client, ctx); err != nil {
+		e.Handle(err)
+		return
+	}
+
+	// Routing
+	switch args[0] {
 	case "remote":
 		return failure.Wrap(remoteRoute(args[1:], client, ctx))
 	default:
