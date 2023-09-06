@@ -32,6 +32,14 @@ func route(args []string, ctx context.Context) (ret error) {
 		return failure.Wrap(initRoute(ctx))
 	}
 
+	isInitialized, err := db.IsAlreadyInitialized(db.FilePath)
+	if err != nil {
+		return failure.Wrap(err)
+	}
+	if !isInitialized {
+		return failure.New(e.Operation, failure.Message("not a tit repository"))
+	}
+
 	// Prepare Database
 	client, err := db.MakeClient(db.FilePath)
 	if err != nil {
