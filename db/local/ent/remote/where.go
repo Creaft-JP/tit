@@ -4,7 +4,7 @@ package remote
 
 import (
 	"entgo.io/ent/dialect/sql"
-	"github.com/Creaft-JP/tit/ent/predicate"
+	"github.com/Creaft-JP/tit/db/local/ent/predicate"
 )
 
 // ID filters vertices based on their ID field.

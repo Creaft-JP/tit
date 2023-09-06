@@ -10,8 +10,8 @@ import (
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
-	"github.com/Creaft-JP/tit/ent/predicate"
-	"github.com/Creaft-JP/tit/ent/remote"
+	"github.com/Creaft-JP/tit/db/local/ent/predicate"
+	"github.com/Creaft-JP/tit/db/local/ent/remote"
 )
 
 const (

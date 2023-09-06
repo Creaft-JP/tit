@@ -8,12 +8,12 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/Creaft-JP/tit/ent/migrate"
+	"github.com/Creaft-JP/tit/db/local/ent/migrate"
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect"
 	"entgo.io/ent/dialect/sql"
-	"github.com/Creaft-JP/tit/ent/remote"
+	"github.com/Creaft-JP/tit/db/local/ent/remote"
 )
 
 // Client is the client that holds all ent builders.

@@ -5,12 +5,12 @@ package enttest
 import (
 	"context"
 
-	"github.com/Creaft-JP/tit/ent"
+	"github.com/Creaft-JP/tit/db/local/ent"
 	// required by schema hooks.
-	_ "github.com/Creaft-JP/tit/ent/runtime"
+	_ "github.com/Creaft-JP/tit/db/local/ent/runtime"
 
 	"entgo.io/ent/dialect/sql/schema"
-	"github.com/Creaft-JP/tit/ent/migrate"
+	"github.com/Creaft-JP/tit/db/local/ent/migrate"
 )
 
 type (

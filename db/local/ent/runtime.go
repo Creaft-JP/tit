@@ -3,8 +3,8 @@
 package ent
 
 import (
-	"github.com/Creaft-JP/tit/ent/remote"
-	"github.com/Creaft-JP/tit/ent/schema"
+	"github.com/Creaft-JP/tit/db/local/ent/remote"
+	"github.com/Creaft-JP/tit/db/local/ent/schema"
 )
 
 // The init function reads all schema descriptors with runtime code

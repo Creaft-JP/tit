@@ -2,7 +2,7 @@ package remote
 
 import (
 	"context"
-	"github.com/Creaft-JP/tit/ent/remote"
+	"github.com/Creaft-JP/tit/db/local/ent/remote"
 	e "github.com/Creaft-JP/tit/error"
 	"github.com/Creaft-JP/tit/test"
 	_ "github.com/mattn/go-sqlite3"

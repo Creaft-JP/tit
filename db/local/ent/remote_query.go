@@ -10,8 +10,8 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"github.com/Creaft-JP/tit/ent/predicate"
-	"github.com/Creaft-JP/tit/ent/remote"
+	"github.com/Creaft-JP/tit/db/local/ent/predicate"
+	"github.com/Creaft-JP/tit/db/local/ent/remote"
 )
 
 // RemoteQuery is the builder for querying Remote entities.

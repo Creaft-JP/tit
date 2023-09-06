@@ -12,7 +12,7 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
-	"github.com/Creaft-JP/tit/ent/remote"
+	"github.com/Creaft-JP/tit/db/local/ent/remote"
 )
 
 // ent aliases to avoid import conflicts in user's code.

@@ -3,7 +3,7 @@ package main
 import (
 	"context"
 	"github.com/Creaft-JP/tit/db"
-	"github.com/Creaft-JP/tit/ent"
+	"github.com/Creaft-JP/tit/db/local/ent"
 	e "github.com/Creaft-JP/tit/error"
 	"github.com/Creaft-JP/tit/subcommands"
 	"github.com/Creaft-JP/tit/subcommands/remote"

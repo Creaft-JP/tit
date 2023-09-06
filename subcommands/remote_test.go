@@ -2,7 +2,7 @@ package subcommands
 
 import (
 	"context"
-	"github.com/Creaft-JP/tit/ent"
+	"github.com/Creaft-JP/tit/db/local/ent"
 	"github.com/Creaft-JP/tit/test"
 	"testing"
 )

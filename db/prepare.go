@@ -4,7 +4,7 @@ import (
 	"context"
 	"entgo.io/ent/dialect"
 	"fmt"
-	"github.com/Creaft-JP/tit/ent"
+	"github.com/Creaft-JP/tit/db/local/ent"
 	e "github.com/Creaft-JP/tit/error"
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/morikuni/failure"

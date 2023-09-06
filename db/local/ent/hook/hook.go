@@ -6,7 +6,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/Creaft-JP/tit/ent"
+	"github.com/Creaft-JP/tit/db/local/ent"
 )
 
 // The RemoteFunc type is an adapter to allow the use of ordinary
