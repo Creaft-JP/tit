@@ -5,13 +5,14 @@ import (
 	"github.com/Creaft-JP/tit/db"
 	"github.com/Creaft-JP/tit/ent"
 	e "github.com/Creaft-JP/tit/error"
+	"github.com/Creaft-JP/tit/skelton"
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/morikuni/failure"
 	"go.uber.org/multierr"
 )
 
 func Init(ctx context.Context) (ret error) {
-	isInitialized, err := db.IsAlreadyInitialized(db.FilePath)
+	isInitialized, err := skelton.IsAlreadyInitialized(skelton.Path)
 	if err != nil {
 		return failure.Wrap(err)
 	}
