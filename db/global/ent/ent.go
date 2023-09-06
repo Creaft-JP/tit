@@ -13,6 +13,7 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"github.com/Creaft-JP/tit/db/global/ent/globalconfig"
+	"github.com/Creaft-JP/tit/db/global/ent/logintoken"
 )
 
 // ent aliases to avoid import conflicts in user's code.
@@ -74,6 +75,7 @@ func checkColumn(table, column string) error {
 	initCheck.Do(func() {
 		columnCheck = sql.NewColumnCheck(map[string]func(string) bool{
 			globalconfig.Table: globalconfig.ValidColumn,
+			logintoken.Table:   logintoken.ValidColumn,
 		})
 	})
 	return columnCheck(table, column)

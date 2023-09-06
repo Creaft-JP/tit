@@ -8,3 +8,6 @@ import (
 
 // GlobalConfig is the predicate function for globalconfig builders.
 type GlobalConfig func(*sql.Selector)
+
+// LoginToken is the predicate function for logintoken builders.
+type LoginToken func(*sql.Selector)

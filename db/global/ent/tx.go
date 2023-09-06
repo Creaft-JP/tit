@@ -14,6 +14,8 @@ type Tx struct {
 	config
 	// GlobalConfig is the client for interacting with the GlobalConfig builders.
 	GlobalConfig *GlobalConfigClient
+	// LoginToken is the client for interacting with the LoginToken builders.
+	LoginToken *LoginTokenClient
 
 	// lazily loaded.
 	client     *Client
@@ -146,6 +148,7 @@ func (tx *Tx) Client() *Client {
 
 func (tx *Tx) init() {
 	tx.GlobalConfig = NewGlobalConfigClient(tx.config)
+	tx.LoginToken = NewLoginTokenClient(tx.config)
 }
 
 // txDriver wraps the given dialect.Tx with a nop dialect.Driver implementation.

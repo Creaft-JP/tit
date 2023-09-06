@@ -20,9 +20,22 @@ var (
 		Columns:    GlobalConfigsColumns,
 		PrimaryKey: []*schema.Column{GlobalConfigsColumns[0]},
 	}
+	// LoginTokensColumns holds the columns for the "login_tokens" table.
+	LoginTokensColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "sign_in_user_slug", Type: field.TypeString, Unique: true},
+		{Name: "cli_login_token", Type: field.TypeString},
+	}
+	// LoginTokensTable holds the schema information for the "login_tokens" table.
+	LoginTokensTable = &schema.Table{
+		Name:       "login_tokens",
+		Columns:    LoginTokensColumns,
+		PrimaryKey: []*schema.Column{LoginTokensColumns[0]},
+	}
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
 		GlobalConfigsTable,
+		LoginTokensTable,
 	}
 )
 

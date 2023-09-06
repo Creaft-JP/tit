@@ -11,6 +11,7 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"github.com/Creaft-JP/tit/db/global/ent/globalconfig"
+	"github.com/Creaft-JP/tit/db/global/ent/logintoken"
 	"github.com/Creaft-JP/tit/db/global/ent/predicate"
 )
 
@@ -24,6 +25,7 @@ const (
 
 	// Node types.
 	TypeGlobalConfig = "GlobalConfig"
+	TypeLoginToken   = "LoginToken"
 )
 
 // GlobalConfigMutation represents an operation that mutates the GlobalConfig nodes in the graph.
@@ -404,4 +406,384 @@ func (m *GlobalConfigMutation) ClearEdge(name string) error {
 // It returns an error if the edge is not defined in the schema.
 func (m *GlobalConfigMutation) ResetEdge(name string) error {
 	return fmt.Errorf("unknown GlobalConfig edge %s", name)
+}
+
+// LoginTokenMutation represents an operation that mutates the LoginToken nodes in the graph.
+type LoginTokenMutation struct {
+	config
+	op                Op
+	typ               string
+	id                *int
+	sign_in_user_slug *string
+	cli_login_token   *string
+	clearedFields     map[string]struct{}
+	done              bool
+	oldValue          func(context.Context) (*LoginToken, error)
+	predicates        []predicate.LoginToken
+}
+
+var _ ent.Mutation = (*LoginTokenMutation)(nil)
+
+// logintokenOption allows management of the mutation configuration using functional options.
+type logintokenOption func(*LoginTokenMutation)
+
+// newLoginTokenMutation creates new mutation for the LoginToken entity.
+func newLoginTokenMutation(c config, op Op, opts ...logintokenOption) *LoginTokenMutation {
+	m := &LoginTokenMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeLoginToken,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withLoginTokenID sets the ID field of the mutation.
+func withLoginTokenID(id int) logintokenOption {
+	return func(m *LoginTokenMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *LoginToken
+		)
+		m.oldValue = func(ctx context.Context) (*LoginToken, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().LoginToken.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withLoginToken sets the old LoginToken of the mutation.
+func withLoginToken(node *LoginToken) logintokenOption {
+	return func(m *LoginTokenMutation) {
+		m.oldValue = func(context.Context) (*LoginToken, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m LoginTokenMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m LoginTokenMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *LoginTokenMutation) ID() (id int, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *LoginTokenMutation) IDs(ctx context.Context) ([]int, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []int{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().LoginToken.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetSignInUserSlug sets the "sign_in_user_slug" field.
+func (m *LoginTokenMutation) SetSignInUserSlug(s string) {
+	m.sign_in_user_slug = &s
+}
+
+// SignInUserSlug returns the value of the "sign_in_user_slug" field in the mutation.
+func (m *LoginTokenMutation) SignInUserSlug() (r string, exists bool) {
+	v := m.sign_in_user_slug
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSignInUserSlug returns the old "sign_in_user_slug" field's value of the LoginToken entity.
+// If the LoginToken object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *LoginTokenMutation) OldSignInUserSlug(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSignInUserSlug is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSignInUserSlug requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSignInUserSlug: %w", err)
+	}
+	return oldValue.SignInUserSlug, nil
+}
+
+// ResetSignInUserSlug resets all changes to the "sign_in_user_slug" field.
+func (m *LoginTokenMutation) ResetSignInUserSlug() {
+	m.sign_in_user_slug = nil
+}
+
+// SetCliLoginToken sets the "cli_login_token" field.
+func (m *LoginTokenMutation) SetCliLoginToken(s string) {
+	m.cli_login_token = &s
+}
+
+// CliLoginToken returns the value of the "cli_login_token" field in the mutation.
+func (m *LoginTokenMutation) CliLoginToken() (r string, exists bool) {
+	v := m.cli_login_token
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCliLoginToken returns the old "cli_login_token" field's value of the LoginToken entity.
+// If the LoginToken object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *LoginTokenMutation) OldCliLoginToken(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCliLoginToken is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCliLoginToken requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCliLoginToken: %w", err)
+	}
+	return oldValue.CliLoginToken, nil
+}
+
+// ResetCliLoginToken resets all changes to the "cli_login_token" field.
+func (m *LoginTokenMutation) ResetCliLoginToken() {
+	m.cli_login_token = nil
+}
+
+// Where appends a list predicates to the LoginTokenMutation builder.
+func (m *LoginTokenMutation) Where(ps ...predicate.LoginToken) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the LoginTokenMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *LoginTokenMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.LoginToken, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *LoginTokenMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *LoginTokenMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (LoginToken).
+func (m *LoginTokenMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *LoginTokenMutation) Fields() []string {
+	fields := make([]string, 0, 2)
+	if m.sign_in_user_slug != nil {
+		fields = append(fields, logintoken.FieldSignInUserSlug)
+	}
+	if m.cli_login_token != nil {
+		fields = append(fields, logintoken.FieldCliLoginToken)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *LoginTokenMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case logintoken.FieldSignInUserSlug:
+		return m.SignInUserSlug()
+	case logintoken.FieldCliLoginToken:
+		return m.CliLoginToken()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *LoginTokenMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case logintoken.FieldSignInUserSlug:
+		return m.OldSignInUserSlug(ctx)
+	case logintoken.FieldCliLoginToken:
+		return m.OldCliLoginToken(ctx)
+	}
+	return nil, fmt.Errorf("unknown LoginToken field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *LoginTokenMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case logintoken.FieldSignInUserSlug:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSignInUserSlug(v)
+		return nil
+	case logintoken.FieldCliLoginToken:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCliLoginToken(v)
+		return nil
+	}
+	return fmt.Errorf("unknown LoginToken field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *LoginTokenMutation) AddedFields() []string {
+	return nil
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *LoginTokenMutation) AddedField(name string) (ent.Value, bool) {
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *LoginTokenMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	}
+	return fmt.Errorf("unknown LoginToken numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *LoginTokenMutation) ClearedFields() []string {
+	return nil
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *LoginTokenMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *LoginTokenMutation) ClearField(name string) error {
+	return fmt.Errorf("unknown LoginToken nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *LoginTokenMutation) ResetField(name string) error {
+	switch name {
+	case logintoken.FieldSignInUserSlug:
+		m.ResetSignInUserSlug()
+		return nil
+	case logintoken.FieldCliLoginToken:
+		m.ResetCliLoginToken()
+		return nil
+	}
+	return fmt.Errorf("unknown LoginToken field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *LoginTokenMutation) AddedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *LoginTokenMutation) AddedIDs(name string) []ent.Value {
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *LoginTokenMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *LoginTokenMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *LoginTokenMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *LoginTokenMutation) EdgeCleared(name string) bool {
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *LoginTokenMutation) ClearEdge(name string) error {
+	return fmt.Errorf("unknown LoginToken unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *LoginTokenMutation) ResetEdge(name string) error {
+	return fmt.Errorf("unknown LoginToken edge %s", name)
 }

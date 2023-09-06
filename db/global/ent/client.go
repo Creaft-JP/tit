@@ -14,6 +14,7 @@ import (
 	"entgo.io/ent/dialect"
 	"entgo.io/ent/dialect/sql"
 	"github.com/Creaft-JP/tit/db/global/ent/globalconfig"
+	"github.com/Creaft-JP/tit/db/global/ent/logintoken"
 )
 
 // Client is the client that holds all ent builders.
@@ -23,6 +24,8 @@ type Client struct {
 	Schema *migrate.Schema
 	// GlobalConfig is the client for interacting with the GlobalConfig builders.
 	GlobalConfig *GlobalConfigClient
+	// LoginToken is the client for interacting with the LoginToken builders.
+	LoginToken *LoginTokenClient
 }
 
 // NewClient creates a new client configured with the given options.
@@ -37,6 +40,7 @@ func NewClient(opts ...Option) *Client {
 func (c *Client) init() {
 	c.Schema = migrate.NewSchema(c.driver)
 	c.GlobalConfig = NewGlobalConfigClient(c.config)
+	c.LoginToken = NewLoginTokenClient(c.config)
 }
 
 type (
@@ -120,6 +124,7 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		ctx:          ctx,
 		config:       cfg,
 		GlobalConfig: NewGlobalConfigClient(cfg),
+		LoginToken:   NewLoginTokenClient(cfg),
 	}, nil
 }
 
@@ -140,6 +145,7 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		ctx:          ctx,
 		config:       cfg,
 		GlobalConfig: NewGlobalConfigClient(cfg),
+		LoginToken:   NewLoginTokenClient(cfg),
 	}, nil
 }
 
@@ -169,12 +175,14 @@ func (c *Client) Close() error {
 // In order to add hooks to a specific client, call: `client.Node.Use(...)`.
 func (c *Client) Use(hooks ...Hook) {
 	c.GlobalConfig.Use(hooks...)
+	c.LoginToken.Use(hooks...)
 }
 
 // Intercept adds the query interceptors to all the entity clients.
 // In order to add interceptors to a specific client, call: `client.Node.Intercept(...)`.
 func (c *Client) Intercept(interceptors ...Interceptor) {
 	c.GlobalConfig.Intercept(interceptors...)
+	c.LoginToken.Intercept(interceptors...)
 }
 
 // Mutate implements the ent.Mutator interface.
@@ -182,6 +190,8 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 	switch m := m.(type) {
 	case *GlobalConfigMutation:
 		return c.GlobalConfig.mutate(ctx, m)
+	case *LoginTokenMutation:
+		return c.LoginToken.mutate(ctx, m)
 	default:
 		return nil, fmt.Errorf("ent: unknown mutation type %T", m)
 	}
@@ -305,12 +315,130 @@ func (c *GlobalConfigClient) mutate(ctx context.Context, m *GlobalConfigMutation
 	}
 }
 
+// LoginTokenClient is a client for the LoginToken schema.
+type LoginTokenClient struct {
+	config
+}
+
+// NewLoginTokenClient returns a client for the LoginToken from the given config.
+func NewLoginTokenClient(c config) *LoginTokenClient {
+	return &LoginTokenClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `logintoken.Hooks(f(g(h())))`.
+func (c *LoginTokenClient) Use(hooks ...Hook) {
+	c.hooks.LoginToken = append(c.hooks.LoginToken, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `logintoken.Intercept(f(g(h())))`.
+func (c *LoginTokenClient) Intercept(interceptors ...Interceptor) {
+	c.inters.LoginToken = append(c.inters.LoginToken, interceptors...)
+}
+
+// Create returns a builder for creating a LoginToken entity.
+func (c *LoginTokenClient) Create() *LoginTokenCreate {
+	mutation := newLoginTokenMutation(c.config, OpCreate)
+	return &LoginTokenCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of LoginToken entities.
+func (c *LoginTokenClient) CreateBulk(builders ...*LoginTokenCreate) *LoginTokenCreateBulk {
+	return &LoginTokenCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for LoginToken.
+func (c *LoginTokenClient) Update() *LoginTokenUpdate {
+	mutation := newLoginTokenMutation(c.config, OpUpdate)
+	return &LoginTokenUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *LoginTokenClient) UpdateOne(lt *LoginToken) *LoginTokenUpdateOne {
+	mutation := newLoginTokenMutation(c.config, OpUpdateOne, withLoginToken(lt))
+	return &LoginTokenUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *LoginTokenClient) UpdateOneID(id int) *LoginTokenUpdateOne {
+	mutation := newLoginTokenMutation(c.config, OpUpdateOne, withLoginTokenID(id))
+	return &LoginTokenUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for LoginToken.
+func (c *LoginTokenClient) Delete() *LoginTokenDelete {
+	mutation := newLoginTokenMutation(c.config, OpDelete)
+	return &LoginTokenDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *LoginTokenClient) DeleteOne(lt *LoginToken) *LoginTokenDeleteOne {
+	return c.DeleteOneID(lt.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *LoginTokenClient) DeleteOneID(id int) *LoginTokenDeleteOne {
+	builder := c.Delete().Where(logintoken.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &LoginTokenDeleteOne{builder}
+}
+
+// Query returns a query builder for LoginToken.
+func (c *LoginTokenClient) Query() *LoginTokenQuery {
+	return &LoginTokenQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeLoginToken},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a LoginToken entity by its id.
+func (c *LoginTokenClient) Get(ctx context.Context, id int) (*LoginToken, error) {
+	return c.Query().Where(logintoken.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *LoginTokenClient) GetX(ctx context.Context, id int) *LoginToken {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *LoginTokenClient) Hooks() []Hook {
+	return c.hooks.LoginToken
+}
+
+// Interceptors returns the client interceptors.
+func (c *LoginTokenClient) Interceptors() []Interceptor {
+	return c.inters.LoginToken
+}
+
+func (c *LoginTokenClient) mutate(ctx context.Context, m *LoginTokenMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&LoginTokenCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&LoginTokenUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&LoginTokenUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&LoginTokenDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown LoginToken mutation op: %q", m.Op())
+	}
+}
+
 // hooks and interceptors per client, for fast access.
 type (
 	hooks struct {
-		GlobalConfig []ent.Hook
+		GlobalConfig, LoginToken []ent.Hook
 	}
 	inters struct {
-		GlobalConfig []ent.Interceptor
+		GlobalConfig, LoginToken []ent.Interceptor
 	}
 )
