@@ -11,7 +11,7 @@ import (
 	"os"
 )
 
-const FilePath = "./.tit"
+const FilePath = "./.tit/database"
 
 // MakeClient make SQLite3 ent Client from path
 //
