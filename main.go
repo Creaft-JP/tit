@@ -2,7 +2,7 @@ package main
 
 import (
 	"context"
-	"github.com/Creaft-JP/tit/db"
+	"github.com/Creaft-JP/tit/db/local"
 	"github.com/Creaft-JP/tit/db/local/ent"
 	e "github.com/Creaft-JP/tit/error"
 	"github.com/Creaft-JP/tit/subcommands"
@@ -33,14 +33,14 @@ func route(args []string, ctx context.Context) (ret error) {
 	}
 
 	// Prepare Database
-	client, err := db.MakeClient(db.FilePath)
+	client, err := local.MakeClient(local.FilePath)
 	if err != nil {
 		return failure.Wrap(err)
 	}
 	defer func(client *ent.Client) {
 		ret = multierr.Append(ret, failure.Translate(client.Close(), e.Database))
 	}(client)
-	if err := db.Migrate(client, ctx); err != nil {
+	if err := local.Migrate(client, ctx); err != nil {
 		e.Handle(err)
 		return
 	}

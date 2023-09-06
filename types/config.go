@@ -1,7 +1,7 @@
 package types
 
 import (
-	"github.com/Creaft-JP/tit/db"
+	"github.com/Creaft-JP/tit/db/local"
 	"github.com/Creaft-JP/tit/types/config"
 	"path/filepath"
 )
@@ -12,4 +12,4 @@ type Config struct {
 
 const ConfigFilename = "config.json"
 
-var ConfigFilepath = filepath.Join(db.FilePath, ConfigFilename)
+var ConfigFilepath = filepath.Join(local.FilePath, ConfigFilename)
