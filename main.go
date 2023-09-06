@@ -5,6 +5,7 @@ import (
 	"github.com/Creaft-JP/tit/db"
 	"github.com/Creaft-JP/tit/ent"
 	e "github.com/Creaft-JP/tit/error"
+	"github.com/Creaft-JP/tit/skelton"
 	"github.com/Creaft-JP/tit/subcommands"
 	"github.com/Creaft-JP/tit/subcommands/remote"
 	"github.com/morikuni/failure"
@@ -32,7 +33,7 @@ func route(args []string, ctx context.Context) (ret error) {
 		return failure.Wrap(initRoute(ctx))
 	}
 
-	isInitialized, err := db.IsAlreadyInitialized(db.FilePath)
+	isInitialized, err := skelton.IsAlreadyInitialized(skelton.Path)
 	if err != nil {
 		return failure.Wrap(err)
 	}
