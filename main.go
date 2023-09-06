@@ -5,6 +5,7 @@ import (
 	"github.com/Creaft-JP/tit/db/local"
 	"github.com/Creaft-JP/tit/db/local/ent"
 	e "github.com/Creaft-JP/tit/error"
+	"github.com/Creaft-JP/tit/skelton"
 	"github.com/Creaft-JP/tit/subcommands"
 	"github.com/Creaft-JP/tit/subcommands/remote"
 	"github.com/morikuni/failure"
@@ -30,6 +31,14 @@ func route(args []string, ctx context.Context) (ret error) {
 	// init is exceptional
 	if args[0] == "init" {
 		return failure.Wrap(initRoute(ctx))
+	}
+
+	isInitialized, err := skelton.IsAlreadyInitialized(skelton.Path)
+	if err != nil {
+		return failure.Wrap(err)
+	}
+	if !isInitialized {
+		return failure.New(e.Operation, failure.Message("not a tit repository"))
 	}
 
 	// Prepare Database

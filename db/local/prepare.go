@@ -6,12 +6,13 @@ import (
 	"fmt"
 	"github.com/Creaft-JP/tit/db/local/ent"
 	e "github.com/Creaft-JP/tit/error"
+	"github.com/Creaft-JP/tit/skelton"
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/morikuni/failure"
-	"os"
+	"path/filepath"
 )
 
-const FilePath = "./.tit"
+var FilePath = filepath.Join(skelton.Path, "database")
 
 // MakeClient make SQLite3 ent Client from path
 //
@@ -20,22 +21,6 @@ func MakeClient(filePath string) (*ent.Client, error) {
 	name := fmt.Sprintf("%s?_fk=1", filePath)
 	client, err := ent.Open(dialect.SQLite, name)
 	return client, failure.Translate(err, e.Database)
-}
-
-// IsAlreadyInitialized if the filePath's file is exists, return true
-func IsAlreadyInitialized(filePath string) (bool, error) {
-	info, err := os.Stat(filePath)
-	if err != nil {
-		if os.IsNotExist(err) {
-			return false, nil
-		} else {
-			return false, failure.Translate(err, e.File)
-		}
-	}
-	if info.IsDir() {
-		return false, failure.New(e.Operation, failure.Messagef("the filePath \"%s\" is directory", filePath))
-	}
-	return true, nil
 }
 
 func Migrate(client *ent.Client, ctx context.Context) error {

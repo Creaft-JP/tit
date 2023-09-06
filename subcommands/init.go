@@ -5,18 +5,23 @@ import (
 	"github.com/Creaft-JP/tit/db/local"
 	"github.com/Creaft-JP/tit/db/local/ent"
 	e "github.com/Creaft-JP/tit/error"
+	"github.com/Creaft-JP/tit/skelton"
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/morikuni/failure"
 	"go.uber.org/multierr"
+	"os"
 )
 
 func Init(ctx context.Context) (ret error) {
-	isInitialized, err := local.IsAlreadyInitialized(local.FilePath)
+	isInitialized, err := skelton.IsAlreadyInitialized(skelton.Path)
 	if err != nil {
 		return failure.Wrap(err)
 	}
 	if isInitialized {
 		return failure.New(e.Operation, failure.Message("tit repository already exists"))
+	}
+	if err := os.Mkdir(skelton.Path, 0755); err != nil {
+		return failure.Translate(err, e.File)
 	}
 	client, err := local.MakeClient(local.FilePath)
 	if err != nil {
