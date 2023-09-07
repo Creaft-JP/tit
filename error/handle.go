@@ -48,7 +48,7 @@ func Handle(err error) {
 	if _, e := fmt.Fprintln(os.Stderr); e != nil {
 		panic(e)
 	}
-	if _, e := fmt.Println(os.Stderr, "============ Detail ============"); e != nil {
+	if _, e := fmt.Fprintln(os.Stderr, "============ Detail ============"); e != nil {
 		panic(e)
 	}
 	if _, e := fmt.Fprintf(os.Stderr, "%+v\n", err); e != nil {
