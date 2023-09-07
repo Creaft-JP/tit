@@ -2,10 +2,13 @@ package main
 
 import (
 	"context"
+	gdb "github.com/Creaft-JP/tit/db/global"
+	gent "github.com/Creaft-JP/tit/db/global/ent"
 	"github.com/Creaft-JP/tit/db/local"
-	"github.com/Creaft-JP/tit/db/local/ent"
+	lent "github.com/Creaft-JP/tit/db/local/ent"
 	"github.com/Creaft-JP/tit/directories"
 	e "github.com/Creaft-JP/tit/error"
+	g "github.com/Creaft-JP/tit/global"
 	"github.com/Creaft-JP/tit/skeleton"
 	"github.com/Creaft-JP/tit/subcommands"
 	"github.com/Creaft-JP/tit/subcommands/remote"
@@ -17,6 +20,30 @@ import (
 func main() {
 	args := os.Args
 	ctx := context.Background()
+
+	initialized, err := directories.Exists(g.Path)
+	if err != nil {
+		e.Handle(err)
+		return
+	}
+	if !initialized {
+		if err := os.Mkdir(g.Path, 0755); err != nil {
+			e.Handle(failure.Translate(err, e.File))
+			return
+		}
+	}
+	client, err := gdb.MakeClient(gdb.FilePath)
+	defer func(c *gent.Client) {
+		if err := c.Close(); err != nil {
+			e.Handle(err)
+		}
+	}(client)
+	if !initialized {
+		if err := gdb.Migrate(client, ctx); err != nil {
+			e.Handle(err)
+			return
+		}
+	}
 
 	if err := route(args[1:], ctx); err != nil {
 		e.Handle(err)
@@ -47,7 +74,7 @@ func route(args []string, ctx context.Context) (ret error) {
 	if err != nil {
 		return failure.Wrap(err)
 	}
-	defer func(client *ent.Client) {
+	defer func(client *lent.Client) {
 		ret = multierr.Append(ret, failure.Translate(client.Close(), e.Database))
 	}(client)
 	if err := local.Migrate(client, ctx); err != nil {
@@ -68,7 +95,7 @@ func initRoute(ctx context.Context) (err error) {
 	return failure.Wrap(subcommands.Init(ctx))
 }
 
-func remoteRoute(args []string, client *ent.Client, ctx context.Context) (err error) {
+func remoteRoute(args []string, client *lent.Client, ctx context.Context) (err error) {
 	if len(args) > 0 {
 		switch args[0] {
 		case "add":
@@ -78,6 +105,6 @@ func remoteRoute(args []string, client *ent.Client, ctx context.Context) (err er
 	return failure.Wrap(subcommands.Remote(args, os.Stdout, client, ctx))
 }
 
-func remoteAddRoute(args []string, client *ent.Client, ctx context.Context) (err error) {
+func remoteAddRoute(args []string, client *lent.Client, ctx context.Context) (err error) {
 	return failure.Wrap(remote.Add(args, client, ctx))
 }
