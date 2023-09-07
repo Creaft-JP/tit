@@ -1,4 +1,4 @@
-package skelton
+package skeleton
 
 import (
 	e "github.com/Creaft-JP/tit/error"
@@ -9,7 +9,7 @@ import (
 
 var Path = filepath.Join(".", ".tit")
 
-// IsAlreadyInitialized if the path's directory exists, return true
+// IsAlreadyInitialized if the skeleton has already been initialized, return true
 func IsAlreadyInitialized(path string) (bool, error) {
 	info, err := os.Stat(path)
 	if err != nil {

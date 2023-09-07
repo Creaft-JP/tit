@@ -6,13 +6,13 @@ import (
 	"fmt"
 	"github.com/Creaft-JP/tit/db/local/ent"
 	e "github.com/Creaft-JP/tit/error"
-	"github.com/Creaft-JP/tit/skelton"
+	"github.com/Creaft-JP/tit/skeleton"
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/morikuni/failure"
 	"path/filepath"
 )
 
-var FilePath = filepath.Join(skelton.Path, "database")
+var FilePath = filepath.Join(skeleton.Path, "database")
 
 // MakeClient make SQLite3 ent Client from path
 //
