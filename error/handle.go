@@ -20,20 +20,38 @@ func Handle(err error) {
 		return
 	}
 
-	fmt.Println("============ Error ============")
-	fmt.Printf("Error = %v\n", err)
+	if _, e := fmt.Fprintln(os.Stderr, "============ Error ============"); e != nil {
+		panic(e)
+	}
+	if _, e := fmt.Fprintf(os.Stderr, "Error = %v\n", err); e != nil {
+		panic(e)
+	}
 
-	fmt.Printf("Code = %v\n", code)
+	if _, e := fmt.Fprintf(os.Stderr, "Code = %v\n", code); e != nil {
+		panic(e)
+	}
 
 	msg, _ := failure.MessageOf(err)
-	fmt.Printf("Message = %v\n", msg)
+	if _, e := fmt.Fprintf(os.Stderr, "Message = %v\n", msg); e != nil {
+		panic(e)
+	}
 
 	cs, _ := failure.CallStackOf(err)
-	fmt.Printf("CallStack = %v\n", cs)
+	if _, e := fmt.Fprintf(os.Stderr, "CallStack = %v\n", cs); e != nil {
+		panic(e)
+	}
 
-	fmt.Printf("Cause = %v\n", failure.CauseOf(err))
+	if _, e := fmt.Fprintf(os.Stderr, "Cause = %v\n", failure.CauseOf(err)); e != nil {
+		panic(e)
+	}
 
-	fmt.Println()
-	fmt.Println("============ Detail ============")
-	fmt.Printf("%+v\n", err)
+	if _, e := fmt.Fprintln(os.Stderr); e != nil {
+		panic(e)
+	}
+	if _, e := fmt.Println(os.Stderr, "============ Detail ============"); e != nil {
+		panic(e)
+	}
+	if _, e := fmt.Fprintf(os.Stderr, "%+v\n", err); e != nil {
+		panic(e)
+	}
 }
