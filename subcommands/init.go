@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/Creaft-JP/tit/db/local"
 	"github.com/Creaft-JP/tit/db/local/ent"
+	"github.com/Creaft-JP/tit/directories"
 	e "github.com/Creaft-JP/tit/error"
 	"github.com/Creaft-JP/tit/skeleton"
 	_ "github.com/mattn/go-sqlite3"
@@ -13,7 +14,7 @@ import (
 )
 
 func Init(ctx context.Context) (ret error) {
-	isInitialized, err := skeleton.IsAlreadyInitialized(skeleton.Path)
+	isInitialized, err := directories.Exists(skeleton.Path)
 	if err != nil {
 		return failure.Wrap(err)
 	}
