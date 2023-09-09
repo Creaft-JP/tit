@@ -45,13 +45,13 @@ func main() {
 		}
 	}
 
-	if err := route(args[1:], ctx); err != nil {
+	if err := route(args[1:], client, ctx); err != nil {
 		e.Handle(err)
 		return
 	}
 }
 
-func route(args []string, ctx context.Context) (ret error) {
+func route(args []string, gcl *gent.Client, ctx context.Context) (ret error) {
 	if len(args) == 0 {
 		return failure.New(e.Operation, failure.Message("subcommand must be specified"))
 	}
@@ -70,14 +70,14 @@ func route(args []string, ctx context.Context) (ret error) {
 	}
 
 	// Prepare Database
-	client, err := local.MakeClient(local.FilePath)
+	lcl, err := local.MakeClient(local.FilePath)
 	if err != nil {
 		return failure.Wrap(err)
 	}
 	defer func(client *lent.Client) {
 		ret = multierr.Append(ret, failure.Translate(client.Close(), e.Database))
-	}(client)
-	if err := local.Migrate(client, ctx); err != nil {
+	}(lcl)
+	if err := local.Migrate(lcl, ctx); err != nil {
 		e.Handle(err)
 		return
 	}
@@ -85,7 +85,9 @@ func route(args []string, ctx context.Context) (ret error) {
 	// Routing
 	switch args[0] {
 	case "remote":
-		return failure.Wrap(remoteRoute(args[1:], client, ctx))
+		return failure.Wrap(remoteRoute(args[1:], lcl, ctx))
+	case "login":
+		return failure.Wrap(loginRoute(args[1:], gcl, ctx))
 	default:
 		return failure.New(e.Operation, failure.Messagef("subcommand: \"%s\" does not exits", args[0]))
 	}
@@ -107,4 +109,8 @@ func remoteRoute(args []string, client *lent.Client, ctx context.Context) (err e
 
 func remoteAddRoute(args []string, client *lent.Client, ctx context.Context) (err error) {
 	return failure.Wrap(remote.Add(args, client, ctx))
+}
+
+func loginRoute(args []string, cl *gent.Client, ctx context.Context) error {
+	return failure.Wrap(subcommands.Login(args, os.Stdin, os.Stdout, cl, ctx))
 }

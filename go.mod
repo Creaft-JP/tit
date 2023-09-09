@@ -7,6 +7,7 @@ require (
 	github.com/mattn/go-sqlite3 v1.14.17
 	github.com/morikuni/failure v1.1.2
 	go.uber.org/multierr v1.11.0
+	golang.org/x/term v0.12.0
 )
 
 require (
@@ -21,5 +22,6 @@ require (
 	github.com/mitchellh/go-wordwrap v1.0.1 // indirect
 	github.com/zclconf/go-cty v1.14.0 // indirect
 	golang.org/x/mod v0.12.0 // indirect
+	golang.org/x/sys v0.12.0 // indirect
 	golang.org/x/text v0.13.0 // indirect
 )
