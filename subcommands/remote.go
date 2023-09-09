@@ -4,19 +4,19 @@ import (
 	"context"
 	"flag"
 	"fmt"
-	"github.com/Creaft-JP/tit/ent"
+	"github.com/Creaft-JP/tit/db/local/ent"
 	e "github.com/Creaft-JP/tit/error"
 	"github.com/morikuni/failure"
 	"io"
 )
 
 func Remote(args []string /*configReader io.Reader, */, consoleWriter io.Writer, client *ent.Client, ctx context.Context) error {
-	flagSet := flag.NewFlagSet("remote", flag.ContinueOnError)
+	fs := flag.NewFlagSet("remote", flag.ContinueOnError)
 	var verbose bool
-	setVerbose(flagSet, &verbose, "verbose")
-	setVerbose(flagSet, &verbose, "v")
-	if err := flagSet.Parse(args); err != nil {
-		return failure.Translate(err, e.Operation, failure.Message("failed to parse options"))
+	setVerbose(fs, &verbose, "verbose")
+	setVerbose(fs, &verbose, "v")
+	if err := parse(fs, args); err != nil {
+		return failure.Wrap(err)
 	}
 	remotes, err := client.Remote.Query().All(ctx)
 	if err != nil {

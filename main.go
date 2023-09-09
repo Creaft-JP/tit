@@ -2,10 +2,14 @@ package main
 
 import (
 	"context"
-	"github.com/Creaft-JP/tit/db"
-	"github.com/Creaft-JP/tit/ent"
+	gdb "github.com/Creaft-JP/tit/db/global"
+	gent "github.com/Creaft-JP/tit/db/global/ent"
+	"github.com/Creaft-JP/tit/db/local"
+	lent "github.com/Creaft-JP/tit/db/local/ent"
+	"github.com/Creaft-JP/tit/directories"
 	e "github.com/Creaft-JP/tit/error"
-	"github.com/Creaft-JP/tit/skelton"
+	g "github.com/Creaft-JP/tit/global"
+	"github.com/Creaft-JP/tit/skeleton"
 	"github.com/Creaft-JP/tit/subcommands"
 	"github.com/Creaft-JP/tit/subcommands/remote"
 	"github.com/morikuni/failure"
@@ -17,13 +21,37 @@ func main() {
 	args := os.Args
 	ctx := context.Background()
 
-	if err := route(args[1:], ctx); err != nil {
+	initialized, err := directories.Exists(g.Path)
+	if err != nil {
+		e.Handle(err)
+		return
+	}
+	if !initialized {
+		if err := os.Mkdir(g.Path, 0755); err != nil {
+			e.Handle(failure.Translate(err, e.File))
+			return
+		}
+	}
+	client, err := gdb.MakeClient(gdb.FilePath)
+	defer func(c *gent.Client) {
+		if err := c.Close(); err != nil {
+			e.Handle(err)
+		}
+	}(client)
+	if !initialized {
+		if err := gdb.Migrate(client, ctx); err != nil {
+			e.Handle(err)
+			return
+		}
+	}
+
+	if err := route(args[1:], client, ctx); err != nil {
 		e.Handle(err)
 		return
 	}
 }
 
-func route(args []string, ctx context.Context) (ret error) {
+func route(args []string, gcl *gent.Client, ctx context.Context) (ret error) {
 	if len(args) == 0 {
 		return failure.New(e.Operation, failure.Message("subcommand must be specified"))
 	}
@@ -33,7 +61,7 @@ func route(args []string, ctx context.Context) (ret error) {
 		return failure.Wrap(initRoute(ctx))
 	}
 
-	isInitialized, err := skelton.IsAlreadyInitialized(skelton.Path)
+	isInitialized, err := directories.Exists(skeleton.Path)
 	if err != nil {
 		return failure.Wrap(err)
 	}
@@ -42,14 +70,14 @@ func route(args []string, ctx context.Context) (ret error) {
 	}
 
 	// Prepare Database
-	client, err := db.MakeClient(db.FilePath)
+	lcl, err := local.MakeClient(local.FilePath)
 	if err != nil {
 		return failure.Wrap(err)
 	}
-	defer func(client *ent.Client) {
+	defer func(client *lent.Client) {
 		ret = multierr.Append(ret, failure.Translate(client.Close(), e.Database))
-	}(client)
-	if err := db.Migrate(client, ctx); err != nil {
+	}(lcl)
+	if err := local.Migrate(lcl, ctx); err != nil {
 		e.Handle(err)
 		return
 	}
@@ -57,7 +85,9 @@ func route(args []string, ctx context.Context) (ret error) {
 	// Routing
 	switch args[0] {
 	case "remote":
-		return failure.Wrap(remoteRoute(args[1:], client, ctx))
+		return failure.Wrap(remoteRoute(args[1:], lcl, ctx))
+	case "login":
+		return failure.Wrap(loginRoute(args[1:], gcl, ctx))
 	default:
 		return failure.New(e.Operation, failure.Messagef("subcommand: \"%s\" does not exits", args[0]))
 	}
@@ -67,7 +97,7 @@ func initRoute(ctx context.Context) (err error) {
 	return failure.Wrap(subcommands.Init(ctx))
 }
 
-func remoteRoute(args []string, client *ent.Client, ctx context.Context) (err error) {
+func remoteRoute(args []string, client *lent.Client, ctx context.Context) (err error) {
 	if len(args) > 0 {
 		switch args[0] {
 		case "add":
@@ -77,6 +107,10 @@ func remoteRoute(args []string, client *ent.Client, ctx context.Context) (err er
 	return failure.Wrap(subcommands.Remote(args, os.Stdout, client, ctx))
 }
 
-func remoteAddRoute(args []string, client *ent.Client, ctx context.Context) (err error) {
+func remoteAddRoute(args []string, client *lent.Client, ctx context.Context) (err error) {
 	return failure.Wrap(remote.Add(args, client, ctx))
+}
+
+func loginRoute(args []string, cl *gent.Client, ctx context.Context) error {
+	return failure.Wrap(subcommands.Login(args, os.Stdin, os.Stdout, cl, ctx))
 }

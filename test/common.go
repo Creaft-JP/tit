@@ -3,8 +3,8 @@ package test
 import (
 	"bytes"
 	"entgo.io/ent/dialect"
-	"github.com/Creaft-JP/tit/ent"
-	"github.com/Creaft-JP/tit/ent/enttest"
+	"github.com/Creaft-JP/tit/db/local/ent"
+	"github.com/Creaft-JP/tit/db/local/ent/enttest"
 	"os"
 	"testing"
 )
