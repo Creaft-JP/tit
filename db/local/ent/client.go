@@ -14,6 +14,7 @@ import (
 	"entgo.io/ent/dialect"
 	"entgo.io/ent/dialect/sql"
 	"github.com/Creaft-JP/tit/db/local/ent/remote"
+	"github.com/Creaft-JP/tit/db/local/ent/stagedfile"
 )
 
 // Client is the client that holds all ent builders.
@@ -23,6 +24,8 @@ type Client struct {
 	Schema *migrate.Schema
 	// Remote is the client for interacting with the Remote builders.
 	Remote *RemoteClient
+	// StagedFile is the client for interacting with the StagedFile builders.
+	StagedFile *StagedFileClient
 }
 
 // NewClient creates a new client configured with the given options.
@@ -37,6 +40,7 @@ func NewClient(opts ...Option) *Client {
 func (c *Client) init() {
 	c.Schema = migrate.NewSchema(c.driver)
 	c.Remote = NewRemoteClient(c.config)
+	c.StagedFile = NewStagedFileClient(c.config)
 }
 
 type (
@@ -117,9 +121,10 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 	cfg := c.config
 	cfg.driver = tx
 	return &Tx{
-		ctx:    ctx,
-		config: cfg,
-		Remote: NewRemoteClient(cfg),
+		ctx:        ctx,
+		config:     cfg,
+		Remote:     NewRemoteClient(cfg),
+		StagedFile: NewStagedFileClient(cfg),
 	}, nil
 }
 
@@ -137,9 +142,10 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 	cfg := c.config
 	cfg.driver = &txDriver{tx: tx, drv: c.driver}
 	return &Tx{
-		ctx:    ctx,
-		config: cfg,
-		Remote: NewRemoteClient(cfg),
+		ctx:        ctx,
+		config:     cfg,
+		Remote:     NewRemoteClient(cfg),
+		StagedFile: NewStagedFileClient(cfg),
 	}, nil
 }
 
@@ -169,12 +175,14 @@ func (c *Client) Close() error {
 // In order to add hooks to a specific client, call: `client.Node.Use(...)`.
 func (c *Client) Use(hooks ...Hook) {
 	c.Remote.Use(hooks...)
+	c.StagedFile.Use(hooks...)
 }
 
 // Intercept adds the query interceptors to all the entity clients.
 // In order to add interceptors to a specific client, call: `client.Node.Intercept(...)`.
 func (c *Client) Intercept(interceptors ...Interceptor) {
 	c.Remote.Intercept(interceptors...)
+	c.StagedFile.Intercept(interceptors...)
 }
 
 // Mutate implements the ent.Mutator interface.
@@ -182,6 +190,8 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 	switch m := m.(type) {
 	case *RemoteMutation:
 		return c.Remote.mutate(ctx, m)
+	case *StagedFileMutation:
+		return c.StagedFile.mutate(ctx, m)
 	default:
 		return nil, fmt.Errorf("ent: unknown mutation type %T", m)
 	}
@@ -305,12 +315,130 @@ func (c *RemoteClient) mutate(ctx context.Context, m *RemoteMutation) (Value, er
 	}
 }
 
+// StagedFileClient is a client for the StagedFile schema.
+type StagedFileClient struct {
+	config
+}
+
+// NewStagedFileClient returns a client for the StagedFile from the given config.
+func NewStagedFileClient(c config) *StagedFileClient {
+	return &StagedFileClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `stagedfile.Hooks(f(g(h())))`.
+func (c *StagedFileClient) Use(hooks ...Hook) {
+	c.hooks.StagedFile = append(c.hooks.StagedFile, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `stagedfile.Intercept(f(g(h())))`.
+func (c *StagedFileClient) Intercept(interceptors ...Interceptor) {
+	c.inters.StagedFile = append(c.inters.StagedFile, interceptors...)
+}
+
+// Create returns a builder for creating a StagedFile entity.
+func (c *StagedFileClient) Create() *StagedFileCreate {
+	mutation := newStagedFileMutation(c.config, OpCreate)
+	return &StagedFileCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of StagedFile entities.
+func (c *StagedFileClient) CreateBulk(builders ...*StagedFileCreate) *StagedFileCreateBulk {
+	return &StagedFileCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for StagedFile.
+func (c *StagedFileClient) Update() *StagedFileUpdate {
+	mutation := newStagedFileMutation(c.config, OpUpdate)
+	return &StagedFileUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *StagedFileClient) UpdateOne(sf *StagedFile) *StagedFileUpdateOne {
+	mutation := newStagedFileMutation(c.config, OpUpdateOne, withStagedFile(sf))
+	return &StagedFileUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *StagedFileClient) UpdateOneID(id int) *StagedFileUpdateOne {
+	mutation := newStagedFileMutation(c.config, OpUpdateOne, withStagedFileID(id))
+	return &StagedFileUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for StagedFile.
+func (c *StagedFileClient) Delete() *StagedFileDelete {
+	mutation := newStagedFileMutation(c.config, OpDelete)
+	return &StagedFileDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *StagedFileClient) DeleteOne(sf *StagedFile) *StagedFileDeleteOne {
+	return c.DeleteOneID(sf.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *StagedFileClient) DeleteOneID(id int) *StagedFileDeleteOne {
+	builder := c.Delete().Where(stagedfile.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &StagedFileDeleteOne{builder}
+}
+
+// Query returns a query builder for StagedFile.
+func (c *StagedFileClient) Query() *StagedFileQuery {
+	return &StagedFileQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeStagedFile},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a StagedFile entity by its id.
+func (c *StagedFileClient) Get(ctx context.Context, id int) (*StagedFile, error) {
+	return c.Query().Where(stagedfile.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *StagedFileClient) GetX(ctx context.Context, id int) *StagedFile {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *StagedFileClient) Hooks() []Hook {
+	return c.hooks.StagedFile
+}
+
+// Interceptors returns the client interceptors.
+func (c *StagedFileClient) Interceptors() []Interceptor {
+	return c.inters.StagedFile
+}
+
+func (c *StagedFileClient) mutate(ctx context.Context, m *StagedFileMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&StagedFileCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&StagedFileUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&StagedFileUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&StagedFileDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown StagedFile mutation op: %q", m.Op())
+	}
+}
+
 // hooks and interceptors per client, for fast access.
 type (
 	hooks struct {
-		Remote []ent.Hook
+		Remote, StagedFile []ent.Hook
 	}
 	inters struct {
-		Remote []ent.Interceptor
+		Remote, StagedFile []ent.Interceptor
 	}
 )

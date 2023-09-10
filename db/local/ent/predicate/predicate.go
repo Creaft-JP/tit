@@ -8,3 +8,6 @@ import (
 
 // Remote is the predicate function for remote builders.
 type Remote func(*sql.Selector)
+
+// StagedFile is the predicate function for stagedfile builders.
+type StagedFile func(*sql.Selector)

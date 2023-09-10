@@ -20,9 +20,22 @@ var (
 		Columns:    RemotesColumns,
 		PrimaryKey: []*schema.Column{RemotesColumns[0]},
 	}
+	// StagedFilesColumns holds the columns for the "staged_files" table.
+	StagedFilesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "path", Type: field.TypeString, Unique: true},
+		{Name: "content", Type: field.TypeString},
+	}
+	// StagedFilesTable holds the schema information for the "staged_files" table.
+	StagedFilesTable = &schema.Table{
+		Name:       "staged_files",
+		Columns:    StagedFilesColumns,
+		PrimaryKey: []*schema.Column{StagedFilesColumns[0]},
+	}
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
 		RemotesTable,
+		StagedFilesTable,
 	}
 )
 

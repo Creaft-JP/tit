@@ -21,6 +21,18 @@ func (f RemoteFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, erro
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.RemoteMutation", m)
 }
 
+// The StagedFileFunc type is an adapter to allow the use of ordinary
+// function as StagedFile mutator.
+type StagedFileFunc func(context.Context, *ent.StagedFileMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f StagedFileFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.StagedFileMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.StagedFileMutation", m)
+}
+
 // Condition is a hook condition function.
 type Condition func(context.Context, ent.Mutation) bool
 

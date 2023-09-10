@@ -5,6 +5,7 @@ package ent
 import (
 	"github.com/Creaft-JP/tit/db/local/ent/remote"
 	"github.com/Creaft-JP/tit/db/local/ent/schema"
+	"github.com/Creaft-JP/tit/db/local/ent/stagedfile"
 )
 
 // The init function reads all schema descriptors with runtime code
@@ -21,4 +22,14 @@ func init() {
 	remoteDescURL := remoteFields[1].Descriptor()
 	// remote.URLValidator is a validator for the "url" field. It is called by the builders before save.
 	remote.URLValidator = remoteDescURL.Validators[0].(func(string) error)
+	stagedfileFields := schema.StagedFile{}.Fields()
+	_ = stagedfileFields
+	// stagedfileDescPath is the schema descriptor for path field.
+	stagedfileDescPath := stagedfileFields[0].Descriptor()
+	// stagedfile.PathValidator is a validator for the "path" field. It is called by the builders before save.
+	stagedfile.PathValidator = stagedfileDescPath.Validators[0].(func(string) error)
+	// stagedfileDescContent is the schema descriptor for content field.
+	stagedfileDescContent := stagedfileFields[1].Descriptor()
+	// stagedfile.ContentValidator is a validator for the "content" field. It is called by the builders before save.
+	stagedfile.ContentValidator = stagedfileDescContent.Validators[0].(func(string) error)
 }
