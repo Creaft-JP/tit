@@ -12,7 +12,7 @@ type StagedFile struct {
 
 // Fields of the StagedFile.
 func (StagedFile) Fields() []ent.Field {
-	return []ent.Field{field.String("path").NotEmpty().Unique(), field.String("content").NotEmpty()}
+	return []ent.Field{field.String("path").NotEmpty().Unique(), field.String("content")}
 }
 
 // Edges of the StagedFile.

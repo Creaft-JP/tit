@@ -14,10 +14,6 @@ import (
 func init() {
 	remoteFields := schema.Remote{}.Fields()
 	_ = remoteFields
-	// remoteDescName is the schema descriptor for name field.
-	remoteDescName := remoteFields[0].Descriptor()
-	// remote.NameValidator is a validator for the "name" field. It is called by the builders before save.
-	remote.NameValidator = remoteDescName.Validators[0].(func(string) error)
 	// remoteDescURL is the schema descriptor for url field.
 	remoteDescURL := remoteFields[1].Descriptor()
 	// remote.URLValidator is a validator for the "url" field. It is called by the builders before save.
@@ -28,8 +24,4 @@ func init() {
 	stagedfileDescPath := stagedfileFields[0].Descriptor()
 	// stagedfile.PathValidator is a validator for the "path" field. It is called by the builders before save.
 	stagedfile.PathValidator = stagedfileDescPath.Validators[0].(func(string) error)
-	// stagedfileDescContent is the schema descriptor for content field.
-	stagedfileDescContent := stagedfileFields[1].Descriptor()
-	// stagedfile.ContentValidator is a validator for the "content" field. It is called by the builders before save.
-	stagedfile.ContentValidator = stagedfileDescContent.Validators[0].(func(string) error)
 }

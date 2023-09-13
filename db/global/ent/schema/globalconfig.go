@@ -12,7 +12,7 @@ type GlobalConfig struct {
 
 // Fields of the GlobalConfig.
 func (GlobalConfig) Fields() []ent.Field {
-	return []ent.Field{field.String("key").NotEmpty().Unique(), field.String("value").NotEmpty()}
+	return []ent.Field{field.String("key").Unique(), field.String("value")}
 }
 
 // Edges of the GlobalConfig.

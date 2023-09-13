@@ -76,11 +76,6 @@ func (sfc *StagedFileCreate) check() error {
 	if _, ok := sfc.mutation.Content(); !ok {
 		return &ValidationError{Name: "content", err: errors.New(`ent: missing required field "StagedFile.content"`)}
 	}
-	if v, ok := sfc.mutation.Content(); ok {
-		if err := stagedfile.ContentValidator(v); err != nil {
-			return &ValidationError{Name: "content", err: fmt.Errorf(`ent: validator failed for field "StagedFile.content": %w`, err)}
-		}
-	}
 	return nil
 }
 

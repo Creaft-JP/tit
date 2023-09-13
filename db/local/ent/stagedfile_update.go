@@ -78,11 +78,6 @@ func (sfu *StagedFileUpdate) check() error {
 			return &ValidationError{Name: "path", err: fmt.Errorf(`ent: validator failed for field "StagedFile.path": %w`, err)}
 		}
 	}
-	if v, ok := sfu.mutation.Content(); ok {
-		if err := stagedfile.ContentValidator(v); err != nil {
-			return &ValidationError{Name: "content", err: fmt.Errorf(`ent: validator failed for field "StagedFile.content": %w`, err)}
-		}
-	}
 	return nil
 }
 
@@ -186,11 +181,6 @@ func (sfuo *StagedFileUpdateOne) check() error {
 	if v, ok := sfuo.mutation.Path(); ok {
 		if err := stagedfile.PathValidator(v); err != nil {
 			return &ValidationError{Name: "path", err: fmt.Errorf(`ent: validator failed for field "StagedFile.path": %w`, err)}
-		}
-	}
-	if v, ok := sfuo.mutation.Content(); ok {
-		if err := stagedfile.ContentValidator(v); err != nil {
-			return &ValidationError{Name: "content", err: fmt.Errorf(`ent: validator failed for field "StagedFile.content": %w`, err)}
 		}
 	}
 	return nil

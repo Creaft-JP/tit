@@ -73,11 +73,6 @@ func (ru *RemoteUpdate) ExecX(ctx context.Context) {
 
 // check runs all checks and user-defined validators on the builder.
 func (ru *RemoteUpdate) check() error {
-	if v, ok := ru.mutation.Name(); ok {
-		if err := remote.NameValidator(v); err != nil {
-			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "Remote.name": %w`, err)}
-		}
-	}
 	if v, ok := ru.mutation.URL(); ok {
 		if err := remote.URLValidator(v); err != nil {
 			return &ValidationError{Name: "url", err: fmt.Errorf(`ent: validator failed for field "Remote.url": %w`, err)}
@@ -183,11 +178,6 @@ func (ruo *RemoteUpdateOne) ExecX(ctx context.Context) {
 
 // check runs all checks and user-defined validators on the builder.
 func (ruo *RemoteUpdateOne) check() error {
-	if v, ok := ruo.mutation.Name(); ok {
-		if err := remote.NameValidator(v); err != nil {
-			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "Remote.name": %w`, err)}
-		}
-	}
 	if v, ok := ruo.mutation.URL(); ok {
 		if err := remote.URLValidator(v); err != nil {
 			return &ValidationError{Name: "url", err: fmt.Errorf(`ent: validator failed for field "Remote.url": %w`, err)}

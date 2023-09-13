@@ -39,8 +39,6 @@ func ValidColumn(column string) bool {
 var (
 	// PathValidator is a validator for the "path" field. It is called by the builders before save.
 	PathValidator func(string) error
-	// ContentValidator is a validator for the "content" field. It is called by the builders before save.
-	ContentValidator func(string) error
 )
 
 // OrderOption defines the ordering options for the StagedFile queries.

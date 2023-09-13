@@ -68,11 +68,6 @@ func (rc *RemoteCreate) check() error {
 	if _, ok := rc.mutation.Name(); !ok {
 		return &ValidationError{Name: "name", err: errors.New(`ent: missing required field "Remote.name"`)}
 	}
-	if v, ok := rc.mutation.Name(); ok {
-		if err := remote.NameValidator(v); err != nil {
-			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "Remote.name": %w`, err)}
-		}
-	}
 	if _, ok := rc.mutation.URL(); !ok {
 		return &ValidationError{Name: "url", err: errors.New(`ent: missing required field "Remote.url"`)}
 	}

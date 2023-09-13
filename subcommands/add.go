@@ -3,12 +3,14 @@ package subcommands
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"github.com/Creaft-JP/tit/db/local/ent"
 	"github.com/Creaft-JP/tit/db/local/ent/stagedfile"
 	e "github.com/Creaft-JP/tit/error"
 	"github.com/morikuni/failure"
 	"go.uber.org/multierr"
 	"os"
+	"path/filepath"
 )
 
 func Add(args []string, cl *ent.Client, ctx context.Context) (ret error) {
@@ -29,7 +31,23 @@ func Add(args []string, cl *ent.Client, ctx context.Context) (ret error) {
 		if err != nil {
 			return failure.Translate(err, e.File)
 		}
-		files = append(files, file{path: arg, content: string(content)})
+		wd, err := os.Getwd()
+		if err != nil {
+			return failure.Translate(err, e.File)
+		}
+		path, err := filepath.Abs(arg)
+		if err != nil {
+			return failure.Translate(err, e.File)
+		}
+		path, err = filepath.Rel(wd, path)
+		if err != nil {
+			return failure.Translate(err, e.File)
+		}
+		if path[:3] == fmt.Sprintf("..%c", filepath.Separator) {
+			return failure.New(e.Operation, failure.Message("can't add a file out of tit repository"))
+		}
+		path = filepath.ToSlash(path)
+		files = append(files, file{path: path, content: string(content)})
 	}
 	transaction, err := cl.BeginTx(ctx, &sql.TxOptions{Isolation: sql.LevelRepeatableRead})
 	if err != nil {

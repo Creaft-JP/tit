@@ -71,25 +71,7 @@ func (gcu *GlobalConfigUpdate) ExecX(ctx context.Context) {
 	}
 }
 
-// check runs all checks and user-defined validators on the builder.
-func (gcu *GlobalConfigUpdate) check() error {
-	if v, ok := gcu.mutation.Key(); ok {
-		if err := globalconfig.KeyValidator(v); err != nil {
-			return &ValidationError{Name: "key", err: fmt.Errorf(`ent: validator failed for field "GlobalConfig.key": %w`, err)}
-		}
-	}
-	if v, ok := gcu.mutation.Value(); ok {
-		if err := globalconfig.ValueValidator(v); err != nil {
-			return &ValidationError{Name: "value", err: fmt.Errorf(`ent: validator failed for field "GlobalConfig.value": %w`, err)}
-		}
-	}
-	return nil
-}
-
 func (gcu *GlobalConfigUpdate) sqlSave(ctx context.Context) (n int, err error) {
-	if err := gcu.check(); err != nil {
-		return n, err
-	}
 	_spec := sqlgraph.NewUpdateSpec(globalconfig.Table, globalconfig.Columns, sqlgraph.NewFieldSpec(globalconfig.FieldID, field.TypeInt))
 	if ps := gcu.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
@@ -181,25 +163,7 @@ func (gcuo *GlobalConfigUpdateOne) ExecX(ctx context.Context) {
 	}
 }
 
-// check runs all checks and user-defined validators on the builder.
-func (gcuo *GlobalConfigUpdateOne) check() error {
-	if v, ok := gcuo.mutation.Key(); ok {
-		if err := globalconfig.KeyValidator(v); err != nil {
-			return &ValidationError{Name: "key", err: fmt.Errorf(`ent: validator failed for field "GlobalConfig.key": %w`, err)}
-		}
-	}
-	if v, ok := gcuo.mutation.Value(); ok {
-		if err := globalconfig.ValueValidator(v); err != nil {
-			return &ValidationError{Name: "value", err: fmt.Errorf(`ent: validator failed for field "GlobalConfig.value": %w`, err)}
-		}
-	}
-	return nil
-}
-
 func (gcuo *GlobalConfigUpdateOne) sqlSave(ctx context.Context) (_node *GlobalConfig, err error) {
-	if err := gcuo.check(); err != nil {
-		return _node, err
-	}
 	_spec := sqlgraph.NewUpdateSpec(globalconfig.Table, globalconfig.Columns, sqlgraph.NewFieldSpec(globalconfig.FieldID, field.TypeInt))
 	id, ok := gcuo.mutation.ID()
 	if !ok {
