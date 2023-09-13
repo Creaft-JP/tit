@@ -1,7 +1,6 @@
 package remote
 
 import (
-	"context"
 	"github.com/Creaft-JP/tit/db/local/ent/remote"
 	e "github.com/Creaft-JP/tit/error"
 	"github.com/Creaft-JP/tit/test"
@@ -12,10 +11,8 @@ import (
 
 func TestFirstRemoteRegister(t *testing.T) {
 	// Arrange
-	client, _ := test.SetUp(t)
+	client, _, ctx := test.SetUp(t)
 	defer test.TearDown(t, client)
-
-	ctx := context.Background()
 
 	args := []string{"origin", "https://api.tithub.tech/creaft/repository"}
 
@@ -42,10 +39,8 @@ func TestFirstRemoteRegister(t *testing.T) {
 
 func TestLackOfArgumentsError(t *testing.T) {
 	// Arrange
-	client, _ := test.SetUp(t)
+	client, _, ctx := test.SetUp(t)
 	defer test.TearDown(t, client)
-
-	ctx := context.Background()
 
 	var args []string
 
@@ -61,10 +56,8 @@ func TestLackOfArgumentsError(t *testing.T) {
 
 func TestSecondRemoteRegister(t *testing.T) {
 	// Arrange
-	client, _ := test.SetUp(t)
+	client, _, ctx := test.SetUp(t)
 	defer test.TearDown(t, client)
-
-	ctx := context.Background()
 
 	if err := Add([]string{"origin", "https://api.tithub.tech/creaft/repo"}, client, ctx); err != nil {
 		t.Fatalf("failed to Add first: %s", err.Error())
@@ -99,10 +92,8 @@ func TestSecondRemoteRegister(t *testing.T) {
 
 func TestBlockReplace(t *testing.T) {
 	// Arrange
-	client, _ := test.SetUp(t)
+	client, _, ctx := test.SetUp(t)
 	defer test.TearDown(t, client)
-
-	ctx := context.Background()
 
 	if err := Add([]string{"origin", "https://api.tithub.tech/creaft/repo"}, client, ctx); err != nil {
 		t.Fatalf("failed to Add first: %s", err.Error())

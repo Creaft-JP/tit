@@ -19,8 +19,7 @@ func setUpRemoteTest(t *testing.T, client *ent.Client, ctx context.Context) {
 
 func TestNoArgs(t *testing.T) {
 	// Arrange
-	ctx := context.Background()
-	client, writer := test.SetUp(t)
+	client, writer, ctx := test.SetUp(t)
 	defer test.TearDown(t, client)
 
 	setUpRemoteTest(t, client, ctx)
@@ -41,8 +40,7 @@ func TestNoArgs(t *testing.T) {
 
 func testVerbose(t *testing.T, args []string) {
 	// Arrange
-	ctx := context.Background()
-	client, writer := test.SetUp(t)
+	client, writer, ctx := test.SetUp(t)
 	defer test.TearDown(t, client)
 
 	setUpRemoteTest(t, client, ctx)
