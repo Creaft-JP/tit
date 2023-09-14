@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"context"
 	"entgo.io/ent/dialect"
+	"fmt"
+	"github.com/Creaft-JP/tit/db/local"
 	"github.com/Creaft-JP/tit/db/local/ent"
 	"github.com/Creaft-JP/tit/db/local/ent/enttest"
 	"os"
@@ -12,21 +14,43 @@ import (
 )
 
 var prevd string
+var dsn = fmt.Sprintf("%s?_fk=1", local.FilePath)
 
 // SetUp returns ent.Client, io.Writer for console and context.Context
 func SetUp(t *testing.T) (*ent.Client, *bytes.Buffer, context.Context) {
-	currd, err := filepath.Abs(".")
-	prevd = currd
+	currd, err := os.Getwd()
 	if err != nil {
 		t.Fatal(err)
 	}
+	prevd = currd
 	if err := os.Mkdir("testdata", 0755); err != nil {
 		t.Fatal(err)
 	}
 	if err := os.Chdir("testdata"); err != nil {
 		t.Fatal(err)
 	}
-	return enttest.Open(t, dialect.SQLite, "./test_db?_fk=1"), bytes.NewBuffer([]byte{}), context.Background()
+	if err := os.Mkdir(".tit", 0755); err != nil {
+		t.Fatal(err)
+	}
+	return enttest.Open(t, dialect.SQLite, dsn), bytes.NewBuffer([]byte{}), context.Background()
+}
+func SetUpInner(t *testing.T) (*ent.Client, context.Context) {
+	currd, err := os.Getwd()
+	if err != nil {
+		t.Fatal(err)
+	}
+	prevd = currd
+	newd := filepath.Join("testdata", "repository")
+	if err := os.MkdirAll(newd, 0755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Chdir(newd); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Mkdir(".tit", 0755); err != nil {
+		t.Fatal(err)
+	}
+	return enttest.Open(t, dialect.SQLite, dsn), context.Background()
 }
 
 func TearDown(t *testing.T, client *ent.Client) {
