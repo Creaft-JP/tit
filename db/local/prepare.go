@@ -27,5 +27,8 @@ func Migrate(client *ent.Client, ctx context.Context) error {
 	if err := client.Schema.Create(ctx); err != nil {
 		return failure.Translate(err, e.Database)
 	}
+	if _, err := client.Page.Create().SetPath([]string{}).SetOrderWithinSiblings(1).SetTitle("").SetOverviewSentence("").Save(ctx); err != nil {
+		return failure.Translate(err, e.Database)
+	}
 	return nil
 }
