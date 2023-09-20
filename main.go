@@ -90,6 +90,8 @@ func route(args []string, gcl *gent.Client, ctx context.Context) (ret error) {
 		return failure.Wrap(loginRoute(args[1:], gcl, ctx))
 	case "add":
 		return failure.Wrap(addRoute(args[1:], lcl, ctx))
+	case "status":
+		return failure.Wrap(statusRoute(lcl, ctx))
 	default:
 		return failure.New(e.Operation, failure.Messagef("subcommand: \"%s\" does not exits", args[0]))
 	}
@@ -119,4 +121,8 @@ func loginRoute(args []string, cl *gent.Client, ctx context.Context) error {
 
 func addRoute(args []string, cl *lent.Client, ctx context.Context) error {
 	return failure.Wrap(subcommands.Add(args, cl, ctx))
+}
+
+func statusRoute(cl *lent.Client, ctx context.Context) error {
+	return failure.Wrap(subcommands.Status(os.Stdout, cl, ctx))
 }
