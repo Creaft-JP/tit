@@ -68,18 +68,8 @@ func (gcc *GlobalConfigCreate) check() error {
 	if _, ok := gcc.mutation.Key(); !ok {
 		return &ValidationError{Name: "key", err: errors.New(`ent: missing required field "GlobalConfig.key"`)}
 	}
-	if v, ok := gcc.mutation.Key(); ok {
-		if err := globalconfig.KeyValidator(v); err != nil {
-			return &ValidationError{Name: "key", err: fmt.Errorf(`ent: validator failed for field "GlobalConfig.key": %w`, err)}
-		}
-	}
 	if _, ok := gcc.mutation.Value(); !ok {
 		return &ValidationError{Name: "value", err: errors.New(`ent: missing required field "GlobalConfig.value"`)}
-	}
-	if v, ok := gcc.mutation.Value(); ok {
-		if err := globalconfig.ValueValidator(v); err != nil {
-			return &ValidationError{Name: "value", err: fmt.Errorf(`ent: validator failed for field "GlobalConfig.value": %w`, err)}
-		}
 	}
 	return nil
 }

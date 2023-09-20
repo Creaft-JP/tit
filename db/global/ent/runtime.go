@@ -3,7 +3,6 @@
 package ent
 
 import (
-	"github.com/Creaft-JP/tit/db/global/ent/globalconfig"
 	"github.com/Creaft-JP/tit/db/global/ent/logintoken"
 	"github.com/Creaft-JP/tit/db/global/ent/schema"
 )
@@ -12,16 +11,6 @@ import (
 // (default values, validators, hooks and policies) and stitches it
 // to their package variables.
 func init() {
-	globalconfigFields := schema.GlobalConfig{}.Fields()
-	_ = globalconfigFields
-	// globalconfigDescKey is the schema descriptor for key field.
-	globalconfigDescKey := globalconfigFields[0].Descriptor()
-	// globalconfig.KeyValidator is a validator for the "key" field. It is called by the builders before save.
-	globalconfig.KeyValidator = globalconfigDescKey.Validators[0].(func(string) error)
-	// globalconfigDescValue is the schema descriptor for value field.
-	globalconfigDescValue := globalconfigFields[1].Descriptor()
-	// globalconfig.ValueValidator is a validator for the "value" field. It is called by the builders before save.
-	globalconfig.ValueValidator = globalconfigDescValue.Validators[0].(func(string) error)
 	logintokenFields := schema.LoginToken{}.Fields()
 	_ = logintokenFields
 	// logintokenDescSignInUserSlug is the schema descriptor for sign_in_user_slug field.

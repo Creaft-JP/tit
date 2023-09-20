@@ -36,13 +36,6 @@ func ValidColumn(column string) bool {
 	return false
 }
 
-var (
-	// KeyValidator is a validator for the "key" field. It is called by the builders before save.
-	KeyValidator func(string) error
-	// ValueValidator is a validator for the "value" field. It is called by the builders before save.
-	ValueValidator func(string) error
-)
-
 // OrderOption defines the ordering options for the GlobalConfig queries.
 type OrderOption func(*sql.Selector)
 

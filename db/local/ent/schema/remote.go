@@ -12,7 +12,7 @@ type Remote struct {
 
 // Fields of the Remote.
 func (Remote) Fields() []ent.Field {
-	return []ent.Field{field.String("name").NotEmpty().Unique(), field.String("url").NotEmpty()}
+	return []ent.Field{field.String("name").Unique(), field.String("url").NotEmpty()}
 }
 
 // Edges of the Remote.

@@ -14,6 +14,8 @@ type Tx struct {
 	config
 	// Remote is the client for interacting with the Remote builders.
 	Remote *RemoteClient
+	// StagedFile is the client for interacting with the StagedFile builders.
+	StagedFile *StagedFileClient
 
 	// lazily loaded.
 	client     *Client
@@ -146,6 +148,7 @@ func (tx *Tx) Client() *Client {
 
 func (tx *Tx) init() {
 	tx.Remote = NewRemoteClient(tx.config)
+	tx.StagedFile = NewStagedFileClient(tx.config)
 }
 
 // txDriver wraps the given dialect.Tx with a nop dialect.Driver implementation.

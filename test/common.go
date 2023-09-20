@@ -2,23 +2,65 @@ package test
 
 import (
 	"bytes"
+	"context"
 	"entgo.io/ent/dialect"
+	"fmt"
+	"github.com/Creaft-JP/tit/db/local"
 	"github.com/Creaft-JP/tit/db/local/ent"
 	"github.com/Creaft-JP/tit/db/local/ent/enttest"
 	"os"
+	"path/filepath"
 	"testing"
 )
 
-// SetUp return ent.Client and io.Writer for console
-func SetUp(t *testing.T) (*ent.Client, *bytes.Buffer) {
-	return enttest.Open(t, dialect.SQLite, "./test_db?_fk=1"), bytes.NewBuffer([]byte{})
+var prevd string
+var dsn = fmt.Sprintf("%s?_fk=1", local.FilePath)
+
+// SetUp returns ent.Client, io.Writer for console and context.Context
+func SetUp(t *testing.T) (*ent.Client, *bytes.Buffer, context.Context) {
+	currd, err := os.Getwd()
+	if err != nil {
+		t.Fatal(err)
+	}
+	prevd = currd
+	if err := os.Mkdir("testdata", 0755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Chdir("testdata"); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Mkdir(".tit", 0755); err != nil {
+		t.Fatal(err)
+	}
+	return enttest.Open(t, dialect.SQLite, dsn), bytes.NewBuffer([]byte{}), context.Background()
+}
+func SetUpInner(t *testing.T) (*ent.Client, context.Context) {
+	currd, err := os.Getwd()
+	if err != nil {
+		t.Fatal(err)
+	}
+	prevd = currd
+	newd := filepath.Join("testdata", "repository")
+	if err := os.MkdirAll(newd, 0755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Chdir(newd); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Mkdir(".tit", 0755); err != nil {
+		t.Fatal(err)
+	}
+	return enttest.Open(t, dialect.SQLite, dsn), context.Background()
 }
 
 func TearDown(t *testing.T, client *ent.Client) {
 	if err := client.Close(); err != nil {
 		t.Fatalf("failed to close client: %s", err.Error())
 	}
-	if err := os.Remove("./test_db"); err != nil {
+	if err := os.Chdir(prevd); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.RemoveAll("testdata"); err != nil {
 		t.Fatalf("failed to remove: %s", err.Error())
 	}
 }
