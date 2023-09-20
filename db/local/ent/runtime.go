@@ -3,6 +3,7 @@
 package ent
 
 import (
+	"github.com/Creaft-JP/tit/db/local/ent/page"
 	"github.com/Creaft-JP/tit/db/local/ent/remote"
 	"github.com/Creaft-JP/tit/db/local/ent/schema"
 	"github.com/Creaft-JP/tit/db/local/ent/stagedfile"
@@ -12,6 +13,12 @@ import (
 // (default values, validators, hooks and policies) and stitches it
 // to their package variables.
 func init() {
+	pageFields := schema.Page{}.Fields()
+	_ = pageFields
+	// pageDescOrderWithinSiblings is the schema descriptor for order_within_siblings field.
+	pageDescOrderWithinSiblings := pageFields[1].Descriptor()
+	// page.OrderWithinSiblingsValidator is a validator for the "order_within_siblings" field. It is called by the builders before save.
+	page.OrderWithinSiblingsValidator = pageDescOrderWithinSiblings.Validators[0].(func(int) error)
 	remoteFields := schema.Remote{}.Fields()
 	_ = remoteFields
 	// remoteDescURL is the schema descriptor for url field.
