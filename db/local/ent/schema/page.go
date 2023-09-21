@@ -13,7 +13,7 @@ type Page struct {
 // Fields of the Page.
 func (Page) Fields() []ent.Field {
 	return []ent.Field{
-		field.Strings("path"),
+		field.String("pathname").NotEmpty(),
 		field.Int("order_within_siblings").Positive(),
 		field.String("title"),
 		field.String("overview_sentence"),
