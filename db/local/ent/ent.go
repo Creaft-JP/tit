@@ -12,6 +12,7 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
+	"github.com/Creaft-JP/tit/db/local/ent/page"
 	"github.com/Creaft-JP/tit/db/local/ent/remote"
 	"github.com/Creaft-JP/tit/db/local/ent/stagedfile"
 )
@@ -74,6 +75,7 @@ var (
 func checkColumn(table, column string) error {
 	initCheck.Do(func() {
 		columnCheck = sql.NewColumnCheck(map[string]func(string) bool{
+			page.Table:       page.ValidColumn,
 			remote.Table:     remote.ValidColumn,
 			stagedfile.Table: stagedfile.ValidColumn,
 		})

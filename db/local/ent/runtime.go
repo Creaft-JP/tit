@@ -3,6 +3,7 @@
 package ent
 
 import (
+	"github.com/Creaft-JP/tit/db/local/ent/page"
 	"github.com/Creaft-JP/tit/db/local/ent/remote"
 	"github.com/Creaft-JP/tit/db/local/ent/schema"
 	"github.com/Creaft-JP/tit/db/local/ent/stagedfile"
@@ -12,6 +13,16 @@ import (
 // (default values, validators, hooks and policies) and stitches it
 // to their package variables.
 func init() {
+	pageFields := schema.Page{}.Fields()
+	_ = pageFields
+	// pageDescPathname is the schema descriptor for pathname field.
+	pageDescPathname := pageFields[0].Descriptor()
+	// page.PathnameValidator is a validator for the "pathname" field. It is called by the builders before save.
+	page.PathnameValidator = pageDescPathname.Validators[0].(func(string) error)
+	// pageDescNumber is the schema descriptor for number field.
+	pageDescNumber := pageFields[1].Descriptor()
+	// page.NumberValidator is a validator for the "number" field. It is called by the builders before save.
+	page.NumberValidator = pageDescNumber.Validators[0].(func(int) error)
 	remoteFields := schema.Remote{}.Fields()
 	_ = remoteFields
 	// remoteDescURL is the schema descriptor for url field.
