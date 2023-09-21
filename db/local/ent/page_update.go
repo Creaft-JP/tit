@@ -9,7 +9,6 @@ import (
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
-	"entgo.io/ent/dialect/sql/sqljson"
 	"entgo.io/ent/schema/field"
 	"github.com/Creaft-JP/tit/db/local/ent/page"
 	"github.com/Creaft-JP/tit/db/local/ent/predicate"
@@ -28,15 +27,9 @@ func (pu *PageUpdate) Where(ps ...predicate.Page) *PageUpdate {
 	return pu
 }
 
-// SetPath sets the "path" field.
-func (pu *PageUpdate) SetPath(s []string) *PageUpdate {
-	pu.mutation.SetPath(s)
-	return pu
-}
-
-// AppendPath appends s to the "path" field.
-func (pu *PageUpdate) AppendPath(s []string) *PageUpdate {
-	pu.mutation.AppendPath(s)
+// SetPathname sets the "pathname" field.
+func (pu *PageUpdate) SetPathname(s string) *PageUpdate {
+	pu.mutation.SetPathname(s)
 	return pu
 }
 
@@ -99,6 +92,11 @@ func (pu *PageUpdate) ExecX(ctx context.Context) {
 
 // check runs all checks and user-defined validators on the builder.
 func (pu *PageUpdate) check() error {
+	if v, ok := pu.mutation.Pathname(); ok {
+		if err := page.PathnameValidator(v); err != nil {
+			return &ValidationError{Name: "pathname", err: fmt.Errorf(`ent: validator failed for field "Page.pathname": %w`, err)}
+		}
+	}
 	if v, ok := pu.mutation.OrderWithinSiblings(); ok {
 		if err := page.OrderWithinSiblingsValidator(v); err != nil {
 			return &ValidationError{Name: "order_within_siblings", err: fmt.Errorf(`ent: validator failed for field "Page.order_within_siblings": %w`, err)}
@@ -119,13 +117,8 @@ func (pu *PageUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			}
 		}
 	}
-	if value, ok := pu.mutation.Path(); ok {
-		_spec.SetField(page.FieldPath, field.TypeJSON, value)
-	}
-	if value, ok := pu.mutation.AppendedPath(); ok {
-		_spec.AddModifier(func(u *sql.UpdateBuilder) {
-			sqljson.Append(u, page.FieldPath, value)
-		})
+	if value, ok := pu.mutation.Pathname(); ok {
+		_spec.SetField(page.FieldPathname, field.TypeString, value)
 	}
 	if value, ok := pu.mutation.OrderWithinSiblings(); ok {
 		_spec.SetField(page.FieldOrderWithinSiblings, field.TypeInt, value)
@@ -159,15 +152,9 @@ type PageUpdateOne struct {
 	mutation *PageMutation
 }
 
-// SetPath sets the "path" field.
-func (puo *PageUpdateOne) SetPath(s []string) *PageUpdateOne {
-	puo.mutation.SetPath(s)
-	return puo
-}
-
-// AppendPath appends s to the "path" field.
-func (puo *PageUpdateOne) AppendPath(s []string) *PageUpdateOne {
-	puo.mutation.AppendPath(s)
+// SetPathname sets the "pathname" field.
+func (puo *PageUpdateOne) SetPathname(s string) *PageUpdateOne {
+	puo.mutation.SetPathname(s)
 	return puo
 }
 
@@ -243,6 +230,11 @@ func (puo *PageUpdateOne) ExecX(ctx context.Context) {
 
 // check runs all checks and user-defined validators on the builder.
 func (puo *PageUpdateOne) check() error {
+	if v, ok := puo.mutation.Pathname(); ok {
+		if err := page.PathnameValidator(v); err != nil {
+			return &ValidationError{Name: "pathname", err: fmt.Errorf(`ent: validator failed for field "Page.pathname": %w`, err)}
+		}
+	}
 	if v, ok := puo.mutation.OrderWithinSiblings(); ok {
 		if err := page.OrderWithinSiblingsValidator(v); err != nil {
 			return &ValidationError{Name: "order_within_siblings", err: fmt.Errorf(`ent: validator failed for field "Page.order_within_siblings": %w`, err)}
@@ -280,13 +272,8 @@ func (puo *PageUpdateOne) sqlSave(ctx context.Context) (_node *Page, err error) 
 			}
 		}
 	}
-	if value, ok := puo.mutation.Path(); ok {
-		_spec.SetField(page.FieldPath, field.TypeJSON, value)
-	}
-	if value, ok := puo.mutation.AppendedPath(); ok {
-		_spec.AddModifier(func(u *sql.UpdateBuilder) {
-			sqljson.Append(u, page.FieldPath, value)
-		})
+	if value, ok := puo.mutation.Pathname(); ok {
+		_spec.SetField(page.FieldPathname, field.TypeString, value)
 	}
 	if value, ok := puo.mutation.OrderWithinSiblings(); ok {
 		_spec.SetField(page.FieldOrderWithinSiblings, field.TypeInt, value)

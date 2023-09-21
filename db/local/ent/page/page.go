@@ -11,8 +11,8 @@ const (
 	Label = "page"
 	// FieldID holds the string denoting the id field in the database.
 	FieldID = "id"
-	// FieldPath holds the string denoting the path field in the database.
-	FieldPath = "path"
+	// FieldPathname holds the string denoting the pathname field in the database.
+	FieldPathname = "pathname"
 	// FieldOrderWithinSiblings holds the string denoting the order_within_siblings field in the database.
 	FieldOrderWithinSiblings = "order_within_siblings"
 	// FieldTitle holds the string denoting the title field in the database.
@@ -26,7 +26,7 @@ const (
 // Columns holds all SQL columns for page fields.
 var Columns = []string{
 	FieldID,
-	FieldPath,
+	FieldPathname,
 	FieldOrderWithinSiblings,
 	FieldTitle,
 	FieldOverviewSentence,
@@ -43,6 +43,8 @@ func ValidColumn(column string) bool {
 }
 
 var (
+	// PathnameValidator is a validator for the "pathname" field. It is called by the builders before save.
+	PathnameValidator func(string) error
 	// OrderWithinSiblingsValidator is a validator for the "order_within_siblings" field. It is called by the builders before save.
 	OrderWithinSiblingsValidator func(int) error
 )
@@ -53,6 +55,11 @@ type OrderOption func(*sql.Selector)
 // ByID orders the results by the id field.
 func ByID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldID, opts...).ToFunc()
+}
+
+// ByPathname orders the results by the pathname field.
+func ByPathname(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldPathname, opts...).ToFunc()
 }
 
 // ByOrderWithinSiblings orders the results by the order_within_siblings field.

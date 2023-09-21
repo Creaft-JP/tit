@@ -11,7 +11,7 @@ var (
 	// PagesColumns holds the columns for the "pages" table.
 	PagesColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
-		{Name: "path", Type: field.TypeJSON},
+		{Name: "pathname", Type: field.TypeString},
 		{Name: "order_within_siblings", Type: field.TypeInt},
 		{Name: "title", Type: field.TypeString},
 		{Name: "overview_sentence", Type: field.TypeString},

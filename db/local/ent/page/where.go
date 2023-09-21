@@ -52,6 +52,11 @@ func IDLTE(id int) predicate.Page {
 	return predicate.Page(sql.FieldLTE(FieldID, id))
 }
 
+// Pathname applies equality check predicate on the "pathname" field. It's identical to PathnameEQ.
+func Pathname(v string) predicate.Page {
+	return predicate.Page(sql.FieldEQ(FieldPathname, v))
+}
+
 // OrderWithinSiblings applies equality check predicate on the "order_within_siblings" field. It's identical to OrderWithinSiblingsEQ.
 func OrderWithinSiblings(v int) predicate.Page {
 	return predicate.Page(sql.FieldEQ(FieldOrderWithinSiblings, v))
@@ -65,6 +70,71 @@ func Title(v string) predicate.Page {
 // OverviewSentence applies equality check predicate on the "overview_sentence" field. It's identical to OverviewSentenceEQ.
 func OverviewSentence(v string) predicate.Page {
 	return predicate.Page(sql.FieldEQ(FieldOverviewSentence, v))
+}
+
+// PathnameEQ applies the EQ predicate on the "pathname" field.
+func PathnameEQ(v string) predicate.Page {
+	return predicate.Page(sql.FieldEQ(FieldPathname, v))
+}
+
+// PathnameNEQ applies the NEQ predicate on the "pathname" field.
+func PathnameNEQ(v string) predicate.Page {
+	return predicate.Page(sql.FieldNEQ(FieldPathname, v))
+}
+
+// PathnameIn applies the In predicate on the "pathname" field.
+func PathnameIn(vs ...string) predicate.Page {
+	return predicate.Page(sql.FieldIn(FieldPathname, vs...))
+}
+
+// PathnameNotIn applies the NotIn predicate on the "pathname" field.
+func PathnameNotIn(vs ...string) predicate.Page {
+	return predicate.Page(sql.FieldNotIn(FieldPathname, vs...))
+}
+
+// PathnameGT applies the GT predicate on the "pathname" field.
+func PathnameGT(v string) predicate.Page {
+	return predicate.Page(sql.FieldGT(FieldPathname, v))
+}
+
+// PathnameGTE applies the GTE predicate on the "pathname" field.
+func PathnameGTE(v string) predicate.Page {
+	return predicate.Page(sql.FieldGTE(FieldPathname, v))
+}
+
+// PathnameLT applies the LT predicate on the "pathname" field.
+func PathnameLT(v string) predicate.Page {
+	return predicate.Page(sql.FieldLT(FieldPathname, v))
+}
+
+// PathnameLTE applies the LTE predicate on the "pathname" field.
+func PathnameLTE(v string) predicate.Page {
+	return predicate.Page(sql.FieldLTE(FieldPathname, v))
+}
+
+// PathnameContains applies the Contains predicate on the "pathname" field.
+func PathnameContains(v string) predicate.Page {
+	return predicate.Page(sql.FieldContains(FieldPathname, v))
+}
+
+// PathnameHasPrefix applies the HasPrefix predicate on the "pathname" field.
+func PathnameHasPrefix(v string) predicate.Page {
+	return predicate.Page(sql.FieldHasPrefix(FieldPathname, v))
+}
+
+// PathnameHasSuffix applies the HasSuffix predicate on the "pathname" field.
+func PathnameHasSuffix(v string) predicate.Page {
+	return predicate.Page(sql.FieldHasSuffix(FieldPathname, v))
+}
+
+// PathnameEqualFold applies the EqualFold predicate on the "pathname" field.
+func PathnameEqualFold(v string) predicate.Page {
+	return predicate.Page(sql.FieldEqualFold(FieldPathname, v))
+}
+
+// PathnameContainsFold applies the ContainsFold predicate on the "pathname" field.
+func PathnameContainsFold(v string) predicate.Page {
+	return predicate.Page(sql.FieldContainsFold(FieldPathname, v))
 }
 
 // OrderWithinSiblingsEQ applies the EQ predicate on the "order_within_siblings" field.

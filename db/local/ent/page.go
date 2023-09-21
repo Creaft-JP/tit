@@ -3,7 +3,6 @@
 package ent
 
 import (
-	"encoding/json"
 	"fmt"
 	"strings"
 
@@ -17,8 +16,8 @@ type Page struct {
 	config `json:"-"`
 	// ID of the ent.
 	ID int `json:"id,omitempty"`
-	// Path holds the value of the "path" field.
-	Path []string `json:"path,omitempty"`
+	// Pathname holds the value of the "pathname" field.
+	Pathname string `json:"pathname,omitempty"`
 	// OrderWithinSiblings holds the value of the "order_within_siblings" field.
 	OrderWithinSiblings int `json:"order_within_siblings,omitempty"`
 	// Title holds the value of the "title" field.
@@ -33,11 +32,9 @@ func (*Page) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case page.FieldPath:
-			values[i] = new([]byte)
 		case page.FieldID, page.FieldOrderWithinSiblings:
 			values[i] = new(sql.NullInt64)
-		case page.FieldTitle, page.FieldOverviewSentence:
+		case page.FieldPathname, page.FieldTitle, page.FieldOverviewSentence:
 			values[i] = new(sql.NullString)
 		default:
 			values[i] = new(sql.UnknownType)
@@ -60,13 +57,11 @@ func (pa *Page) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field id", value)
 			}
 			pa.ID = int(value.Int64)
-		case page.FieldPath:
-			if value, ok := values[i].(*[]byte); !ok {
-				return fmt.Errorf("unexpected type %T for field path", values[i])
-			} else if value != nil && len(*value) > 0 {
-				if err := json.Unmarshal(*value, &pa.Path); err != nil {
-					return fmt.Errorf("unmarshal field path: %w", err)
-				}
+		case page.FieldPathname:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field pathname", values[i])
+			} else if value.Valid {
+				pa.Pathname = value.String
 			}
 		case page.FieldOrderWithinSiblings:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
@@ -122,8 +117,8 @@ func (pa *Page) String() string {
 	var builder strings.Builder
 	builder.WriteString("Page(")
 	builder.WriteString(fmt.Sprintf("id=%v, ", pa.ID))
-	builder.WriteString("path=")
-	builder.WriteString(fmt.Sprintf("%v", pa.Path))
+	builder.WriteString("pathname=")
+	builder.WriteString(pa.Pathname)
 	builder.WriteString(", ")
 	builder.WriteString("order_within_siblings=")
 	builder.WriteString(fmt.Sprintf("%v", pa.OrderWithinSiblings))

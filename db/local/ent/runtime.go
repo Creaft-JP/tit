@@ -15,6 +15,10 @@ import (
 func init() {
 	pageFields := schema.Page{}.Fields()
 	_ = pageFields
+	// pageDescPathname is the schema descriptor for pathname field.
+	pageDescPathname := pageFields[0].Descriptor()
+	// page.PathnameValidator is a validator for the "pathname" field. It is called by the builders before save.
+	page.PathnameValidator = pageDescPathname.Validators[0].(func(string) error)
 	// pageDescOrderWithinSiblings is the schema descriptor for order_within_siblings field.
 	pageDescOrderWithinSiblings := pageFields[1].Descriptor()
 	// page.OrderWithinSiblingsValidator is a validator for the "order_within_siblings" field. It is called by the builders before save.

@@ -36,8 +36,7 @@ type PageMutation struct {
 	op                       Op
 	typ                      string
 	id                       *int
-	_path                    *[]string
-	append_path              []string
+	pathname                 *string
 	order_within_siblings    *int
 	addorder_within_siblings *int
 	title                    *string
@@ -146,55 +145,40 @@ func (m *PageMutation) IDs(ctx context.Context) ([]int, error) {
 	}
 }
 
-// SetPath sets the "path" field.
-func (m *PageMutation) SetPath(s []string) {
-	m._path = &s
-	m.append_path = nil
+// SetPathname sets the "pathname" field.
+func (m *PageMutation) SetPathname(s string) {
+	m.pathname = &s
 }
 
-// Path returns the value of the "path" field in the mutation.
-func (m *PageMutation) Path() (r []string, exists bool) {
-	v := m._path
+// Pathname returns the value of the "pathname" field in the mutation.
+func (m *PageMutation) Pathname() (r string, exists bool) {
+	v := m.pathname
 	if v == nil {
 		return
 	}
 	return *v, true
 }
 
-// OldPath returns the old "path" field's value of the Page entity.
+// OldPathname returns the old "pathname" field's value of the Page entity.
 // If the Page object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *PageMutation) OldPath(ctx context.Context) (v []string, err error) {
+func (m *PageMutation) OldPathname(ctx context.Context) (v string, err error) {
 	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldPath is only allowed on UpdateOne operations")
+		return v, errors.New("OldPathname is only allowed on UpdateOne operations")
 	}
 	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldPath requires an ID field in the mutation")
+		return v, errors.New("OldPathname requires an ID field in the mutation")
 	}
 	oldValue, err := m.oldValue(ctx)
 	if err != nil {
-		return v, fmt.Errorf("querying old value for OldPath: %w", err)
+		return v, fmt.Errorf("querying old value for OldPathname: %w", err)
 	}
-	return oldValue.Path, nil
+	return oldValue.Pathname, nil
 }
 
-// AppendPath adds s to the "path" field.
-func (m *PageMutation) AppendPath(s []string) {
-	m.append_path = append(m.append_path, s...)
-}
-
-// AppendedPath returns the list of values that were appended to the "path" field in this mutation.
-func (m *PageMutation) AppendedPath() ([]string, bool) {
-	if len(m.append_path) == 0 {
-		return nil, false
-	}
-	return m.append_path, true
-}
-
-// ResetPath resets all changes to the "path" field.
-func (m *PageMutation) ResetPath() {
-	m._path = nil
-	m.append_path = nil
+// ResetPathname resets all changes to the "pathname" field.
+func (m *PageMutation) ResetPathname() {
+	m.pathname = nil
 }
 
 // SetOrderWithinSiblings sets the "order_within_siblings" field.
@@ -360,8 +344,8 @@ func (m *PageMutation) Type() string {
 // AddedFields().
 func (m *PageMutation) Fields() []string {
 	fields := make([]string, 0, 4)
-	if m._path != nil {
-		fields = append(fields, page.FieldPath)
+	if m.pathname != nil {
+		fields = append(fields, page.FieldPathname)
 	}
 	if m.order_within_siblings != nil {
 		fields = append(fields, page.FieldOrderWithinSiblings)
@@ -380,8 +364,8 @@ func (m *PageMutation) Fields() []string {
 // schema.
 func (m *PageMutation) Field(name string) (ent.Value, bool) {
 	switch name {
-	case page.FieldPath:
-		return m.Path()
+	case page.FieldPathname:
+		return m.Pathname()
 	case page.FieldOrderWithinSiblings:
 		return m.OrderWithinSiblings()
 	case page.FieldTitle:
@@ -397,8 +381,8 @@ func (m *PageMutation) Field(name string) (ent.Value, bool) {
 // database failed.
 func (m *PageMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
 	switch name {
-	case page.FieldPath:
-		return m.OldPath(ctx)
+	case page.FieldPathname:
+		return m.OldPathname(ctx)
 	case page.FieldOrderWithinSiblings:
 		return m.OldOrderWithinSiblings(ctx)
 	case page.FieldTitle:
@@ -414,12 +398,12 @@ func (m *PageMutation) OldField(ctx context.Context, name string) (ent.Value, er
 // type.
 func (m *PageMutation) SetField(name string, value ent.Value) error {
 	switch name {
-	case page.FieldPath:
-		v, ok := value.([]string)
+	case page.FieldPathname:
+		v, ok := value.(string)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
-		m.SetPath(v)
+		m.SetPathname(v)
 		return nil
 	case page.FieldOrderWithinSiblings:
 		v, ok := value.(int)
@@ -506,8 +490,8 @@ func (m *PageMutation) ClearField(name string) error {
 // It returns an error if the field is not defined in the schema.
 func (m *PageMutation) ResetField(name string) error {
 	switch name {
-	case page.FieldPath:
-		m.ResetPath()
+	case page.FieldPathname:
+		m.ResetPathname()
 		return nil
 	case page.FieldOrderWithinSiblings:
 		m.ResetOrderWithinSiblings()

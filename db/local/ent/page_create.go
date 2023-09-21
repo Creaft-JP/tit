@@ -19,9 +19,9 @@ type PageCreate struct {
 	hooks    []Hook
 }
 
-// SetPath sets the "path" field.
-func (pc *PageCreate) SetPath(s []string) *PageCreate {
-	pc.mutation.SetPath(s)
+// SetPathname sets the "pathname" field.
+func (pc *PageCreate) SetPathname(s string) *PageCreate {
+	pc.mutation.SetPathname(s)
 	return pc
 }
 
@@ -77,8 +77,13 @@ func (pc *PageCreate) ExecX(ctx context.Context) {
 
 // check runs all checks and user-defined validators on the builder.
 func (pc *PageCreate) check() error {
-	if _, ok := pc.mutation.Path(); !ok {
-		return &ValidationError{Name: "path", err: errors.New(`ent: missing required field "Page.path"`)}
+	if _, ok := pc.mutation.Pathname(); !ok {
+		return &ValidationError{Name: "pathname", err: errors.New(`ent: missing required field "Page.pathname"`)}
+	}
+	if v, ok := pc.mutation.Pathname(); ok {
+		if err := page.PathnameValidator(v); err != nil {
+			return &ValidationError{Name: "pathname", err: fmt.Errorf(`ent: validator failed for field "Page.pathname": %w`, err)}
+		}
 	}
 	if _, ok := pc.mutation.OrderWithinSiblings(); !ok {
 		return &ValidationError{Name: "order_within_siblings", err: errors.New(`ent: missing required field "Page.order_within_siblings"`)}
@@ -120,9 +125,9 @@ func (pc *PageCreate) createSpec() (*Page, *sqlgraph.CreateSpec) {
 		_node = &Page{config: pc.config}
 		_spec = sqlgraph.NewCreateSpec(page.Table, sqlgraph.NewFieldSpec(page.FieldID, field.TypeInt))
 	)
-	if value, ok := pc.mutation.Path(); ok {
-		_spec.SetField(page.FieldPath, field.TypeJSON, value)
-		_node.Path = value
+	if value, ok := pc.mutation.Pathname(); ok {
+		_spec.SetField(page.FieldPathname, field.TypeString, value)
+		_node.Pathname = value
 	}
 	if value, ok := pc.mutation.OrderWithinSiblings(); ok {
 		_spec.SetField(page.FieldOrderWithinSiblings, field.TypeInt, value)
