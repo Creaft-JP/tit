@@ -14,7 +14,7 @@ type Page struct {
 func (Page) Fields() []ent.Field {
 	return []ent.Field{
 		field.String("pathname").NotEmpty(),
-		field.Int("order_within_siblings").Positive(),
+		field.Int("number").Positive(),
 		field.String("title"),
 		field.String("overview_sentence"),
 	}
