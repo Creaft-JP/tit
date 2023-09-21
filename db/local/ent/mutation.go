@@ -33,18 +33,18 @@ const (
 // PageMutation represents an operation that mutates the Page nodes in the graph.
 type PageMutation struct {
 	config
-	op                       Op
-	typ                      string
-	id                       *int
-	pathname                 *string
-	order_within_siblings    *int
-	addorder_within_siblings *int
-	title                    *string
-	overview_sentence        *string
-	clearedFields            map[string]struct{}
-	done                     bool
-	oldValue                 func(context.Context) (*Page, error)
-	predicates               []predicate.Page
+	op                Op
+	typ               string
+	id                *int
+	pathname          *string
+	number            *int
+	addnumber         *int
+	title             *string
+	overview_sentence *string
+	clearedFields     map[string]struct{}
+	done              bool
+	oldValue          func(context.Context) (*Page, error)
+	predicates        []predicate.Page
 }
 
 var _ ent.Mutation = (*PageMutation)(nil)
@@ -181,60 +181,60 @@ func (m *PageMutation) ResetPathname() {
 	m.pathname = nil
 }
 
-// SetOrderWithinSiblings sets the "order_within_siblings" field.
-func (m *PageMutation) SetOrderWithinSiblings(i int) {
-	m.order_within_siblings = &i
-	m.addorder_within_siblings = nil
+// SetNumber sets the "number" field.
+func (m *PageMutation) SetNumber(i int) {
+	m.number = &i
+	m.addnumber = nil
 }
 
-// OrderWithinSiblings returns the value of the "order_within_siblings" field in the mutation.
-func (m *PageMutation) OrderWithinSiblings() (r int, exists bool) {
-	v := m.order_within_siblings
+// Number returns the value of the "number" field in the mutation.
+func (m *PageMutation) Number() (r int, exists bool) {
+	v := m.number
 	if v == nil {
 		return
 	}
 	return *v, true
 }
 
-// OldOrderWithinSiblings returns the old "order_within_siblings" field's value of the Page entity.
+// OldNumber returns the old "number" field's value of the Page entity.
 // If the Page object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *PageMutation) OldOrderWithinSiblings(ctx context.Context) (v int, err error) {
+func (m *PageMutation) OldNumber(ctx context.Context) (v int, err error) {
 	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldOrderWithinSiblings is only allowed on UpdateOne operations")
+		return v, errors.New("OldNumber is only allowed on UpdateOne operations")
 	}
 	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldOrderWithinSiblings requires an ID field in the mutation")
+		return v, errors.New("OldNumber requires an ID field in the mutation")
 	}
 	oldValue, err := m.oldValue(ctx)
 	if err != nil {
-		return v, fmt.Errorf("querying old value for OldOrderWithinSiblings: %w", err)
+		return v, fmt.Errorf("querying old value for OldNumber: %w", err)
 	}
-	return oldValue.OrderWithinSiblings, nil
+	return oldValue.Number, nil
 }
 
-// AddOrderWithinSiblings adds i to the "order_within_siblings" field.
-func (m *PageMutation) AddOrderWithinSiblings(i int) {
-	if m.addorder_within_siblings != nil {
-		*m.addorder_within_siblings += i
+// AddNumber adds i to the "number" field.
+func (m *PageMutation) AddNumber(i int) {
+	if m.addnumber != nil {
+		*m.addnumber += i
 	} else {
-		m.addorder_within_siblings = &i
+		m.addnumber = &i
 	}
 }
 
-// AddedOrderWithinSiblings returns the value that was added to the "order_within_siblings" field in this mutation.
-func (m *PageMutation) AddedOrderWithinSiblings() (r int, exists bool) {
-	v := m.addorder_within_siblings
+// AddedNumber returns the value that was added to the "number" field in this mutation.
+func (m *PageMutation) AddedNumber() (r int, exists bool) {
+	v := m.addnumber
 	if v == nil {
 		return
 	}
 	return *v, true
 }
 
-// ResetOrderWithinSiblings resets all changes to the "order_within_siblings" field.
-func (m *PageMutation) ResetOrderWithinSiblings() {
-	m.order_within_siblings = nil
-	m.addorder_within_siblings = nil
+// ResetNumber resets all changes to the "number" field.
+func (m *PageMutation) ResetNumber() {
+	m.number = nil
+	m.addnumber = nil
 }
 
 // SetTitle sets the "title" field.
@@ -347,8 +347,8 @@ func (m *PageMutation) Fields() []string {
 	if m.pathname != nil {
 		fields = append(fields, page.FieldPathname)
 	}
-	if m.order_within_siblings != nil {
-		fields = append(fields, page.FieldOrderWithinSiblings)
+	if m.number != nil {
+		fields = append(fields, page.FieldNumber)
 	}
 	if m.title != nil {
 		fields = append(fields, page.FieldTitle)
@@ -366,8 +366,8 @@ func (m *PageMutation) Field(name string) (ent.Value, bool) {
 	switch name {
 	case page.FieldPathname:
 		return m.Pathname()
-	case page.FieldOrderWithinSiblings:
-		return m.OrderWithinSiblings()
+	case page.FieldNumber:
+		return m.Number()
 	case page.FieldTitle:
 		return m.Title()
 	case page.FieldOverviewSentence:
@@ -383,8 +383,8 @@ func (m *PageMutation) OldField(ctx context.Context, name string) (ent.Value, er
 	switch name {
 	case page.FieldPathname:
 		return m.OldPathname(ctx)
-	case page.FieldOrderWithinSiblings:
-		return m.OldOrderWithinSiblings(ctx)
+	case page.FieldNumber:
+		return m.OldNumber(ctx)
 	case page.FieldTitle:
 		return m.OldTitle(ctx)
 	case page.FieldOverviewSentence:
@@ -405,12 +405,12 @@ func (m *PageMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetPathname(v)
 		return nil
-	case page.FieldOrderWithinSiblings:
+	case page.FieldNumber:
 		v, ok := value.(int)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
-		m.SetOrderWithinSiblings(v)
+		m.SetNumber(v)
 		return nil
 	case page.FieldTitle:
 		v, ok := value.(string)
@@ -434,8 +434,8 @@ func (m *PageMutation) SetField(name string, value ent.Value) error {
 // this mutation.
 func (m *PageMutation) AddedFields() []string {
 	var fields []string
-	if m.addorder_within_siblings != nil {
-		fields = append(fields, page.FieldOrderWithinSiblings)
+	if m.addnumber != nil {
+		fields = append(fields, page.FieldNumber)
 	}
 	return fields
 }
@@ -445,8 +445,8 @@ func (m *PageMutation) AddedFields() []string {
 // was not set, or was not defined in the schema.
 func (m *PageMutation) AddedField(name string) (ent.Value, bool) {
 	switch name {
-	case page.FieldOrderWithinSiblings:
-		return m.AddedOrderWithinSiblings()
+	case page.FieldNumber:
+		return m.AddedNumber()
 	}
 	return nil, false
 }
@@ -456,12 +456,12 @@ func (m *PageMutation) AddedField(name string) (ent.Value, bool) {
 // type.
 func (m *PageMutation) AddField(name string, value ent.Value) error {
 	switch name {
-	case page.FieldOrderWithinSiblings:
+	case page.FieldNumber:
 		v, ok := value.(int)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
-		m.AddOrderWithinSiblings(v)
+		m.AddNumber(v)
 		return nil
 	}
 	return fmt.Errorf("unknown Page numeric field %s", name)
@@ -493,8 +493,8 @@ func (m *PageMutation) ResetField(name string) error {
 	case page.FieldPathname:
 		m.ResetPathname()
 		return nil
-	case page.FieldOrderWithinSiblings:
-		m.ResetOrderWithinSiblings()
+	case page.FieldNumber:
+		m.ResetNumber()
 		return nil
 	case page.FieldTitle:
 		m.ResetTitle()

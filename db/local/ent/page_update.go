@@ -33,16 +33,16 @@ func (pu *PageUpdate) SetPathname(s string) *PageUpdate {
 	return pu
 }
 
-// SetOrderWithinSiblings sets the "order_within_siblings" field.
-func (pu *PageUpdate) SetOrderWithinSiblings(i int) *PageUpdate {
-	pu.mutation.ResetOrderWithinSiblings()
-	pu.mutation.SetOrderWithinSiblings(i)
+// SetNumber sets the "number" field.
+func (pu *PageUpdate) SetNumber(i int) *PageUpdate {
+	pu.mutation.ResetNumber()
+	pu.mutation.SetNumber(i)
 	return pu
 }
 
-// AddOrderWithinSiblings adds i to the "order_within_siblings" field.
-func (pu *PageUpdate) AddOrderWithinSiblings(i int) *PageUpdate {
-	pu.mutation.AddOrderWithinSiblings(i)
+// AddNumber adds i to the "number" field.
+func (pu *PageUpdate) AddNumber(i int) *PageUpdate {
+	pu.mutation.AddNumber(i)
 	return pu
 }
 
@@ -97,9 +97,9 @@ func (pu *PageUpdate) check() error {
 			return &ValidationError{Name: "pathname", err: fmt.Errorf(`ent: validator failed for field "Page.pathname": %w`, err)}
 		}
 	}
-	if v, ok := pu.mutation.OrderWithinSiblings(); ok {
-		if err := page.OrderWithinSiblingsValidator(v); err != nil {
-			return &ValidationError{Name: "order_within_siblings", err: fmt.Errorf(`ent: validator failed for field "Page.order_within_siblings": %w`, err)}
+	if v, ok := pu.mutation.Number(); ok {
+		if err := page.NumberValidator(v); err != nil {
+			return &ValidationError{Name: "number", err: fmt.Errorf(`ent: validator failed for field "Page.number": %w`, err)}
 		}
 	}
 	return nil
@@ -120,11 +120,11 @@ func (pu *PageUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if value, ok := pu.mutation.Pathname(); ok {
 		_spec.SetField(page.FieldPathname, field.TypeString, value)
 	}
-	if value, ok := pu.mutation.OrderWithinSiblings(); ok {
-		_spec.SetField(page.FieldOrderWithinSiblings, field.TypeInt, value)
+	if value, ok := pu.mutation.Number(); ok {
+		_spec.SetField(page.FieldNumber, field.TypeInt, value)
 	}
-	if value, ok := pu.mutation.AddedOrderWithinSiblings(); ok {
-		_spec.AddField(page.FieldOrderWithinSiblings, field.TypeInt, value)
+	if value, ok := pu.mutation.AddedNumber(); ok {
+		_spec.AddField(page.FieldNumber, field.TypeInt, value)
 	}
 	if value, ok := pu.mutation.Title(); ok {
 		_spec.SetField(page.FieldTitle, field.TypeString, value)
@@ -158,16 +158,16 @@ func (puo *PageUpdateOne) SetPathname(s string) *PageUpdateOne {
 	return puo
 }
 
-// SetOrderWithinSiblings sets the "order_within_siblings" field.
-func (puo *PageUpdateOne) SetOrderWithinSiblings(i int) *PageUpdateOne {
-	puo.mutation.ResetOrderWithinSiblings()
-	puo.mutation.SetOrderWithinSiblings(i)
+// SetNumber sets the "number" field.
+func (puo *PageUpdateOne) SetNumber(i int) *PageUpdateOne {
+	puo.mutation.ResetNumber()
+	puo.mutation.SetNumber(i)
 	return puo
 }
 
-// AddOrderWithinSiblings adds i to the "order_within_siblings" field.
-func (puo *PageUpdateOne) AddOrderWithinSiblings(i int) *PageUpdateOne {
-	puo.mutation.AddOrderWithinSiblings(i)
+// AddNumber adds i to the "number" field.
+func (puo *PageUpdateOne) AddNumber(i int) *PageUpdateOne {
+	puo.mutation.AddNumber(i)
 	return puo
 }
 
@@ -235,9 +235,9 @@ func (puo *PageUpdateOne) check() error {
 			return &ValidationError{Name: "pathname", err: fmt.Errorf(`ent: validator failed for field "Page.pathname": %w`, err)}
 		}
 	}
-	if v, ok := puo.mutation.OrderWithinSiblings(); ok {
-		if err := page.OrderWithinSiblingsValidator(v); err != nil {
-			return &ValidationError{Name: "order_within_siblings", err: fmt.Errorf(`ent: validator failed for field "Page.order_within_siblings": %w`, err)}
+	if v, ok := puo.mutation.Number(); ok {
+		if err := page.NumberValidator(v); err != nil {
+			return &ValidationError{Name: "number", err: fmt.Errorf(`ent: validator failed for field "Page.number": %w`, err)}
 		}
 	}
 	return nil
@@ -275,11 +275,11 @@ func (puo *PageUpdateOne) sqlSave(ctx context.Context) (_node *Page, err error) 
 	if value, ok := puo.mutation.Pathname(); ok {
 		_spec.SetField(page.FieldPathname, field.TypeString, value)
 	}
-	if value, ok := puo.mutation.OrderWithinSiblings(); ok {
-		_spec.SetField(page.FieldOrderWithinSiblings, field.TypeInt, value)
+	if value, ok := puo.mutation.Number(); ok {
+		_spec.SetField(page.FieldNumber, field.TypeInt, value)
 	}
-	if value, ok := puo.mutation.AddedOrderWithinSiblings(); ok {
-		_spec.AddField(page.FieldOrderWithinSiblings, field.TypeInt, value)
+	if value, ok := puo.mutation.AddedNumber(); ok {
+		_spec.AddField(page.FieldNumber, field.TypeInt, value)
 	}
 	if value, ok := puo.mutation.Title(); ok {
 		_spec.SetField(page.FieldTitle, field.TypeString, value)

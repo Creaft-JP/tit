@@ -18,8 +18,8 @@ type Page struct {
 	ID int `json:"id,omitempty"`
 	// Pathname holds the value of the "pathname" field.
 	Pathname string `json:"pathname,omitempty"`
-	// OrderWithinSiblings holds the value of the "order_within_siblings" field.
-	OrderWithinSiblings int `json:"order_within_siblings,omitempty"`
+	// Number holds the value of the "number" field.
+	Number int `json:"number,omitempty"`
 	// Title holds the value of the "title" field.
 	Title string `json:"title,omitempty"`
 	// OverviewSentence holds the value of the "overview_sentence" field.
@@ -32,7 +32,7 @@ func (*Page) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case page.FieldID, page.FieldOrderWithinSiblings:
+		case page.FieldID, page.FieldNumber:
 			values[i] = new(sql.NullInt64)
 		case page.FieldPathname, page.FieldTitle, page.FieldOverviewSentence:
 			values[i] = new(sql.NullString)
@@ -63,11 +63,11 @@ func (pa *Page) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				pa.Pathname = value.String
 			}
-		case page.FieldOrderWithinSiblings:
+		case page.FieldNumber:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
-				return fmt.Errorf("unexpected type %T for field order_within_siblings", values[i])
+				return fmt.Errorf("unexpected type %T for field number", values[i])
 			} else if value.Valid {
-				pa.OrderWithinSiblings = int(value.Int64)
+				pa.Number = int(value.Int64)
 			}
 		case page.FieldTitle:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -120,8 +120,8 @@ func (pa *Page) String() string {
 	builder.WriteString("pathname=")
 	builder.WriteString(pa.Pathname)
 	builder.WriteString(", ")
-	builder.WriteString("order_within_siblings=")
-	builder.WriteString(fmt.Sprintf("%v", pa.OrderWithinSiblings))
+	builder.WriteString("number=")
+	builder.WriteString(fmt.Sprintf("%v", pa.Number))
 	builder.WriteString(", ")
 	builder.WriteString("title=")
 	builder.WriteString(pa.Title)

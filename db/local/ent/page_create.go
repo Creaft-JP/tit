@@ -25,9 +25,9 @@ func (pc *PageCreate) SetPathname(s string) *PageCreate {
 	return pc
 }
 
-// SetOrderWithinSiblings sets the "order_within_siblings" field.
-func (pc *PageCreate) SetOrderWithinSiblings(i int) *PageCreate {
-	pc.mutation.SetOrderWithinSiblings(i)
+// SetNumber sets the "number" field.
+func (pc *PageCreate) SetNumber(i int) *PageCreate {
+	pc.mutation.SetNumber(i)
 	return pc
 }
 
@@ -85,12 +85,12 @@ func (pc *PageCreate) check() error {
 			return &ValidationError{Name: "pathname", err: fmt.Errorf(`ent: validator failed for field "Page.pathname": %w`, err)}
 		}
 	}
-	if _, ok := pc.mutation.OrderWithinSiblings(); !ok {
-		return &ValidationError{Name: "order_within_siblings", err: errors.New(`ent: missing required field "Page.order_within_siblings"`)}
+	if _, ok := pc.mutation.Number(); !ok {
+		return &ValidationError{Name: "number", err: errors.New(`ent: missing required field "Page.number"`)}
 	}
-	if v, ok := pc.mutation.OrderWithinSiblings(); ok {
-		if err := page.OrderWithinSiblingsValidator(v); err != nil {
-			return &ValidationError{Name: "order_within_siblings", err: fmt.Errorf(`ent: validator failed for field "Page.order_within_siblings": %w`, err)}
+	if v, ok := pc.mutation.Number(); ok {
+		if err := page.NumberValidator(v); err != nil {
+			return &ValidationError{Name: "number", err: fmt.Errorf(`ent: validator failed for field "Page.number": %w`, err)}
 		}
 	}
 	if _, ok := pc.mutation.Title(); !ok {
@@ -129,9 +129,9 @@ func (pc *PageCreate) createSpec() (*Page, *sqlgraph.CreateSpec) {
 		_spec.SetField(page.FieldPathname, field.TypeString, value)
 		_node.Pathname = value
 	}
-	if value, ok := pc.mutation.OrderWithinSiblings(); ok {
-		_spec.SetField(page.FieldOrderWithinSiblings, field.TypeInt, value)
-		_node.OrderWithinSiblings = value
+	if value, ok := pc.mutation.Number(); ok {
+		_spec.SetField(page.FieldNumber, field.TypeInt, value)
+		_node.Number = value
 	}
 	if value, ok := pc.mutation.Title(); ok {
 		_spec.SetField(page.FieldTitle, field.TypeString, value)

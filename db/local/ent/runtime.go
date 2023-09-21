@@ -19,10 +19,10 @@ func init() {
 	pageDescPathname := pageFields[0].Descriptor()
 	// page.PathnameValidator is a validator for the "pathname" field. It is called by the builders before save.
 	page.PathnameValidator = pageDescPathname.Validators[0].(func(string) error)
-	// pageDescOrderWithinSiblings is the schema descriptor for order_within_siblings field.
-	pageDescOrderWithinSiblings := pageFields[1].Descriptor()
-	// page.OrderWithinSiblingsValidator is a validator for the "order_within_siblings" field. It is called by the builders before save.
-	page.OrderWithinSiblingsValidator = pageDescOrderWithinSiblings.Validators[0].(func(int) error)
+	// pageDescNumber is the schema descriptor for number field.
+	pageDescNumber := pageFields[1].Descriptor()
+	// page.NumberValidator is a validator for the "number" field. It is called by the builders before save.
+	page.NumberValidator = pageDescNumber.Validators[0].(func(int) error)
 	remoteFields := schema.Remote{}.Fields()
 	_ = remoteFields
 	// remoteDescURL is the schema descriptor for url field.

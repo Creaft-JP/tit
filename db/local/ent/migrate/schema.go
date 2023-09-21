@@ -12,7 +12,7 @@ var (
 	PagesColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
 		{Name: "pathname", Type: field.TypeString},
-		{Name: "order_within_siblings", Type: field.TypeInt},
+		{Name: "number", Type: field.TypeInt},
 		{Name: "title", Type: field.TypeString},
 		{Name: "overview_sentence", Type: field.TypeString},
 	}

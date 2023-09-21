@@ -57,9 +57,9 @@ func Pathname(v string) predicate.Page {
 	return predicate.Page(sql.FieldEQ(FieldPathname, v))
 }
 
-// OrderWithinSiblings applies equality check predicate on the "order_within_siblings" field. It's identical to OrderWithinSiblingsEQ.
-func OrderWithinSiblings(v int) predicate.Page {
-	return predicate.Page(sql.FieldEQ(FieldOrderWithinSiblings, v))
+// Number applies equality check predicate on the "number" field. It's identical to NumberEQ.
+func Number(v int) predicate.Page {
+	return predicate.Page(sql.FieldEQ(FieldNumber, v))
 }
 
 // Title applies equality check predicate on the "title" field. It's identical to TitleEQ.
@@ -137,44 +137,44 @@ func PathnameContainsFold(v string) predicate.Page {
 	return predicate.Page(sql.FieldContainsFold(FieldPathname, v))
 }
 
-// OrderWithinSiblingsEQ applies the EQ predicate on the "order_within_siblings" field.
-func OrderWithinSiblingsEQ(v int) predicate.Page {
-	return predicate.Page(sql.FieldEQ(FieldOrderWithinSiblings, v))
+// NumberEQ applies the EQ predicate on the "number" field.
+func NumberEQ(v int) predicate.Page {
+	return predicate.Page(sql.FieldEQ(FieldNumber, v))
 }
 
-// OrderWithinSiblingsNEQ applies the NEQ predicate on the "order_within_siblings" field.
-func OrderWithinSiblingsNEQ(v int) predicate.Page {
-	return predicate.Page(sql.FieldNEQ(FieldOrderWithinSiblings, v))
+// NumberNEQ applies the NEQ predicate on the "number" field.
+func NumberNEQ(v int) predicate.Page {
+	return predicate.Page(sql.FieldNEQ(FieldNumber, v))
 }
 
-// OrderWithinSiblingsIn applies the In predicate on the "order_within_siblings" field.
-func OrderWithinSiblingsIn(vs ...int) predicate.Page {
-	return predicate.Page(sql.FieldIn(FieldOrderWithinSiblings, vs...))
+// NumberIn applies the In predicate on the "number" field.
+func NumberIn(vs ...int) predicate.Page {
+	return predicate.Page(sql.FieldIn(FieldNumber, vs...))
 }
 
-// OrderWithinSiblingsNotIn applies the NotIn predicate on the "order_within_siblings" field.
-func OrderWithinSiblingsNotIn(vs ...int) predicate.Page {
-	return predicate.Page(sql.FieldNotIn(FieldOrderWithinSiblings, vs...))
+// NumberNotIn applies the NotIn predicate on the "number" field.
+func NumberNotIn(vs ...int) predicate.Page {
+	return predicate.Page(sql.FieldNotIn(FieldNumber, vs...))
 }
 
-// OrderWithinSiblingsGT applies the GT predicate on the "order_within_siblings" field.
-func OrderWithinSiblingsGT(v int) predicate.Page {
-	return predicate.Page(sql.FieldGT(FieldOrderWithinSiblings, v))
+// NumberGT applies the GT predicate on the "number" field.
+func NumberGT(v int) predicate.Page {
+	return predicate.Page(sql.FieldGT(FieldNumber, v))
 }
 
-// OrderWithinSiblingsGTE applies the GTE predicate on the "order_within_siblings" field.
-func OrderWithinSiblingsGTE(v int) predicate.Page {
-	return predicate.Page(sql.FieldGTE(FieldOrderWithinSiblings, v))
+// NumberGTE applies the GTE predicate on the "number" field.
+func NumberGTE(v int) predicate.Page {
+	return predicate.Page(sql.FieldGTE(FieldNumber, v))
 }
 
-// OrderWithinSiblingsLT applies the LT predicate on the "order_within_siblings" field.
-func OrderWithinSiblingsLT(v int) predicate.Page {
-	return predicate.Page(sql.FieldLT(FieldOrderWithinSiblings, v))
+// NumberLT applies the LT predicate on the "number" field.
+func NumberLT(v int) predicate.Page {
+	return predicate.Page(sql.FieldLT(FieldNumber, v))
 }
 
-// OrderWithinSiblingsLTE applies the LTE predicate on the "order_within_siblings" field.
-func OrderWithinSiblingsLTE(v int) predicate.Page {
-	return predicate.Page(sql.FieldLTE(FieldOrderWithinSiblings, v))
+// NumberLTE applies the LTE predicate on the "number" field.
+func NumberLTE(v int) predicate.Page {
+	return predicate.Page(sql.FieldLTE(FieldNumber, v))
 }
 
 // TitleEQ applies the EQ predicate on the "title" field.
