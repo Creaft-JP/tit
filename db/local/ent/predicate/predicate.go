@@ -12,5 +12,8 @@ type Page func(*sql.Selector)
 // Remote is the predicate function for remote builders.
 type Remote func(*sql.Selector)
 
+// Section is the predicate function for section builders.
+type Section func(*sql.Selector)
+
 // StagedFile is the predicate function for stagedfile builders.
 type StagedFile func(*sql.Selector)

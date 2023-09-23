@@ -4,6 +4,7 @@ package page
 
 import (
 	"entgo.io/ent/dialect/sql"
+	"entgo.io/ent/dialect/sql/sqlgraph"
 )
 
 const (
@@ -19,8 +20,17 @@ const (
 	FieldTitle = "title"
 	// FieldOverviewSentence holds the string denoting the overview_sentence field in the database.
 	FieldOverviewSentence = "overview_sentence"
+	// EdgeSections holds the string denoting the sections edge name in mutations.
+	EdgeSections = "sections"
 	// Table holds the table name of the page in the database.
 	Table = "pages"
+	// SectionsTable is the table that holds the sections relation/edge.
+	SectionsTable = "sections"
+	// SectionsInverseTable is the table name for the Section entity.
+	// It exists in this package in order to avoid circular dependency with the "section" package.
+	SectionsInverseTable = "sections"
+	// SectionsColumn is the table column denoting the sections relation/edge.
+	SectionsColumn = "page_sections"
 )
 
 // Columns holds all SQL columns for page fields.
@@ -75,4 +85,25 @@ func ByTitle(opts ...sql.OrderTermOption) OrderOption {
 // ByOverviewSentence orders the results by the overview_sentence field.
 func ByOverviewSentence(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldOverviewSentence, opts...).ToFunc()
+}
+
+// BySectionsCount orders the results by sections count.
+func BySectionsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newSectionsStep(), opts...)
+	}
+}
+
+// BySections orders the results by sections terms.
+func BySections(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newSectionsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+func newSectionsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(SectionsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, SectionsTable, SectionsColumn),
+	)
 }

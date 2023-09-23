@@ -12,6 +12,7 @@ import (
 	"entgo.io/ent/schema/field"
 	"github.com/Creaft-JP/tit/db/local/ent/page"
 	"github.com/Creaft-JP/tit/db/local/ent/predicate"
+	"github.com/Creaft-JP/tit/db/local/ent/section"
 )
 
 // PageUpdate is the builder for updating Page entities.
@@ -58,9 +59,45 @@ func (pu *PageUpdate) SetOverviewSentence(s string) *PageUpdate {
 	return pu
 }
 
+// AddSectionIDs adds the "sections" edge to the Section entity by IDs.
+func (pu *PageUpdate) AddSectionIDs(ids ...int) *PageUpdate {
+	pu.mutation.AddSectionIDs(ids...)
+	return pu
+}
+
+// AddSections adds the "sections" edges to the Section entity.
+func (pu *PageUpdate) AddSections(s ...*Section) *PageUpdate {
+	ids := make([]int, len(s))
+	for i := range s {
+		ids[i] = s[i].ID
+	}
+	return pu.AddSectionIDs(ids...)
+}
+
 // Mutation returns the PageMutation object of the builder.
 func (pu *PageUpdate) Mutation() *PageMutation {
 	return pu.mutation
+}
+
+// ClearSections clears all "sections" edges to the Section entity.
+func (pu *PageUpdate) ClearSections() *PageUpdate {
+	pu.mutation.ClearSections()
+	return pu
+}
+
+// RemoveSectionIDs removes the "sections" edge to Section entities by IDs.
+func (pu *PageUpdate) RemoveSectionIDs(ids ...int) *PageUpdate {
+	pu.mutation.RemoveSectionIDs(ids...)
+	return pu
+}
+
+// RemoveSections removes "sections" edges to Section entities.
+func (pu *PageUpdate) RemoveSections(s ...*Section) *PageUpdate {
+	ids := make([]int, len(s))
+	for i := range s {
+		ids[i] = s[i].ID
+	}
+	return pu.RemoveSectionIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -132,6 +169,51 @@ func (pu *PageUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if value, ok := pu.mutation.OverviewSentence(); ok {
 		_spec.SetField(page.FieldOverviewSentence, field.TypeString, value)
 	}
+	if pu.mutation.SectionsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   page.SectionsTable,
+			Columns: []string{page.SectionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(section.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := pu.mutation.RemovedSectionsIDs(); len(nodes) > 0 && !pu.mutation.SectionsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   page.SectionsTable,
+			Columns: []string{page.SectionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(section.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := pu.mutation.SectionsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   page.SectionsTable,
+			Columns: []string{page.SectionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(section.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
 	if n, err = sqlgraph.UpdateNodes(ctx, pu.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{page.Label}
@@ -183,9 +265,45 @@ func (puo *PageUpdateOne) SetOverviewSentence(s string) *PageUpdateOne {
 	return puo
 }
 
+// AddSectionIDs adds the "sections" edge to the Section entity by IDs.
+func (puo *PageUpdateOne) AddSectionIDs(ids ...int) *PageUpdateOne {
+	puo.mutation.AddSectionIDs(ids...)
+	return puo
+}
+
+// AddSections adds the "sections" edges to the Section entity.
+func (puo *PageUpdateOne) AddSections(s ...*Section) *PageUpdateOne {
+	ids := make([]int, len(s))
+	for i := range s {
+		ids[i] = s[i].ID
+	}
+	return puo.AddSectionIDs(ids...)
+}
+
 // Mutation returns the PageMutation object of the builder.
 func (puo *PageUpdateOne) Mutation() *PageMutation {
 	return puo.mutation
+}
+
+// ClearSections clears all "sections" edges to the Section entity.
+func (puo *PageUpdateOne) ClearSections() *PageUpdateOne {
+	puo.mutation.ClearSections()
+	return puo
+}
+
+// RemoveSectionIDs removes the "sections" edge to Section entities by IDs.
+func (puo *PageUpdateOne) RemoveSectionIDs(ids ...int) *PageUpdateOne {
+	puo.mutation.RemoveSectionIDs(ids...)
+	return puo
+}
+
+// RemoveSections removes "sections" edges to Section entities.
+func (puo *PageUpdateOne) RemoveSections(s ...*Section) *PageUpdateOne {
+	ids := make([]int, len(s))
+	for i := range s {
+		ids[i] = s[i].ID
+	}
+	return puo.RemoveSectionIDs(ids...)
 }
 
 // Where appends a list predicates to the PageUpdate builder.
@@ -286,6 +404,51 @@ func (puo *PageUpdateOne) sqlSave(ctx context.Context) (_node *Page, err error) 
 	}
 	if value, ok := puo.mutation.OverviewSentence(); ok {
 		_spec.SetField(page.FieldOverviewSentence, field.TypeString, value)
+	}
+	if puo.mutation.SectionsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   page.SectionsTable,
+			Columns: []string{page.SectionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(section.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := puo.mutation.RemovedSectionsIDs(); len(nodes) > 0 && !puo.mutation.SectionsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   page.SectionsTable,
+			Columns: []string{page.SectionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(section.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := puo.mutation.SectionsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   page.SectionsTable,
+			Columns: []string{page.SectionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(section.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	_node = &Page{config: puo.config}
 	_spec.Assign = _node.assignValues

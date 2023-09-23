@@ -34,6 +34,29 @@ var (
 		Columns:    RemotesColumns,
 		PrimaryKey: []*schema.Column{RemotesColumns[0]},
 	}
+	// SectionsColumns holds the columns for the "sections" table.
+	SectionsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "slug", Type: field.TypeString},
+		{Name: "title", Type: field.TypeString, Size: 50},
+		{Name: "overview_sentence", Type: field.TypeString},
+		{Name: "number", Type: field.TypeInt},
+		{Name: "page_sections", Type: field.TypeInt, Nullable: true},
+	}
+	// SectionsTable holds the schema information for the "sections" table.
+	SectionsTable = &schema.Table{
+		Name:       "sections",
+		Columns:    SectionsColumns,
+		PrimaryKey: []*schema.Column{SectionsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "sections_pages_sections",
+				Columns:    []*schema.Column{SectionsColumns[5]},
+				RefColumns: []*schema.Column{PagesColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+		},
+	}
 	// StagedFilesColumns holds the columns for the "staged_files" table.
 	StagedFilesColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
@@ -50,9 +73,11 @@ var (
 	Tables = []*schema.Table{
 		PagesTable,
 		RemotesTable,
+		SectionsTable,
 		StagedFilesTable,
 	}
 )
 
 func init() {
+	SectionsTable.ForeignKeys[0].RefTable = PagesTable
 }

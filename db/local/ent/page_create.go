@@ -10,6 +10,7 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/Creaft-JP/tit/db/local/ent/page"
+	"github.com/Creaft-JP/tit/db/local/ent/section"
 )
 
 // PageCreate is the builder for creating a Page entity.
@@ -41,6 +42,21 @@ func (pc *PageCreate) SetTitle(s string) *PageCreate {
 func (pc *PageCreate) SetOverviewSentence(s string) *PageCreate {
 	pc.mutation.SetOverviewSentence(s)
 	return pc
+}
+
+// AddSectionIDs adds the "sections" edge to the Section entity by IDs.
+func (pc *PageCreate) AddSectionIDs(ids ...int) *PageCreate {
+	pc.mutation.AddSectionIDs(ids...)
+	return pc
+}
+
+// AddSections adds the "sections" edges to the Section entity.
+func (pc *PageCreate) AddSections(s ...*Section) *PageCreate {
+	ids := make([]int, len(s))
+	for i := range s {
+		ids[i] = s[i].ID
+	}
+	return pc.AddSectionIDs(ids...)
 }
 
 // Mutation returns the PageMutation object of the builder.
@@ -140,6 +156,22 @@ func (pc *PageCreate) createSpec() (*Page, *sqlgraph.CreateSpec) {
 	if value, ok := pc.mutation.OverviewSentence(); ok {
 		_spec.SetField(page.FieldOverviewSentence, field.TypeString, value)
 		_node.OverviewSentence = value
+	}
+	if nodes := pc.mutation.SectionsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   page.SectionsTable,
+			Columns: []string{page.SectionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(section.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec
 }

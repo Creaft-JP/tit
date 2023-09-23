@@ -4,6 +4,7 @@ package page
 
 import (
 	"entgo.io/ent/dialect/sql"
+	"entgo.io/ent/dialect/sql/sqlgraph"
 	"github.com/Creaft-JP/tit/db/local/ent/predicate"
 )
 
@@ -305,6 +306,29 @@ func OverviewSentenceEqualFold(v string) predicate.Page {
 // OverviewSentenceContainsFold applies the ContainsFold predicate on the "overview_sentence" field.
 func OverviewSentenceContainsFold(v string) predicate.Page {
 	return predicate.Page(sql.FieldContainsFold(FieldOverviewSentence, v))
+}
+
+// HasSections applies the HasEdge predicate on the "sections" edge.
+func HasSections() predicate.Page {
+	return predicate.Page(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, SectionsTable, SectionsColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasSectionsWith applies the HasEdge predicate on the "sections" edge with a given conditions (other predicates).
+func HasSectionsWith(preds ...predicate.Section) predicate.Page {
+	return predicate.Page(func(s *sql.Selector) {
+		step := newSectionsStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
 }
 
 // And groups predicates with the AND operator between them.

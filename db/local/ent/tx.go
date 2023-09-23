@@ -16,6 +16,8 @@ type Tx struct {
 	Page *PageClient
 	// Remote is the client for interacting with the Remote builders.
 	Remote *RemoteClient
+	// Section is the client for interacting with the Section builders.
+	Section *SectionClient
 	// StagedFile is the client for interacting with the StagedFile builders.
 	StagedFile *StagedFileClient
 
@@ -151,6 +153,7 @@ func (tx *Tx) Client() *Client {
 func (tx *Tx) init() {
 	tx.Page = NewPageClient(tx.config)
 	tx.Remote = NewRemoteClient(tx.config)
+	tx.Section = NewSectionClient(tx.config)
 	tx.StagedFile = NewStagedFileClient(tx.config)
 }
 
