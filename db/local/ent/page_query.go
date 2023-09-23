@@ -4,6 +4,7 @@ package ent
 
 import (
 	"context"
+	"database/sql/driver"
 	"fmt"
 	"math"
 
@@ -12,15 +13,17 @@ import (
 	"entgo.io/ent/schema/field"
 	"github.com/Creaft-JP/tit/db/local/ent/page"
 	"github.com/Creaft-JP/tit/db/local/ent/predicate"
+	"github.com/Creaft-JP/tit/db/local/ent/section"
 )
 
 // PageQuery is the builder for querying Page entities.
 type PageQuery struct {
 	config
-	ctx        *QueryContext
-	order      []page.OrderOption
-	inters     []Interceptor
-	predicates []predicate.Page
+	ctx          *QueryContext
+	order        []page.OrderOption
+	inters       []Interceptor
+	predicates   []predicate.Page
+	withSections *SectionQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -55,6 +58,28 @@ func (pq *PageQuery) Unique(unique bool) *PageQuery {
 func (pq *PageQuery) Order(o ...page.OrderOption) *PageQuery {
 	pq.order = append(pq.order, o...)
 	return pq
+}
+
+// QuerySections chains the current query on the "sections" edge.
+func (pq *PageQuery) QuerySections() *SectionQuery {
+	query := (&SectionClient{config: pq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := pq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := pq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(page.Table, page.FieldID, selector),
+			sqlgraph.To(section.Table, section.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, page.SectionsTable, page.SectionsColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(pq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
 }
 
 // First returns the first Page entity from the query.
@@ -244,15 +269,27 @@ func (pq *PageQuery) Clone() *PageQuery {
 		return nil
 	}
 	return &PageQuery{
-		config:     pq.config,
-		ctx:        pq.ctx.Clone(),
-		order:      append([]page.OrderOption{}, pq.order...),
-		inters:     append([]Interceptor{}, pq.inters...),
-		predicates: append([]predicate.Page{}, pq.predicates...),
+		config:       pq.config,
+		ctx:          pq.ctx.Clone(),
+		order:        append([]page.OrderOption{}, pq.order...),
+		inters:       append([]Interceptor{}, pq.inters...),
+		predicates:   append([]predicate.Page{}, pq.predicates...),
+		withSections: pq.withSections.Clone(),
 		// clone intermediate query.
 		sql:  pq.sql.Clone(),
 		path: pq.path,
 	}
+}
+
+// WithSections tells the query-builder to eager-load the nodes that are connected to
+// the "sections" edge. The optional arguments are used to configure the query builder of the edge.
+func (pq *PageQuery) WithSections(opts ...func(*SectionQuery)) *PageQuery {
+	query := (&SectionClient{config: pq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	pq.withSections = query
+	return pq
 }
 
 // GroupBy is used to group vertices by one or more fields/columns.
@@ -331,8 +368,11 @@ func (pq *PageQuery) prepareQuery(ctx context.Context) error {
 
 func (pq *PageQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Page, error) {
 	var (
-		nodes = []*Page{}
-		_spec = pq.querySpec()
+		nodes       = []*Page{}
+		_spec       = pq.querySpec()
+		loadedTypes = [1]bool{
+			pq.withSections != nil,
+		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
 		return (*Page).scanValues(nil, columns)
@@ -340,6 +380,7 @@ func (pq *PageQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Page, e
 	_spec.Assign = func(columns []string, values []any) error {
 		node := &Page{config: pq.config}
 		nodes = append(nodes, node)
+		node.Edges.loadedTypes = loadedTypes
 		return node.assignValues(columns, values)
 	}
 	for i := range hooks {
@@ -351,7 +392,46 @@ func (pq *PageQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Page, e
 	if len(nodes) == 0 {
 		return nodes, nil
 	}
+	if query := pq.withSections; query != nil {
+		if err := pq.loadSections(ctx, query, nodes,
+			func(n *Page) { n.Edges.Sections = []*Section{} },
+			func(n *Page, e *Section) { n.Edges.Sections = append(n.Edges.Sections, e) }); err != nil {
+			return nil, err
+		}
+	}
 	return nodes, nil
+}
+
+func (pq *PageQuery) loadSections(ctx context.Context, query *SectionQuery, nodes []*Page, init func(*Page), assign func(*Page, *Section)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*Page)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	query.withFKs = true
+	query.Where(predicate.Section(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(page.SectionsColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.page_sections
+		if fk == nil {
+			return fmt.Errorf(`foreign-key "page_sections" is nil for node %v`, n.ID)
+		}
+		node, ok := nodeids[*fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "page_sections" returned %v for node %v`, *fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
 }
 
 func (pq *PageQuery) sqlCount(ctx context.Context) (int, error) {

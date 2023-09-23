@@ -13,8 +13,10 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/dialect"
 	"entgo.io/ent/dialect/sql"
+	"entgo.io/ent/dialect/sql/sqlgraph"
 	"github.com/Creaft-JP/tit/db/local/ent/page"
 	"github.com/Creaft-JP/tit/db/local/ent/remote"
+	"github.com/Creaft-JP/tit/db/local/ent/section"
 	"github.com/Creaft-JP/tit/db/local/ent/stagedfile"
 )
 
@@ -27,6 +29,8 @@ type Client struct {
 	Page *PageClient
 	// Remote is the client for interacting with the Remote builders.
 	Remote *RemoteClient
+	// Section is the client for interacting with the Section builders.
+	Section *SectionClient
 	// StagedFile is the client for interacting with the StagedFile builders.
 	StagedFile *StagedFileClient
 }
@@ -44,6 +48,7 @@ func (c *Client) init() {
 	c.Schema = migrate.NewSchema(c.driver)
 	c.Page = NewPageClient(c.config)
 	c.Remote = NewRemoteClient(c.config)
+	c.Section = NewSectionClient(c.config)
 	c.StagedFile = NewStagedFileClient(c.config)
 }
 
@@ -129,6 +134,7 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		config:     cfg,
 		Page:       NewPageClient(cfg),
 		Remote:     NewRemoteClient(cfg),
+		Section:    NewSectionClient(cfg),
 		StagedFile: NewStagedFileClient(cfg),
 	}, nil
 }
@@ -151,6 +157,7 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		config:     cfg,
 		Page:       NewPageClient(cfg),
 		Remote:     NewRemoteClient(cfg),
+		Section:    NewSectionClient(cfg),
 		StagedFile: NewStagedFileClient(cfg),
 	}, nil
 }
@@ -182,6 +189,7 @@ func (c *Client) Close() error {
 func (c *Client) Use(hooks ...Hook) {
 	c.Page.Use(hooks...)
 	c.Remote.Use(hooks...)
+	c.Section.Use(hooks...)
 	c.StagedFile.Use(hooks...)
 }
 
@@ -190,6 +198,7 @@ func (c *Client) Use(hooks ...Hook) {
 func (c *Client) Intercept(interceptors ...Interceptor) {
 	c.Page.Intercept(interceptors...)
 	c.Remote.Intercept(interceptors...)
+	c.Section.Intercept(interceptors...)
 	c.StagedFile.Intercept(interceptors...)
 }
 
@@ -200,6 +209,8 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.Page.mutate(ctx, m)
 	case *RemoteMutation:
 		return c.Remote.mutate(ctx, m)
+	case *SectionMutation:
+		return c.Section.mutate(ctx, m)
 	case *StagedFileMutation:
 		return c.StagedFile.mutate(ctx, m)
 	default:
@@ -298,6 +309,22 @@ func (c *PageClient) GetX(ctx context.Context, id int) *Page {
 		panic(err)
 	}
 	return obj
+}
+
+// QuerySections queries the sections edge of a Page.
+func (c *PageClient) QuerySections(pa *Page) *SectionQuery {
+	query := (&SectionClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := pa.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(page.Table, page.FieldID, id),
+			sqlgraph.To(section.Table, section.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, page.SectionsTable, page.SectionsColumn),
+		)
+		fromV = sqlgraph.Neighbors(pa.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
 }
 
 // Hooks returns the client hooks.
@@ -443,6 +470,140 @@ func (c *RemoteClient) mutate(ctx context.Context, m *RemoteMutation) (Value, er
 	}
 }
 
+// SectionClient is a client for the Section schema.
+type SectionClient struct {
+	config
+}
+
+// NewSectionClient returns a client for the Section from the given config.
+func NewSectionClient(c config) *SectionClient {
+	return &SectionClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `section.Hooks(f(g(h())))`.
+func (c *SectionClient) Use(hooks ...Hook) {
+	c.hooks.Section = append(c.hooks.Section, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `section.Intercept(f(g(h())))`.
+func (c *SectionClient) Intercept(interceptors ...Interceptor) {
+	c.inters.Section = append(c.inters.Section, interceptors...)
+}
+
+// Create returns a builder for creating a Section entity.
+func (c *SectionClient) Create() *SectionCreate {
+	mutation := newSectionMutation(c.config, OpCreate)
+	return &SectionCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of Section entities.
+func (c *SectionClient) CreateBulk(builders ...*SectionCreate) *SectionCreateBulk {
+	return &SectionCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for Section.
+func (c *SectionClient) Update() *SectionUpdate {
+	mutation := newSectionMutation(c.config, OpUpdate)
+	return &SectionUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *SectionClient) UpdateOne(s *Section) *SectionUpdateOne {
+	mutation := newSectionMutation(c.config, OpUpdateOne, withSection(s))
+	return &SectionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *SectionClient) UpdateOneID(id int) *SectionUpdateOne {
+	mutation := newSectionMutation(c.config, OpUpdateOne, withSectionID(id))
+	return &SectionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for Section.
+func (c *SectionClient) Delete() *SectionDelete {
+	mutation := newSectionMutation(c.config, OpDelete)
+	return &SectionDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *SectionClient) DeleteOne(s *Section) *SectionDeleteOne {
+	return c.DeleteOneID(s.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *SectionClient) DeleteOneID(id int) *SectionDeleteOne {
+	builder := c.Delete().Where(section.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &SectionDeleteOne{builder}
+}
+
+// Query returns a query builder for Section.
+func (c *SectionClient) Query() *SectionQuery {
+	return &SectionQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeSection},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a Section entity by its id.
+func (c *SectionClient) Get(ctx context.Context, id int) (*Section, error) {
+	return c.Query().Where(section.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *SectionClient) GetX(ctx context.Context, id int) *Section {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryPage queries the page edge of a Section.
+func (c *SectionClient) QueryPage(s *Section) *PageQuery {
+	query := (&PageClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := s.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(section.Table, section.FieldID, id),
+			sqlgraph.To(page.Table, page.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, section.PageTable, section.PageColumn),
+		)
+		fromV = sqlgraph.Neighbors(s.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *SectionClient) Hooks() []Hook {
+	return c.hooks.Section
+}
+
+// Interceptors returns the client interceptors.
+func (c *SectionClient) Interceptors() []Interceptor {
+	return c.inters.Section
+}
+
+func (c *SectionClient) mutate(ctx context.Context, m *SectionMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&SectionCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&SectionUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&SectionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&SectionDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown Section mutation op: %q", m.Op())
+	}
+}
+
 // StagedFileClient is a client for the StagedFile schema.
 type StagedFileClient struct {
 	config
@@ -564,9 +725,9 @@ func (c *StagedFileClient) mutate(ctx context.Context, m *StagedFileMutation) (V
 // hooks and interceptors per client, for fast access.
 type (
 	hooks struct {
-		Page, Remote, StagedFile []ent.Hook
+		Page, Remote, Section, StagedFile []ent.Hook
 	}
 	inters struct {
-		Page, Remote, StagedFile []ent.Interceptor
+		Page, Remote, Section, StagedFile []ent.Interceptor
 	}
 )

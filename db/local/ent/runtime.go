@@ -6,6 +6,7 @@ import (
 	"github.com/Creaft-JP/tit/db/local/ent/page"
 	"github.com/Creaft-JP/tit/db/local/ent/remote"
 	"github.com/Creaft-JP/tit/db/local/ent/schema"
+	"github.com/Creaft-JP/tit/db/local/ent/section"
 	"github.com/Creaft-JP/tit/db/local/ent/stagedfile"
 )
 
@@ -29,6 +30,20 @@ func init() {
 	remoteDescURL := remoteFields[1].Descriptor()
 	// remote.URLValidator is a validator for the "url" field. It is called by the builders before save.
 	remote.URLValidator = remoteDescURL.Validators[0].(func(string) error)
+	sectionFields := schema.Section{}.Fields()
+	_ = sectionFields
+	// sectionDescSlug is the schema descriptor for slug field.
+	sectionDescSlug := sectionFields[0].Descriptor()
+	// section.SlugValidator is a validator for the "slug" field. It is called by the builders before save.
+	section.SlugValidator = sectionDescSlug.Validators[0].(func(string) error)
+	// sectionDescTitle is the schema descriptor for title field.
+	sectionDescTitle := sectionFields[1].Descriptor()
+	// section.TitleValidator is a validator for the "title" field. It is called by the builders before save.
+	section.TitleValidator = sectionDescTitle.Validators[0].(func(string) error)
+	// sectionDescNumber is the schema descriptor for number field.
+	sectionDescNumber := sectionFields[3].Descriptor()
+	// section.NumberValidator is a validator for the "number" field. It is called by the builders before save.
+	section.NumberValidator = sectionDescNumber.Validators[0].(func(int) error)
 	stagedfileFields := schema.StagedFile{}.Fields()
 	_ = stagedfileFields
 	// stagedfileDescPath is the schema descriptor for path field.

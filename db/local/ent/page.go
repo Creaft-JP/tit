@@ -24,7 +24,28 @@ type Page struct {
 	Title string `json:"title,omitempty"`
 	// OverviewSentence holds the value of the "overview_sentence" field.
 	OverviewSentence string `json:"overview_sentence,omitempty"`
-	selectValues     sql.SelectValues
+	// Edges holds the relations/edges for other nodes in the graph.
+	// The values are being populated by the PageQuery when eager-loading is set.
+	Edges        PageEdges `json:"edges"`
+	selectValues sql.SelectValues
+}
+
+// PageEdges holds the relations/edges for other nodes in the graph.
+type PageEdges struct {
+	// Sections holds the value of the sections edge.
+	Sections []*Section `json:"sections,omitempty"`
+	// loadedTypes holds the information for reporting if a
+	// type was loaded (or requested) in eager-loading or not.
+	loadedTypes [1]bool
+}
+
+// SectionsOrErr returns the Sections value or an error if the edge
+// was not loaded in eager-loading.
+func (e PageEdges) SectionsOrErr() ([]*Section, error) {
+	if e.loadedTypes[0] {
+		return e.Sections, nil
+	}
+	return nil, &NotLoadedError{edge: "sections"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -92,6 +113,11 @@ func (pa *Page) assignValues(columns []string, values []any) error {
 // This includes values selected through modifiers, order, etc.
 func (pa *Page) Value(name string) (ent.Value, error) {
 	return pa.selectValues.Get(name)
+}
+
+// QuerySections queries the "sections" edge of the Page entity.
+func (pa *Page) QuerySections() *SectionQuery {
+	return NewPageClient(pa.config).QuerySections(pa)
 }
 
 // Update returns a builder for updating this Page.

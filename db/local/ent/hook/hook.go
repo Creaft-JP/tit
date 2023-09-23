@@ -33,6 +33,18 @@ func (f RemoteFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, erro
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.RemoteMutation", m)
 }
 
+// The SectionFunc type is an adapter to allow the use of ordinary
+// function as Section mutator.
+type SectionFunc func(context.Context, *ent.SectionMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f SectionFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.SectionMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.SectionMutation", m)
+}
+
 // The StagedFileFunc type is an adapter to allow the use of ordinary
 // function as StagedFile mutator.
 type StagedFileFunc func(context.Context, *ent.StagedFileMutation) (ent.Value, error)
