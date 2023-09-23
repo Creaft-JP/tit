@@ -18,5 +18,5 @@ func (CommittedFile) Fields() []ent.Field {
 
 // Edges of the CommittedFile.
 func (CommittedFile) Edges() []ent.Edge {
-	return []ent.Edge{edge.From("commit", Commit.Type).Ref("files").Unique()}
+	return []ent.Edge{edge.From("commit", TitCommit.Type).Ref("files").Unique()}
 }
