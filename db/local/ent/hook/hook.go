@@ -9,18 +9,6 @@ import (
 	"github.com/Creaft-JP/tit/db/local/ent"
 )
 
-// The CommitFunc type is an adapter to allow the use of ordinary
-// function as Commit mutator.
-type CommitFunc func(context.Context, *ent.CommitMutation) (ent.Value, error)
-
-// Mutate calls f(ctx, m).
-func (f CommitFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
-	if mv, ok := m.(*ent.CommitMutation); ok {
-		return f(ctx, mv)
-	}
-	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.CommitMutation", m)
-}
-
 // The CommittedFileFunc type is an adapter to allow the use of ordinary
 // function as CommittedFile mutator.
 type CommittedFileFunc func(context.Context, *ent.CommittedFileMutation) (ent.Value, error)
@@ -79,6 +67,18 @@ func (f StagedFileFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, 
 		return f(ctx, mv)
 	}
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.StagedFileMutation", m)
+}
+
+// The TitCommitFunc type is an adapter to allow the use of ordinary
+// function as TitCommit mutator.
+type TitCommitFunc func(context.Context, *ent.TitCommitMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f TitCommitFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.TitCommitMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.TitCommitMutation", m)
 }
 
 // Condition is a hook condition function.

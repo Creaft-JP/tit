@@ -10,9 +10,9 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"github.com/Creaft-JP/tit/db/local/ent/commit"
 	"github.com/Creaft-JP/tit/db/local/ent/committedfile"
 	"github.com/Creaft-JP/tit/db/local/ent/predicate"
+	"github.com/Creaft-JP/tit/db/local/ent/titcommit"
 )
 
 // CommittedFileUpdate is the builder for updating CommittedFile entities.
@@ -40,13 +40,13 @@ func (cfu *CommittedFileUpdate) SetContent(s string) *CommittedFileUpdate {
 	return cfu
 }
 
-// SetCommitID sets the "commit" edge to the Commit entity by ID.
+// SetCommitID sets the "commit" edge to the TitCommit entity by ID.
 func (cfu *CommittedFileUpdate) SetCommitID(id int) *CommittedFileUpdate {
 	cfu.mutation.SetCommitID(id)
 	return cfu
 }
 
-// SetNillableCommitID sets the "commit" edge to the Commit entity by ID if the given value is not nil.
+// SetNillableCommitID sets the "commit" edge to the TitCommit entity by ID if the given value is not nil.
 func (cfu *CommittedFileUpdate) SetNillableCommitID(id *int) *CommittedFileUpdate {
 	if id != nil {
 		cfu = cfu.SetCommitID(*id)
@@ -54,9 +54,9 @@ func (cfu *CommittedFileUpdate) SetNillableCommitID(id *int) *CommittedFileUpdat
 	return cfu
 }
 
-// SetCommit sets the "commit" edge to the Commit entity.
-func (cfu *CommittedFileUpdate) SetCommit(c *Commit) *CommittedFileUpdate {
-	return cfu.SetCommitID(c.ID)
+// SetCommit sets the "commit" edge to the TitCommit entity.
+func (cfu *CommittedFileUpdate) SetCommit(t *TitCommit) *CommittedFileUpdate {
+	return cfu.SetCommitID(t.ID)
 }
 
 // Mutation returns the CommittedFileMutation object of the builder.
@@ -64,7 +64,7 @@ func (cfu *CommittedFileUpdate) Mutation() *CommittedFileMutation {
 	return cfu.mutation
 }
 
-// ClearCommit clears the "commit" edge to the Commit entity.
+// ClearCommit clears the "commit" edge to the TitCommit entity.
 func (cfu *CommittedFileUpdate) ClearCommit() *CommittedFileUpdate {
 	cfu.mutation.ClearCommit()
 	return cfu
@@ -133,7 +133,7 @@ func (cfu *CommittedFileUpdate) sqlSave(ctx context.Context) (n int, err error) 
 			Columns: []string{committedfile.CommitColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(commit.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(titcommit.FieldID, field.TypeInt),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
@@ -146,7 +146,7 @@ func (cfu *CommittedFileUpdate) sqlSave(ctx context.Context) (n int, err error) 
 			Columns: []string{committedfile.CommitColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(commit.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(titcommit.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -186,13 +186,13 @@ func (cfuo *CommittedFileUpdateOne) SetContent(s string) *CommittedFileUpdateOne
 	return cfuo
 }
 
-// SetCommitID sets the "commit" edge to the Commit entity by ID.
+// SetCommitID sets the "commit" edge to the TitCommit entity by ID.
 func (cfuo *CommittedFileUpdateOne) SetCommitID(id int) *CommittedFileUpdateOne {
 	cfuo.mutation.SetCommitID(id)
 	return cfuo
 }
 
-// SetNillableCommitID sets the "commit" edge to the Commit entity by ID if the given value is not nil.
+// SetNillableCommitID sets the "commit" edge to the TitCommit entity by ID if the given value is not nil.
 func (cfuo *CommittedFileUpdateOne) SetNillableCommitID(id *int) *CommittedFileUpdateOne {
 	if id != nil {
 		cfuo = cfuo.SetCommitID(*id)
@@ -200,9 +200,9 @@ func (cfuo *CommittedFileUpdateOne) SetNillableCommitID(id *int) *CommittedFileU
 	return cfuo
 }
 
-// SetCommit sets the "commit" edge to the Commit entity.
-func (cfuo *CommittedFileUpdateOne) SetCommit(c *Commit) *CommittedFileUpdateOne {
-	return cfuo.SetCommitID(c.ID)
+// SetCommit sets the "commit" edge to the TitCommit entity.
+func (cfuo *CommittedFileUpdateOne) SetCommit(t *TitCommit) *CommittedFileUpdateOne {
+	return cfuo.SetCommitID(t.ID)
 }
 
 // Mutation returns the CommittedFileMutation object of the builder.
@@ -210,7 +210,7 @@ func (cfuo *CommittedFileUpdateOne) Mutation() *CommittedFileMutation {
 	return cfuo.mutation
 }
 
-// ClearCommit clears the "commit" edge to the Commit entity.
+// ClearCommit clears the "commit" edge to the TitCommit entity.
 func (cfuo *CommittedFileUpdateOne) ClearCommit() *CommittedFileUpdateOne {
 	cfuo.mutation.ClearCommit()
 	return cfuo
@@ -309,7 +309,7 @@ func (cfuo *CommittedFileUpdateOne) sqlSave(ctx context.Context) (_node *Committ
 			Columns: []string{committedfile.CommitColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(commit.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(titcommit.FieldID, field.TypeInt),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
@@ -322,7 +322,7 @@ func (cfuo *CommittedFileUpdateOne) sqlSave(ctx context.Context) (_node *Committ
 			Columns: []string{committedfile.CommitColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(commit.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(titcommit.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

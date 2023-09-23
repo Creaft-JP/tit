@@ -8,11 +8,11 @@ import (
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
-	"github.com/Creaft-JP/tit/db/local/ent/commit"
+	"github.com/Creaft-JP/tit/db/local/ent/titcommit"
 )
 
-// Commit is the model entity for the Commit schema.
-type Commit struct {
+// TitCommit is the model entity for the TitCommit schema.
+type TitCommit struct {
 	config `json:"-"`
 	// ID of the ent.
 	ID int `json:"id,omitempty"`
@@ -21,13 +21,13 @@ type Commit struct {
 	// Message holds the value of the "message" field.
 	Message string `json:"message,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
-	// The values are being populated by the CommitQuery when eager-loading is set.
-	Edges        CommitEdges `json:"edges"`
+	// The values are being populated by the TitCommitQuery when eager-loading is set.
+	Edges        TitCommitEdges `json:"edges"`
 	selectValues sql.SelectValues
 }
 
-// CommitEdges holds the relations/edges for other nodes in the graph.
-type CommitEdges struct {
+// TitCommitEdges holds the relations/edges for other nodes in the graph.
+type TitCommitEdges struct {
 	// Files holds the value of the files edge.
 	Files []*CommittedFile `json:"files,omitempty"`
 	// loadedTypes holds the information for reporting if a
@@ -37,7 +37,7 @@ type CommitEdges struct {
 
 // FilesOrErr returns the Files value or an error if the edge
 // was not loaded in eager-loading.
-func (e CommitEdges) FilesOrErr() ([]*CommittedFile, error) {
+func (e TitCommitEdges) FilesOrErr() ([]*CommittedFile, error) {
 	if e.loadedTypes[0] {
 		return e.Files, nil
 	}
@@ -45,13 +45,13 @@ func (e CommitEdges) FilesOrErr() ([]*CommittedFile, error) {
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
-func (*Commit) scanValues(columns []string) ([]any, error) {
+func (*TitCommit) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case commit.FieldID, commit.FieldNumber:
+		case titcommit.FieldID, titcommit.FieldNumber:
 			values[i] = new(sql.NullInt64)
-		case commit.FieldMessage:
+		case titcommit.FieldMessage:
 			values[i] = new(sql.NullString)
 		default:
 			values[i] = new(sql.UnknownType)
@@ -61,80 +61,80 @@ func (*Commit) scanValues(columns []string) ([]any, error) {
 }
 
 // assignValues assigns the values that were returned from sql.Rows (after scanning)
-// to the Commit fields.
-func (c *Commit) assignValues(columns []string, values []any) error {
+// to the TitCommit fields.
+func (tc *TitCommit) assignValues(columns []string, values []any) error {
 	if m, n := len(values), len(columns); m < n {
 		return fmt.Errorf("mismatch number of scan values: %d != %d", m, n)
 	}
 	for i := range columns {
 		switch columns[i] {
-		case commit.FieldID:
+		case titcommit.FieldID:
 			value, ok := values[i].(*sql.NullInt64)
 			if !ok {
 				return fmt.Errorf("unexpected type %T for field id", value)
 			}
-			c.ID = int(value.Int64)
-		case commit.FieldNumber:
+			tc.ID = int(value.Int64)
+		case titcommit.FieldNumber:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field number", values[i])
 			} else if value.Valid {
-				c.Number = int(value.Int64)
+				tc.Number = int(value.Int64)
 			}
-		case commit.FieldMessage:
+		case titcommit.FieldMessage:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field message", values[i])
 			} else if value.Valid {
-				c.Message = value.String
+				tc.Message = value.String
 			}
 		default:
-			c.selectValues.Set(columns[i], values[i])
+			tc.selectValues.Set(columns[i], values[i])
 		}
 	}
 	return nil
 }
 
-// Value returns the ent.Value that was dynamically selected and assigned to the Commit.
+// Value returns the ent.Value that was dynamically selected and assigned to the TitCommit.
 // This includes values selected through modifiers, order, etc.
-func (c *Commit) Value(name string) (ent.Value, error) {
-	return c.selectValues.Get(name)
+func (tc *TitCommit) Value(name string) (ent.Value, error) {
+	return tc.selectValues.Get(name)
 }
 
-// QueryFiles queries the "files" edge of the Commit entity.
-func (c *Commit) QueryFiles() *CommittedFileQuery {
-	return NewCommitClient(c.config).QueryFiles(c)
+// QueryFiles queries the "files" edge of the TitCommit entity.
+func (tc *TitCommit) QueryFiles() *CommittedFileQuery {
+	return NewTitCommitClient(tc.config).QueryFiles(tc)
 }
 
-// Update returns a builder for updating this Commit.
-// Note that you need to call Commit.Unwrap() before calling this method if this Commit
+// Update returns a builder for updating this TitCommit.
+// Note that you need to call TitCommit.Unwrap() before calling this method if this TitCommit
 // was returned from a transaction, and the transaction was committed or rolled back.
-func (c *Commit) Update() *CommitUpdateOne {
-	return NewCommitClient(c.config).UpdateOne(c)
+func (tc *TitCommit) Update() *TitCommitUpdateOne {
+	return NewTitCommitClient(tc.config).UpdateOne(tc)
 }
 
-// Unwrap unwraps the Commit entity that was returned from a transaction after it was closed,
+// Unwrap unwraps the TitCommit entity that was returned from a transaction after it was closed,
 // so that all future queries will be executed through the driver which created the transaction.
-func (c *Commit) Unwrap() *Commit {
-	_tx, ok := c.config.driver.(*txDriver)
+func (tc *TitCommit) Unwrap() *TitCommit {
+	_tx, ok := tc.config.driver.(*txDriver)
 	if !ok {
-		panic("ent: Commit is not a transactional entity")
+		panic("ent: TitCommit is not a transactional entity")
 	}
-	c.config.driver = _tx.drv
-	return c
+	tc.config.driver = _tx.drv
+	return tc
 }
 
 // String implements the fmt.Stringer.
-func (c *Commit) String() string {
+func (tc *TitCommit) String() string {
 	var builder strings.Builder
-	builder.WriteString("Commit(")
-	builder.WriteString(fmt.Sprintf("id=%v, ", c.ID))
+	builder.WriteString("TitCommit(")
+	builder.WriteString(fmt.Sprintf("id=%v, ", tc.ID))
 	builder.WriteString("number=")
-	builder.WriteString(fmt.Sprintf("%v", c.Number))
+	builder.WriteString(fmt.Sprintf("%v", tc.Number))
 	builder.WriteString(", ")
 	builder.WriteString("message=")
-	builder.WriteString(c.Message)
+	builder.WriteString(tc.Message)
 	builder.WriteByte(')')
 	return builder.String()
 }
 
-// Commits is a parsable slice of Commit.
-type Commits []*Commit
+// TitCommits is a parsable slice of TitCommit.
+type TitCommits []*TitCommit

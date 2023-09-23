@@ -22,11 +22,11 @@ const (
 	Table = "committed_files"
 	// CommitTable is the table that holds the commit relation/edge.
 	CommitTable = "committed_files"
-	// CommitInverseTable is the table name for the Commit entity.
-	// It exists in this package in order to avoid circular dependency with the "commit" package.
-	CommitInverseTable = "commits"
+	// CommitInverseTable is the table name for the TitCommit entity.
+	// It exists in this package in order to avoid circular dependency with the "titcommit" package.
+	CommitInverseTable = "tit_commits"
 	// CommitColumn is the table column denoting the commit relation/edge.
-	CommitColumn = "commit_files"
+	CommitColumn = "tit_commit_files"
 )
 
 // Columns holds all SQL columns for committedfile fields.
@@ -39,7 +39,7 @@ var Columns = []string{
 // ForeignKeys holds the SQL foreign-keys that are owned by the "committed_files"
 // table and are not defined as standalone fields in the schema.
 var ForeignKeys = []string{
-	"commit_files",
+	"tit_commit_files",
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).

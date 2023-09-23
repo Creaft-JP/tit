@@ -8,24 +8,12 @@ import (
 )
 
 var (
-	// CommitsColumns holds the columns for the "commits" table.
-	CommitsColumns = []*schema.Column{
-		{Name: "id", Type: field.TypeInt, Increment: true},
-		{Name: "number", Type: field.TypeInt},
-		{Name: "message", Type: field.TypeString},
-	}
-	// CommitsTable holds the schema information for the "commits" table.
-	CommitsTable = &schema.Table{
-		Name:       "commits",
-		Columns:    CommitsColumns,
-		PrimaryKey: []*schema.Column{CommitsColumns[0]},
-	}
 	// CommittedFilesColumns holds the columns for the "committed_files" table.
 	CommittedFilesColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
 		{Name: "path", Type: field.TypeString},
 		{Name: "content", Type: field.TypeString},
-		{Name: "commit_files", Type: field.TypeInt, Nullable: true},
+		{Name: "tit_commit_files", Type: field.TypeInt, Nullable: true},
 	}
 	// CommittedFilesTable holds the schema information for the "committed_files" table.
 	CommittedFilesTable = &schema.Table{
@@ -34,9 +22,9 @@ var (
 		PrimaryKey: []*schema.Column{CommittedFilesColumns[0]},
 		ForeignKeys: []*schema.ForeignKey{
 			{
-				Symbol:     "committed_files_commits_files",
+				Symbol:     "committed_files_tit_commits_files",
 				Columns:    []*schema.Column{CommittedFilesColumns[3]},
-				RefColumns: []*schema.Column{CommitsColumns[0]},
+				RefColumns: []*schema.Column{TitCommitsColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
 		},
@@ -102,18 +90,30 @@ var (
 		Columns:    StagedFilesColumns,
 		PrimaryKey: []*schema.Column{StagedFilesColumns[0]},
 	}
+	// TitCommitsColumns holds the columns for the "tit_commits" table.
+	TitCommitsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "number", Type: field.TypeInt},
+		{Name: "message", Type: field.TypeString},
+	}
+	// TitCommitsTable holds the schema information for the "tit_commits" table.
+	TitCommitsTable = &schema.Table{
+		Name:       "tit_commits",
+		Columns:    TitCommitsColumns,
+		PrimaryKey: []*schema.Column{TitCommitsColumns[0]},
+	}
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
-		CommitsTable,
 		CommittedFilesTable,
 		PagesTable,
 		RemotesTable,
 		SectionsTable,
 		StagedFilesTable,
+		TitCommitsTable,
 	}
 )
 
 func init() {
-	CommittedFilesTable.ForeignKeys[0].RefTable = CommitsTable
+	CommittedFilesTable.ForeignKeys[0].RefTable = TitCommitsTable
 	SectionsTable.ForeignKeys[0].RefTable = PagesTable
 }

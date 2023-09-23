@@ -9,8 +9,8 @@ import (
 
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"github.com/Creaft-JP/tit/db/local/ent/commit"
 	"github.com/Creaft-JP/tit/db/local/ent/committedfile"
+	"github.com/Creaft-JP/tit/db/local/ent/titcommit"
 )
 
 // CommittedFileCreate is the builder for creating a CommittedFile entity.
@@ -32,13 +32,13 @@ func (cfc *CommittedFileCreate) SetContent(s string) *CommittedFileCreate {
 	return cfc
 }
 
-// SetCommitID sets the "commit" edge to the Commit entity by ID.
+// SetCommitID sets the "commit" edge to the TitCommit entity by ID.
 func (cfc *CommittedFileCreate) SetCommitID(id int) *CommittedFileCreate {
 	cfc.mutation.SetCommitID(id)
 	return cfc
 }
 
-// SetNillableCommitID sets the "commit" edge to the Commit entity by ID if the given value is not nil.
+// SetNillableCommitID sets the "commit" edge to the TitCommit entity by ID if the given value is not nil.
 func (cfc *CommittedFileCreate) SetNillableCommitID(id *int) *CommittedFileCreate {
 	if id != nil {
 		cfc = cfc.SetCommitID(*id)
@@ -46,9 +46,9 @@ func (cfc *CommittedFileCreate) SetNillableCommitID(id *int) *CommittedFileCreat
 	return cfc
 }
 
-// SetCommit sets the "commit" edge to the Commit entity.
-func (cfc *CommittedFileCreate) SetCommit(c *Commit) *CommittedFileCreate {
-	return cfc.SetCommitID(c.ID)
+// SetCommit sets the "commit" edge to the TitCommit entity.
+func (cfc *CommittedFileCreate) SetCommit(t *TitCommit) *CommittedFileCreate {
+	return cfc.SetCommitID(t.ID)
 }
 
 // Mutation returns the CommittedFileMutation object of the builder.
@@ -138,13 +138,13 @@ func (cfc *CommittedFileCreate) createSpec() (*CommittedFile, *sqlgraph.CreateSp
 			Columns: []string{committedfile.CommitColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(commit.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(titcommit.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
-		_node.commit_files = &nodes[0]
+		_node.tit_commit_files = &nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec

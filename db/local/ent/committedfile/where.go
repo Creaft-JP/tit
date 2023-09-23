@@ -205,7 +205,7 @@ func HasCommit() predicate.CommittedFile {
 }
 
 // HasCommitWith applies the HasEdge predicate on the "commit" edge with a given conditions (other predicates).
-func HasCommitWith(preds ...predicate.Commit) predicate.CommittedFile {
+func HasCommitWith(preds ...predicate.TitCommit) predicate.CommittedFile {
 	return predicate.CommittedFile(func(s *sql.Selector) {
 		step := newCommitStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {

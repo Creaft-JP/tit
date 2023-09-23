@@ -8,8 +8,8 @@ import (
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
-	"github.com/Creaft-JP/tit/db/local/ent/commit"
 	"github.com/Creaft-JP/tit/db/local/ent/committedfile"
+	"github.com/Creaft-JP/tit/db/local/ent/titcommit"
 )
 
 // CommittedFile is the model entity for the CommittedFile schema.
@@ -23,15 +23,15 @@ type CommittedFile struct {
 	Content string `json:"content,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the CommittedFileQuery when eager-loading is set.
-	Edges        CommittedFileEdges `json:"edges"`
-	commit_files *int
-	selectValues sql.SelectValues
+	Edges            CommittedFileEdges `json:"edges"`
+	tit_commit_files *int
+	selectValues     sql.SelectValues
 }
 
 // CommittedFileEdges holds the relations/edges for other nodes in the graph.
 type CommittedFileEdges struct {
 	// Commit holds the value of the commit edge.
-	Commit *Commit `json:"commit,omitempty"`
+	Commit *TitCommit `json:"commit,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
 	loadedTypes [1]bool
@@ -39,11 +39,11 @@ type CommittedFileEdges struct {
 
 // CommitOrErr returns the Commit value or an error if the edge
 // was not loaded in eager-loading, or loaded but was not found.
-func (e CommittedFileEdges) CommitOrErr() (*Commit, error) {
+func (e CommittedFileEdges) CommitOrErr() (*TitCommit, error) {
 	if e.loadedTypes[0] {
 		if e.Commit == nil {
 			// Edge was loaded but was not found.
-			return nil, &NotFoundError{label: commit.Label}
+			return nil, &NotFoundError{label: titcommit.Label}
 		}
 		return e.Commit, nil
 	}
@@ -59,7 +59,7 @@ func (*CommittedFile) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullInt64)
 		case committedfile.FieldPath, committedfile.FieldContent:
 			values[i] = new(sql.NullString)
-		case committedfile.ForeignKeys[0]: // commit_files
+		case committedfile.ForeignKeys[0]: // tit_commit_files
 			values[i] = new(sql.NullInt64)
 		default:
 			values[i] = new(sql.UnknownType)
@@ -96,10 +96,10 @@ func (cf *CommittedFile) assignValues(columns []string, values []any) error {
 			}
 		case committedfile.ForeignKeys[0]:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
-				return fmt.Errorf("unexpected type %T for edge-field commit_files", value)
+				return fmt.Errorf("unexpected type %T for edge-field tit_commit_files", value)
 			} else if value.Valid {
-				cf.commit_files = new(int)
-				*cf.commit_files = int(value.Int64)
+				cf.tit_commit_files = new(int)
+				*cf.tit_commit_files = int(value.Int64)
 			}
 		default:
 			cf.selectValues.Set(columns[i], values[i])
@@ -115,7 +115,7 @@ func (cf *CommittedFile) Value(name string) (ent.Value, error) {
 }
 
 // QueryCommit queries the "commit" edge of the CommittedFile entity.
-func (cf *CommittedFile) QueryCommit() *CommitQuery {
+func (cf *CommittedFile) QueryCommit() *TitCommitQuery {
 	return NewCommittedFileClient(cf.config).QueryCommit(cf)
 }
 

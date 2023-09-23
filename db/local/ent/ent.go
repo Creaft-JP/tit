@@ -12,12 +12,12 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
-	"github.com/Creaft-JP/tit/db/local/ent/commit"
 	"github.com/Creaft-JP/tit/db/local/ent/committedfile"
 	"github.com/Creaft-JP/tit/db/local/ent/page"
 	"github.com/Creaft-JP/tit/db/local/ent/remote"
 	"github.com/Creaft-JP/tit/db/local/ent/section"
 	"github.com/Creaft-JP/tit/db/local/ent/stagedfile"
+	"github.com/Creaft-JP/tit/db/local/ent/titcommit"
 )
 
 // ent aliases to avoid import conflicts in user's code.
@@ -78,12 +78,12 @@ var (
 func checkColumn(table, column string) error {
 	initCheck.Do(func() {
 		columnCheck = sql.NewColumnCheck(map[string]func(string) bool{
-			commit.Table:        commit.ValidColumn,
 			committedfile.Table: committedfile.ValidColumn,
 			page.Table:          page.ValidColumn,
 			remote.Table:        remote.ValidColumn,
 			section.Table:       section.ValidColumn,
 			stagedfile.Table:    stagedfile.ValidColumn,
+			titcommit.Table:     titcommit.ValidColumn,
 		})
 	})
 	return columnCheck(table, column)

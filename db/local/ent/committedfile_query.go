@@ -10,9 +10,9 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"github.com/Creaft-JP/tit/db/local/ent/commit"
 	"github.com/Creaft-JP/tit/db/local/ent/committedfile"
 	"github.com/Creaft-JP/tit/db/local/ent/predicate"
+	"github.com/Creaft-JP/tit/db/local/ent/titcommit"
 )
 
 // CommittedFileQuery is the builder for querying CommittedFile entities.
@@ -22,7 +22,7 @@ type CommittedFileQuery struct {
 	order      []committedfile.OrderOption
 	inters     []Interceptor
 	predicates []predicate.CommittedFile
-	withCommit *CommitQuery
+	withCommit *TitCommitQuery
 	withFKs    bool
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
@@ -61,8 +61,8 @@ func (cfq *CommittedFileQuery) Order(o ...committedfile.OrderOption) *CommittedF
 }
 
 // QueryCommit chains the current query on the "commit" edge.
-func (cfq *CommittedFileQuery) QueryCommit() *CommitQuery {
-	query := (&CommitClient{config: cfq.config}).Query()
+func (cfq *CommittedFileQuery) QueryCommit() *TitCommitQuery {
+	query := (&TitCommitClient{config: cfq.config}).Query()
 	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
 		if err := cfq.prepareQuery(ctx); err != nil {
 			return nil, err
@@ -73,7 +73,7 @@ func (cfq *CommittedFileQuery) QueryCommit() *CommitQuery {
 		}
 		step := sqlgraph.NewStep(
 			sqlgraph.From(committedfile.Table, committedfile.FieldID, selector),
-			sqlgraph.To(commit.Table, commit.FieldID),
+			sqlgraph.To(titcommit.Table, titcommit.FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, true, committedfile.CommitTable, committedfile.CommitColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(cfq.driver.Dialect(), step)
@@ -283,8 +283,8 @@ func (cfq *CommittedFileQuery) Clone() *CommittedFileQuery {
 
 // WithCommit tells the query-builder to eager-load the nodes that are connected to
 // the "commit" edge. The optional arguments are used to configure the query builder of the edge.
-func (cfq *CommittedFileQuery) WithCommit(opts ...func(*CommitQuery)) *CommittedFileQuery {
-	query := (&CommitClient{config: cfq.config}).Query()
+func (cfq *CommittedFileQuery) WithCommit(opts ...func(*TitCommitQuery)) *CommittedFileQuery {
+	query := (&TitCommitClient{config: cfq.config}).Query()
 	for _, opt := range opts {
 		opt(query)
 	}
@@ -401,21 +401,21 @@ func (cfq *CommittedFileQuery) sqlAll(ctx context.Context, hooks ...queryHook) (
 	}
 	if query := cfq.withCommit; query != nil {
 		if err := cfq.loadCommit(ctx, query, nodes, nil,
-			func(n *CommittedFile, e *Commit) { n.Edges.Commit = e }); err != nil {
+			func(n *CommittedFile, e *TitCommit) { n.Edges.Commit = e }); err != nil {
 			return nil, err
 		}
 	}
 	return nodes, nil
 }
 
-func (cfq *CommittedFileQuery) loadCommit(ctx context.Context, query *CommitQuery, nodes []*CommittedFile, init func(*CommittedFile), assign func(*CommittedFile, *Commit)) error {
+func (cfq *CommittedFileQuery) loadCommit(ctx context.Context, query *TitCommitQuery, nodes []*CommittedFile, init func(*CommittedFile), assign func(*CommittedFile, *TitCommit)) error {
 	ids := make([]int, 0, len(nodes))
 	nodeids := make(map[int][]*CommittedFile)
 	for i := range nodes {
-		if nodes[i].commit_files == nil {
+		if nodes[i].tit_commit_files == nil {
 			continue
 		}
-		fk := *nodes[i].commit_files
+		fk := *nodes[i].tit_commit_files
 		if _, ok := nodeids[fk]; !ok {
 			ids = append(ids, fk)
 		}
@@ -424,7 +424,7 @@ func (cfq *CommittedFileQuery) loadCommit(ctx context.Context, query *CommitQuer
 	if len(ids) == 0 {
 		return nil
 	}
-	query.Where(commit.IDIn(ids...))
+	query.Where(titcommit.IDIn(ids...))
 	neighbors, err := query.All(ctx)
 	if err != nil {
 		return err
@@ -432,7 +432,7 @@ func (cfq *CommittedFileQuery) loadCommit(ctx context.Context, query *CommitQuer
 	for _, n := range neighbors {
 		nodes, ok := nodeids[n.ID]
 		if !ok {
-			return fmt.Errorf(`unexpected foreign-key "commit_files" returned %v`, n.ID)
+			return fmt.Errorf(`unexpected foreign-key "tit_commit_files" returned %v`, n.ID)
 		}
 		for i := range nodes {
 			assign(nodes[i], n)
