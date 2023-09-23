@@ -2,6 +2,7 @@ package subcommands
 
 import (
 	"context"
+	"database/sql"
 	"github.com/Creaft-JP/tit/db/local"
 	"github.com/Creaft-JP/tit/db/local/ent"
 	"github.com/Creaft-JP/tit/directories"
@@ -35,5 +36,22 @@ func Init(ctx context.Context) (ret error) {
 	if err := local.Migrate(client, ctx); err != nil {
 		return failure.Wrap(err)
 	}
-	return nil
+	transaction, err := client.BeginTx(ctx, &sql.TxOptions{Isolation: sql.LevelRepeatableRead})
+	section, err := transaction.Section.Create().
+		SetSlug("section").
+		SetNumber(1).
+		SetTitle("").
+		SetOverviewSentence("").Save(ctx)
+	if err != nil {
+		return multierr.Append(failure.Translate(err, e.Database), transaction.Rollback())
+	}
+	if _, err := transaction.Page.Create().
+		SetPathname("/").
+		SetNumber(1).
+		SetTitle("").
+		SetOverviewSentence("").
+		AddSections(section).Save(ctx); err != nil {
+		return multierr.Append(failure.Translate(err, e.Database), transaction.Rollback())
+	}
+	return failure.Translate(transaction.Commit(), e.Database)
 }
