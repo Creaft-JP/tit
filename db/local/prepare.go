@@ -27,11 +27,20 @@ func Migrate(client *ent.Client, ctx context.Context) error {
 	if err := client.Schema.Create(ctx); err != nil {
 		return failure.Translate(err, e.Database)
 	}
+	section, err := client.Section.Create().
+		SetSlug("section").
+		SetNumber(1).
+		SetTitle("").
+		SetOverviewSentence("").Save(ctx)
+	if err != nil {
+		return failure.Translate(err, e.Database)
+	}
 	if _, err := client.Page.Create().
 		SetPathname("/").
 		SetNumber(1).
 		SetTitle("").
-		SetOverviewSentence("").Save(ctx); err != nil {
+		SetOverviewSentence("").
+		AddSections(section).Save(ctx); err != nil {
 		return failure.Translate(err, e.Database)
 	}
 	return nil
