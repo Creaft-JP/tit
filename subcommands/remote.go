@@ -10,7 +10,7 @@ import (
 	"io"
 )
 
-func Remote(args []string /*configReader io.Reader, */, consoleWriter io.Writer, client *ent.Client, ctx context.Context) error {
+func Remote(args []string, consoleWriter io.Writer, client *ent.Client, ctx context.Context) error {
 	fs := flag.NewFlagSet("remote", flag.ContinueOnError)
 	var verbose bool
 	setVerbose(fs, &verbose, "verbose")
