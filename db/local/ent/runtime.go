@@ -3,6 +3,8 @@
 package ent
 
 import (
+	"github.com/Creaft-JP/tit/db/local/ent/commit"
+	"github.com/Creaft-JP/tit/db/local/ent/committedfile"
 	"github.com/Creaft-JP/tit/db/local/ent/page"
 	"github.com/Creaft-JP/tit/db/local/ent/remote"
 	"github.com/Creaft-JP/tit/db/local/ent/schema"
@@ -14,6 +16,22 @@ import (
 // (default values, validators, hooks and policies) and stitches it
 // to their package variables.
 func init() {
+	commitFields := schema.Commit{}.Fields()
+	_ = commitFields
+	// commitDescNumber is the schema descriptor for number field.
+	commitDescNumber := commitFields[0].Descriptor()
+	// commit.NumberValidator is a validator for the "number" field. It is called by the builders before save.
+	commit.NumberValidator = commitDescNumber.Validators[0].(func(int) error)
+	// commitDescMessage is the schema descriptor for message field.
+	commitDescMessage := commitFields[1].Descriptor()
+	// commit.MessageValidator is a validator for the "message" field. It is called by the builders before save.
+	commit.MessageValidator = commitDescMessage.Validators[0].(func(string) error)
+	committedfileFields := schema.CommittedFile{}.Fields()
+	_ = committedfileFields
+	// committedfileDescPath is the schema descriptor for path field.
+	committedfileDescPath := committedfileFields[0].Descriptor()
+	// committedfile.PathValidator is a validator for the "path" field. It is called by the builders before save.
+	committedfile.PathValidator = committedfileDescPath.Validators[0].(func(string) error)
 	pageFields := schema.Page{}.Fields()
 	_ = pageFields
 	// pageDescPathname is the schema descriptor for pathname field.

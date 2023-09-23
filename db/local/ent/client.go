@@ -14,6 +14,8 @@ import (
 	"entgo.io/ent/dialect"
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
+	"github.com/Creaft-JP/tit/db/local/ent/commit"
+	"github.com/Creaft-JP/tit/db/local/ent/committedfile"
 	"github.com/Creaft-JP/tit/db/local/ent/page"
 	"github.com/Creaft-JP/tit/db/local/ent/remote"
 	"github.com/Creaft-JP/tit/db/local/ent/section"
@@ -25,6 +27,10 @@ type Client struct {
 	config
 	// Schema is the client for creating, migrating and dropping schema.
 	Schema *migrate.Schema
+	// Commit is the client for interacting with the Commit builders.
+	Commit *CommitClient
+	// CommittedFile is the client for interacting with the CommittedFile builders.
+	CommittedFile *CommittedFileClient
 	// Page is the client for interacting with the Page builders.
 	Page *PageClient
 	// Remote is the client for interacting with the Remote builders.
@@ -46,6 +52,8 @@ func NewClient(opts ...Option) *Client {
 
 func (c *Client) init() {
 	c.Schema = migrate.NewSchema(c.driver)
+	c.Commit = NewCommitClient(c.config)
+	c.CommittedFile = NewCommittedFileClient(c.config)
 	c.Page = NewPageClient(c.config)
 	c.Remote = NewRemoteClient(c.config)
 	c.Section = NewSectionClient(c.config)
@@ -130,12 +138,14 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 	cfg := c.config
 	cfg.driver = tx
 	return &Tx{
-		ctx:        ctx,
-		config:     cfg,
-		Page:       NewPageClient(cfg),
-		Remote:     NewRemoteClient(cfg),
-		Section:    NewSectionClient(cfg),
-		StagedFile: NewStagedFileClient(cfg),
+		ctx:           ctx,
+		config:        cfg,
+		Commit:        NewCommitClient(cfg),
+		CommittedFile: NewCommittedFileClient(cfg),
+		Page:          NewPageClient(cfg),
+		Remote:        NewRemoteClient(cfg),
+		Section:       NewSectionClient(cfg),
+		StagedFile:    NewStagedFileClient(cfg),
 	}, nil
 }
 
@@ -153,19 +163,21 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 	cfg := c.config
 	cfg.driver = &txDriver{tx: tx, drv: c.driver}
 	return &Tx{
-		ctx:        ctx,
-		config:     cfg,
-		Page:       NewPageClient(cfg),
-		Remote:     NewRemoteClient(cfg),
-		Section:    NewSectionClient(cfg),
-		StagedFile: NewStagedFileClient(cfg),
+		ctx:           ctx,
+		config:        cfg,
+		Commit:        NewCommitClient(cfg),
+		CommittedFile: NewCommittedFileClient(cfg),
+		Page:          NewPageClient(cfg),
+		Remote:        NewRemoteClient(cfg),
+		Section:       NewSectionClient(cfg),
+		StagedFile:    NewStagedFileClient(cfg),
 	}, nil
 }
 
 // Debug returns a new debug-client. It's used to get verbose logging on specific operations.
 //
 //	client.Debug().
-//		Page.
+//		Commit.
 //		Query().
 //		Count(ctx)
 func (c *Client) Debug() *Client {
@@ -187,24 +199,30 @@ func (c *Client) Close() error {
 // Use adds the mutation hooks to all the entity clients.
 // In order to add hooks to a specific client, call: `client.Node.Use(...)`.
 func (c *Client) Use(hooks ...Hook) {
-	c.Page.Use(hooks...)
-	c.Remote.Use(hooks...)
-	c.Section.Use(hooks...)
-	c.StagedFile.Use(hooks...)
+	for _, n := range []interface{ Use(...Hook) }{
+		c.Commit, c.CommittedFile, c.Page, c.Remote, c.Section, c.StagedFile,
+	} {
+		n.Use(hooks...)
+	}
 }
 
 // Intercept adds the query interceptors to all the entity clients.
 // In order to add interceptors to a specific client, call: `client.Node.Intercept(...)`.
 func (c *Client) Intercept(interceptors ...Interceptor) {
-	c.Page.Intercept(interceptors...)
-	c.Remote.Intercept(interceptors...)
-	c.Section.Intercept(interceptors...)
-	c.StagedFile.Intercept(interceptors...)
+	for _, n := range []interface{ Intercept(...Interceptor) }{
+		c.Commit, c.CommittedFile, c.Page, c.Remote, c.Section, c.StagedFile,
+	} {
+		n.Intercept(interceptors...)
+	}
 }
 
 // Mutate implements the ent.Mutator interface.
 func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 	switch m := m.(type) {
+	case *CommitMutation:
+		return c.Commit.mutate(ctx, m)
+	case *CommittedFileMutation:
+		return c.CommittedFile.mutate(ctx, m)
 	case *PageMutation:
 		return c.Page.mutate(ctx, m)
 	case *RemoteMutation:
@@ -215,6 +233,274 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.StagedFile.mutate(ctx, m)
 	default:
 		return nil, fmt.Errorf("ent: unknown mutation type %T", m)
+	}
+}
+
+// CommitClient is a client for the Commit schema.
+type CommitClient struct {
+	config
+}
+
+// NewCommitClient returns a client for the Commit from the given config.
+func NewCommitClient(c config) *CommitClient {
+	return &CommitClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `commit.Hooks(f(g(h())))`.
+func (c *CommitClient) Use(hooks ...Hook) {
+	c.hooks.Commit = append(c.hooks.Commit, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `commit.Intercept(f(g(h())))`.
+func (c *CommitClient) Intercept(interceptors ...Interceptor) {
+	c.inters.Commit = append(c.inters.Commit, interceptors...)
+}
+
+// Create returns a builder for creating a Commit entity.
+func (c *CommitClient) Create() *CommitCreate {
+	mutation := newCommitMutation(c.config, OpCreate)
+	return &CommitCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of Commit entities.
+func (c *CommitClient) CreateBulk(builders ...*CommitCreate) *CommitCreateBulk {
+	return &CommitCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for Commit.
+func (c *CommitClient) Update() *CommitUpdate {
+	mutation := newCommitMutation(c.config, OpUpdate)
+	return &CommitUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *CommitClient) UpdateOne(co *Commit) *CommitUpdateOne {
+	mutation := newCommitMutation(c.config, OpUpdateOne, withCommit(co))
+	return &CommitUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *CommitClient) UpdateOneID(id int) *CommitUpdateOne {
+	mutation := newCommitMutation(c.config, OpUpdateOne, withCommitID(id))
+	return &CommitUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for Commit.
+func (c *CommitClient) Delete() *CommitDelete {
+	mutation := newCommitMutation(c.config, OpDelete)
+	return &CommitDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *CommitClient) DeleteOne(co *Commit) *CommitDeleteOne {
+	return c.DeleteOneID(co.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *CommitClient) DeleteOneID(id int) *CommitDeleteOne {
+	builder := c.Delete().Where(commit.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &CommitDeleteOne{builder}
+}
+
+// Query returns a query builder for Commit.
+func (c *CommitClient) Query() *CommitQuery {
+	return &CommitQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeCommit},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a Commit entity by its id.
+func (c *CommitClient) Get(ctx context.Context, id int) (*Commit, error) {
+	return c.Query().Where(commit.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *CommitClient) GetX(ctx context.Context, id int) *Commit {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryFiles queries the files edge of a Commit.
+func (c *CommitClient) QueryFiles(co *Commit) *CommittedFileQuery {
+	query := (&CommittedFileClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := co.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(commit.Table, commit.FieldID, id),
+			sqlgraph.To(committedfile.Table, committedfile.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, commit.FilesTable, commit.FilesColumn),
+		)
+		fromV = sqlgraph.Neighbors(co.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *CommitClient) Hooks() []Hook {
+	return c.hooks.Commit
+}
+
+// Interceptors returns the client interceptors.
+func (c *CommitClient) Interceptors() []Interceptor {
+	return c.inters.Commit
+}
+
+func (c *CommitClient) mutate(ctx context.Context, m *CommitMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&CommitCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&CommitUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&CommitUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&CommitDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown Commit mutation op: %q", m.Op())
+	}
+}
+
+// CommittedFileClient is a client for the CommittedFile schema.
+type CommittedFileClient struct {
+	config
+}
+
+// NewCommittedFileClient returns a client for the CommittedFile from the given config.
+func NewCommittedFileClient(c config) *CommittedFileClient {
+	return &CommittedFileClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `committedfile.Hooks(f(g(h())))`.
+func (c *CommittedFileClient) Use(hooks ...Hook) {
+	c.hooks.CommittedFile = append(c.hooks.CommittedFile, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `committedfile.Intercept(f(g(h())))`.
+func (c *CommittedFileClient) Intercept(interceptors ...Interceptor) {
+	c.inters.CommittedFile = append(c.inters.CommittedFile, interceptors...)
+}
+
+// Create returns a builder for creating a CommittedFile entity.
+func (c *CommittedFileClient) Create() *CommittedFileCreate {
+	mutation := newCommittedFileMutation(c.config, OpCreate)
+	return &CommittedFileCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of CommittedFile entities.
+func (c *CommittedFileClient) CreateBulk(builders ...*CommittedFileCreate) *CommittedFileCreateBulk {
+	return &CommittedFileCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for CommittedFile.
+func (c *CommittedFileClient) Update() *CommittedFileUpdate {
+	mutation := newCommittedFileMutation(c.config, OpUpdate)
+	return &CommittedFileUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *CommittedFileClient) UpdateOne(cf *CommittedFile) *CommittedFileUpdateOne {
+	mutation := newCommittedFileMutation(c.config, OpUpdateOne, withCommittedFile(cf))
+	return &CommittedFileUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *CommittedFileClient) UpdateOneID(id int) *CommittedFileUpdateOne {
+	mutation := newCommittedFileMutation(c.config, OpUpdateOne, withCommittedFileID(id))
+	return &CommittedFileUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for CommittedFile.
+func (c *CommittedFileClient) Delete() *CommittedFileDelete {
+	mutation := newCommittedFileMutation(c.config, OpDelete)
+	return &CommittedFileDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *CommittedFileClient) DeleteOne(cf *CommittedFile) *CommittedFileDeleteOne {
+	return c.DeleteOneID(cf.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *CommittedFileClient) DeleteOneID(id int) *CommittedFileDeleteOne {
+	builder := c.Delete().Where(committedfile.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &CommittedFileDeleteOne{builder}
+}
+
+// Query returns a query builder for CommittedFile.
+func (c *CommittedFileClient) Query() *CommittedFileQuery {
+	return &CommittedFileQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeCommittedFile},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a CommittedFile entity by its id.
+func (c *CommittedFileClient) Get(ctx context.Context, id int) (*CommittedFile, error) {
+	return c.Query().Where(committedfile.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *CommittedFileClient) GetX(ctx context.Context, id int) *CommittedFile {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryCommit queries the commit edge of a CommittedFile.
+func (c *CommittedFileClient) QueryCommit(cf *CommittedFile) *CommitQuery {
+	query := (&CommitClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := cf.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(committedfile.Table, committedfile.FieldID, id),
+			sqlgraph.To(commit.Table, commit.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, committedfile.CommitTable, committedfile.CommitColumn),
+		)
+		fromV = sqlgraph.Neighbors(cf.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *CommittedFileClient) Hooks() []Hook {
+	return c.hooks.CommittedFile
+}
+
+// Interceptors returns the client interceptors.
+func (c *CommittedFileClient) Interceptors() []Interceptor {
+	return c.inters.CommittedFile
+}
+
+func (c *CommittedFileClient) mutate(ctx context.Context, m *CommittedFileMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&CommittedFileCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&CommittedFileUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&CommittedFileUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&CommittedFileDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown CommittedFile mutation op: %q", m.Op())
 	}
 }
 
@@ -725,9 +1011,9 @@ func (c *StagedFileClient) mutate(ctx context.Context, m *StagedFileMutation) (V
 // hooks and interceptors per client, for fast access.
 type (
 	hooks struct {
-		Page, Remote, Section, StagedFile []ent.Hook
+		Commit, CommittedFile, Page, Remote, Section, StagedFile []ent.Hook
 	}
 	inters struct {
-		Page, Remote, Section, StagedFile []ent.Interceptor
+		Commit, CommittedFile, Page, Remote, Section, StagedFile []ent.Interceptor
 	}
 )

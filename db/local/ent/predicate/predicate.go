@@ -6,6 +6,12 @@ import (
 	"entgo.io/ent/dialect/sql"
 )
 
+// Commit is the predicate function for commit builders.
+type Commit func(*sql.Selector)
+
+// CommittedFile is the predicate function for committedfile builders.
+type CommittedFile func(*sql.Selector)
+
 // Page is the predicate function for page builders.
 type Page func(*sql.Selector)
 

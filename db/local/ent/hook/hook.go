@@ -9,6 +9,30 @@ import (
 	"github.com/Creaft-JP/tit/db/local/ent"
 )
 
+// The CommitFunc type is an adapter to allow the use of ordinary
+// function as Commit mutator.
+type CommitFunc func(context.Context, *ent.CommitMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f CommitFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.CommitMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.CommitMutation", m)
+}
+
+// The CommittedFileFunc type is an adapter to allow the use of ordinary
+// function as CommittedFile mutator.
+type CommittedFileFunc func(context.Context, *ent.CommittedFileMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f CommittedFileFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.CommittedFileMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.CommittedFileMutation", m)
+}
+
 // The PageFunc type is an adapter to allow the use of ordinary
 // function as Page mutator.
 type PageFunc func(context.Context, *ent.PageMutation) (ent.Value, error)
