@@ -13,17 +13,20 @@ import (
 	"entgo.io/ent/schema/field"
 	"github.com/Creaft-JP/tit/db/local/ent/committedfile"
 	"github.com/Creaft-JP/tit/db/local/ent/predicate"
+	"github.com/Creaft-JP/tit/db/local/ent/section"
 	"github.com/Creaft-JP/tit/db/local/ent/titcommit"
 )
 
 // TitCommitQuery is the builder for querying TitCommit entities.
 type TitCommitQuery struct {
 	config
-	ctx        *QueryContext
-	order      []titcommit.OrderOption
-	inters     []Interceptor
-	predicates []predicate.TitCommit
-	withFiles  *CommittedFileQuery
+	ctx         *QueryContext
+	order       []titcommit.OrderOption
+	inters      []Interceptor
+	predicates  []predicate.TitCommit
+	withSection *SectionQuery
+	withFiles   *CommittedFileQuery
+	withFKs     bool
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -58,6 +61,28 @@ func (tcq *TitCommitQuery) Unique(unique bool) *TitCommitQuery {
 func (tcq *TitCommitQuery) Order(o ...titcommit.OrderOption) *TitCommitQuery {
 	tcq.order = append(tcq.order, o...)
 	return tcq
+}
+
+// QuerySection chains the current query on the "section" edge.
+func (tcq *TitCommitQuery) QuerySection() *SectionQuery {
+	query := (&SectionClient{config: tcq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := tcq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := tcq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(titcommit.Table, titcommit.FieldID, selector),
+			sqlgraph.To(section.Table, section.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, titcommit.SectionTable, titcommit.SectionColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(tcq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
 }
 
 // QueryFiles chains the current query on the "files" edge.
@@ -269,16 +294,28 @@ func (tcq *TitCommitQuery) Clone() *TitCommitQuery {
 		return nil
 	}
 	return &TitCommitQuery{
-		config:     tcq.config,
-		ctx:        tcq.ctx.Clone(),
-		order:      append([]titcommit.OrderOption{}, tcq.order...),
-		inters:     append([]Interceptor{}, tcq.inters...),
-		predicates: append([]predicate.TitCommit{}, tcq.predicates...),
-		withFiles:  tcq.withFiles.Clone(),
+		config:      tcq.config,
+		ctx:         tcq.ctx.Clone(),
+		order:       append([]titcommit.OrderOption{}, tcq.order...),
+		inters:      append([]Interceptor{}, tcq.inters...),
+		predicates:  append([]predicate.TitCommit{}, tcq.predicates...),
+		withSection: tcq.withSection.Clone(),
+		withFiles:   tcq.withFiles.Clone(),
 		// clone intermediate query.
 		sql:  tcq.sql.Clone(),
 		path: tcq.path,
 	}
+}
+
+// WithSection tells the query-builder to eager-load the nodes that are connected to
+// the "section" edge. The optional arguments are used to configure the query builder of the edge.
+func (tcq *TitCommitQuery) WithSection(opts ...func(*SectionQuery)) *TitCommitQuery {
+	query := (&SectionClient{config: tcq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	tcq.withSection = query
+	return tcq
 }
 
 // WithFiles tells the query-builder to eager-load the nodes that are connected to
@@ -369,11 +406,19 @@ func (tcq *TitCommitQuery) prepareQuery(ctx context.Context) error {
 func (tcq *TitCommitQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*TitCommit, error) {
 	var (
 		nodes       = []*TitCommit{}
+		withFKs     = tcq.withFKs
 		_spec       = tcq.querySpec()
-		loadedTypes = [1]bool{
+		loadedTypes = [2]bool{
+			tcq.withSection != nil,
 			tcq.withFiles != nil,
 		}
 	)
+	if tcq.withSection != nil {
+		withFKs = true
+	}
+	if withFKs {
+		_spec.Node.Columns = append(_spec.Node.Columns, titcommit.ForeignKeys...)
+	}
 	_spec.ScanValues = func(columns []string) ([]any, error) {
 		return (*TitCommit).scanValues(nil, columns)
 	}
@@ -392,6 +437,12 @@ func (tcq *TitCommitQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*T
 	if len(nodes) == 0 {
 		return nodes, nil
 	}
+	if query := tcq.withSection; query != nil {
+		if err := tcq.loadSection(ctx, query, nodes, nil,
+			func(n *TitCommit, e *Section) { n.Edges.Section = e }); err != nil {
+			return nil, err
+		}
+	}
 	if query := tcq.withFiles; query != nil {
 		if err := tcq.loadFiles(ctx, query, nodes,
 			func(n *TitCommit) { n.Edges.Files = []*CommittedFile{} },
@@ -402,6 +453,38 @@ func (tcq *TitCommitQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*T
 	return nodes, nil
 }
 
+func (tcq *TitCommitQuery) loadSection(ctx context.Context, query *SectionQuery, nodes []*TitCommit, init func(*TitCommit), assign func(*TitCommit, *Section)) error {
+	ids := make([]int, 0, len(nodes))
+	nodeids := make(map[int][]*TitCommit)
+	for i := range nodes {
+		if nodes[i].section_commits == nil {
+			continue
+		}
+		fk := *nodes[i].section_commits
+		if _, ok := nodeids[fk]; !ok {
+			ids = append(ids, fk)
+		}
+		nodeids[fk] = append(nodeids[fk], nodes[i])
+	}
+	if len(ids) == 0 {
+		return nil
+	}
+	query.Where(section.IDIn(ids...))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		nodes, ok := nodeids[n.ID]
+		if !ok {
+			return fmt.Errorf(`unexpected foreign-key "section_commits" returned %v`, n.ID)
+		}
+		for i := range nodes {
+			assign(nodes[i], n)
+		}
+	}
+	return nil
+}
 func (tcq *TitCommitQuery) loadFiles(ctx context.Context, query *CommittedFileQuery, nodes []*TitCommit, init func(*TitCommit), assign func(*TitCommit, *CommittedFile)) error {
 	fks := make([]driver.Value, 0, len(nodes))
 	nodeids := make(map[int]*TitCommit)

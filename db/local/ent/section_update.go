@@ -13,6 +13,7 @@ import (
 	"github.com/Creaft-JP/tit/db/local/ent/page"
 	"github.com/Creaft-JP/tit/db/local/ent/predicate"
 	"github.com/Creaft-JP/tit/db/local/ent/section"
+	"github.com/Creaft-JP/tit/db/local/ent/titcommit"
 )
 
 // SectionUpdate is the builder for updating Section entities.
@@ -78,6 +79,21 @@ func (su *SectionUpdate) SetPage(p *Page) *SectionUpdate {
 	return su.SetPageID(p.ID)
 }
 
+// AddCommitIDs adds the "commits" edge to the TitCommit entity by IDs.
+func (su *SectionUpdate) AddCommitIDs(ids ...int) *SectionUpdate {
+	su.mutation.AddCommitIDs(ids...)
+	return su
+}
+
+// AddCommits adds the "commits" edges to the TitCommit entity.
+func (su *SectionUpdate) AddCommits(t ...*TitCommit) *SectionUpdate {
+	ids := make([]int, len(t))
+	for i := range t {
+		ids[i] = t[i].ID
+	}
+	return su.AddCommitIDs(ids...)
+}
+
 // Mutation returns the SectionMutation object of the builder.
 func (su *SectionUpdate) Mutation() *SectionMutation {
 	return su.mutation
@@ -87,6 +103,27 @@ func (su *SectionUpdate) Mutation() *SectionMutation {
 func (su *SectionUpdate) ClearPage() *SectionUpdate {
 	su.mutation.ClearPage()
 	return su
+}
+
+// ClearCommits clears all "commits" edges to the TitCommit entity.
+func (su *SectionUpdate) ClearCommits() *SectionUpdate {
+	su.mutation.ClearCommits()
+	return su
+}
+
+// RemoveCommitIDs removes the "commits" edge to TitCommit entities by IDs.
+func (su *SectionUpdate) RemoveCommitIDs(ids ...int) *SectionUpdate {
+	su.mutation.RemoveCommitIDs(ids...)
+	return su
+}
+
+// RemoveCommits removes "commits" edges to TitCommit entities.
+func (su *SectionUpdate) RemoveCommits(t ...*TitCommit) *SectionUpdate {
+	ids := make([]int, len(t))
+	for i := range t {
+		ids[i] = t[i].ID
+	}
+	return su.RemoveCommitIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -192,6 +229,51 @@ func (su *SectionUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
+	if su.mutation.CommitsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   section.CommitsTable,
+			Columns: []string{section.CommitsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(titcommit.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := su.mutation.RemovedCommitsIDs(); len(nodes) > 0 && !su.mutation.CommitsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   section.CommitsTable,
+			Columns: []string{section.CommitsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(titcommit.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := su.mutation.CommitsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   section.CommitsTable,
+			Columns: []string{section.CommitsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(titcommit.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
 	if n, err = sqlgraph.UpdateNodes(ctx, su.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{section.Label}
@@ -262,6 +344,21 @@ func (suo *SectionUpdateOne) SetPage(p *Page) *SectionUpdateOne {
 	return suo.SetPageID(p.ID)
 }
 
+// AddCommitIDs adds the "commits" edge to the TitCommit entity by IDs.
+func (suo *SectionUpdateOne) AddCommitIDs(ids ...int) *SectionUpdateOne {
+	suo.mutation.AddCommitIDs(ids...)
+	return suo
+}
+
+// AddCommits adds the "commits" edges to the TitCommit entity.
+func (suo *SectionUpdateOne) AddCommits(t ...*TitCommit) *SectionUpdateOne {
+	ids := make([]int, len(t))
+	for i := range t {
+		ids[i] = t[i].ID
+	}
+	return suo.AddCommitIDs(ids...)
+}
+
 // Mutation returns the SectionMutation object of the builder.
 func (suo *SectionUpdateOne) Mutation() *SectionMutation {
 	return suo.mutation
@@ -271,6 +368,27 @@ func (suo *SectionUpdateOne) Mutation() *SectionMutation {
 func (suo *SectionUpdateOne) ClearPage() *SectionUpdateOne {
 	suo.mutation.ClearPage()
 	return suo
+}
+
+// ClearCommits clears all "commits" edges to the TitCommit entity.
+func (suo *SectionUpdateOne) ClearCommits() *SectionUpdateOne {
+	suo.mutation.ClearCommits()
+	return suo
+}
+
+// RemoveCommitIDs removes the "commits" edge to TitCommit entities by IDs.
+func (suo *SectionUpdateOne) RemoveCommitIDs(ids ...int) *SectionUpdateOne {
+	suo.mutation.RemoveCommitIDs(ids...)
+	return suo
+}
+
+// RemoveCommits removes "commits" edges to TitCommit entities.
+func (suo *SectionUpdateOne) RemoveCommits(t ...*TitCommit) *SectionUpdateOne {
+	ids := make([]int, len(t))
+	for i := range t {
+		ids[i] = t[i].ID
+	}
+	return suo.RemoveCommitIDs(ids...)
 }
 
 // Where appends a list predicates to the SectionUpdate builder.
@@ -399,6 +517,51 @@ func (suo *SectionUpdateOne) sqlSave(ctx context.Context) (_node *Section, err e
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(page.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if suo.mutation.CommitsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   section.CommitsTable,
+			Columns: []string{section.CommitsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(titcommit.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := suo.mutation.RemovedCommitsIDs(); len(nodes) > 0 && !suo.mutation.CommitsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   section.CommitsTable,
+			Columns: []string{section.CommitsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(titcommit.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := suo.mutation.CommitsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   section.CommitsTable,
+			Columns: []string{section.CommitsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(titcommit.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

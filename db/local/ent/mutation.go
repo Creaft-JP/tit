@@ -1494,6 +1494,9 @@ type SectionMutation struct {
 	clearedFields     map[string]struct{}
 	page              *int
 	clearedpage       bool
+	commits           map[int]struct{}
+	removedcommits    map[int]struct{}
+	clearedcommits    bool
 	done              bool
 	oldValue          func(context.Context) (*Section, error)
 	predicates        []predicate.Section
@@ -1800,6 +1803,60 @@ func (m *SectionMutation) ResetPage() {
 	m.clearedpage = false
 }
 
+// AddCommitIDs adds the "commits" edge to the TitCommit entity by ids.
+func (m *SectionMutation) AddCommitIDs(ids ...int) {
+	if m.commits == nil {
+		m.commits = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.commits[ids[i]] = struct{}{}
+	}
+}
+
+// ClearCommits clears the "commits" edge to the TitCommit entity.
+func (m *SectionMutation) ClearCommits() {
+	m.clearedcommits = true
+}
+
+// CommitsCleared reports if the "commits" edge to the TitCommit entity was cleared.
+func (m *SectionMutation) CommitsCleared() bool {
+	return m.clearedcommits
+}
+
+// RemoveCommitIDs removes the "commits" edge to the TitCommit entity by IDs.
+func (m *SectionMutation) RemoveCommitIDs(ids ...int) {
+	if m.removedcommits == nil {
+		m.removedcommits = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.commits, ids[i])
+		m.removedcommits[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedCommits returns the removed IDs of the "commits" edge to the TitCommit entity.
+func (m *SectionMutation) RemovedCommitsIDs() (ids []int) {
+	for id := range m.removedcommits {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// CommitsIDs returns the "commits" edge IDs in the mutation.
+func (m *SectionMutation) CommitsIDs() (ids []int) {
+	for id := range m.commits {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetCommits resets all changes to the "commits" edge.
+func (m *SectionMutation) ResetCommits() {
+	m.commits = nil
+	m.clearedcommits = false
+	m.removedcommits = nil
+}
+
 // Where appends a list predicates to the SectionMutation builder.
 func (m *SectionMutation) Where(ps ...predicate.Section) {
 	m.predicates = append(m.predicates, ps...)
@@ -1999,9 +2056,12 @@ func (m *SectionMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *SectionMutation) AddedEdges() []string {
-	edges := make([]string, 0, 1)
+	edges := make([]string, 0, 2)
 	if m.page != nil {
 		edges = append(edges, section.EdgePage)
+	}
+	if m.commits != nil {
+		edges = append(edges, section.EdgeCommits)
 	}
 	return edges
 }
@@ -2014,27 +2074,47 @@ func (m *SectionMutation) AddedIDs(name string) []ent.Value {
 		if id := m.page; id != nil {
 			return []ent.Value{*id}
 		}
+	case section.EdgeCommits:
+		ids := make([]ent.Value, 0, len(m.commits))
+		for id := range m.commits {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *SectionMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 1)
+	edges := make([]string, 0, 2)
+	if m.removedcommits != nil {
+		edges = append(edges, section.EdgeCommits)
+	}
 	return edges
 }
 
 // RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
 // the given name in this mutation.
 func (m *SectionMutation) RemovedIDs(name string) []ent.Value {
+	switch name {
+	case section.EdgeCommits:
+		ids := make([]ent.Value, 0, len(m.removedcommits))
+		for id := range m.removedcommits {
+			ids = append(ids, id)
+		}
+		return ids
+	}
 	return nil
 }
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *SectionMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 1)
+	edges := make([]string, 0, 2)
 	if m.clearedpage {
 		edges = append(edges, section.EdgePage)
+	}
+	if m.clearedcommits {
+		edges = append(edges, section.EdgeCommits)
 	}
 	return edges
 }
@@ -2045,6 +2125,8 @@ func (m *SectionMutation) EdgeCleared(name string) bool {
 	switch name {
 	case section.EdgePage:
 		return m.clearedpage
+	case section.EdgeCommits:
+		return m.clearedcommits
 	}
 	return false
 }
@@ -2066,6 +2148,9 @@ func (m *SectionMutation) ResetEdge(name string) error {
 	switch name {
 	case section.EdgePage:
 		m.ResetPage()
+		return nil
+	case section.EdgeCommits:
+		m.ResetCommits()
 		return nil
 	}
 	return fmt.Errorf("unknown Section edge %s", name)
@@ -2454,19 +2539,21 @@ func (m *StagedFileMutation) ResetEdge(name string) error {
 // TitCommitMutation represents an operation that mutates the TitCommit nodes in the graph.
 type TitCommitMutation struct {
 	config
-	op            Op
-	typ           string
-	id            *int
-	number        *int
-	addnumber     *int
-	message       *string
-	clearedFields map[string]struct{}
-	files         map[int]struct{}
-	removedfiles  map[int]struct{}
-	clearedfiles  bool
-	done          bool
-	oldValue      func(context.Context) (*TitCommit, error)
-	predicates    []predicate.TitCommit
+	op             Op
+	typ            string
+	id             *int
+	number         *int
+	addnumber      *int
+	message        *string
+	clearedFields  map[string]struct{}
+	section        *int
+	clearedsection bool
+	files          map[int]struct{}
+	removedfiles   map[int]struct{}
+	clearedfiles   bool
+	done           bool
+	oldValue       func(context.Context) (*TitCommit, error)
+	predicates     []predicate.TitCommit
 }
 
 var _ ent.Mutation = (*TitCommitMutation)(nil)
@@ -2657,6 +2744,45 @@ func (m *TitCommitMutation) OldMessage(ctx context.Context) (v string, err error
 // ResetMessage resets all changes to the "message" field.
 func (m *TitCommitMutation) ResetMessage() {
 	m.message = nil
+}
+
+// SetSectionID sets the "section" edge to the Section entity by id.
+func (m *TitCommitMutation) SetSectionID(id int) {
+	m.section = &id
+}
+
+// ClearSection clears the "section" edge to the Section entity.
+func (m *TitCommitMutation) ClearSection() {
+	m.clearedsection = true
+}
+
+// SectionCleared reports if the "section" edge to the Section entity was cleared.
+func (m *TitCommitMutation) SectionCleared() bool {
+	return m.clearedsection
+}
+
+// SectionID returns the "section" edge ID in the mutation.
+func (m *TitCommitMutation) SectionID() (id int, exists bool) {
+	if m.section != nil {
+		return *m.section, true
+	}
+	return
+}
+
+// SectionIDs returns the "section" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// SectionID instead. It exists only for internal usage by the builders.
+func (m *TitCommitMutation) SectionIDs() (ids []int) {
+	if id := m.section; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetSection resets all changes to the "section" edge.
+func (m *TitCommitMutation) ResetSection() {
+	m.section = nil
+	m.clearedsection = false
 }
 
 // AddFileIDs adds the "files" edge to the CommittedFile entity by ids.
@@ -2878,7 +3004,10 @@ func (m *TitCommitMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *TitCommitMutation) AddedEdges() []string {
-	edges := make([]string, 0, 1)
+	edges := make([]string, 0, 2)
+	if m.section != nil {
+		edges = append(edges, titcommit.EdgeSection)
+	}
 	if m.files != nil {
 		edges = append(edges, titcommit.EdgeFiles)
 	}
@@ -2889,6 +3018,10 @@ func (m *TitCommitMutation) AddedEdges() []string {
 // name in this mutation.
 func (m *TitCommitMutation) AddedIDs(name string) []ent.Value {
 	switch name {
+	case titcommit.EdgeSection:
+		if id := m.section; id != nil {
+			return []ent.Value{*id}
+		}
 	case titcommit.EdgeFiles:
 		ids := make([]ent.Value, 0, len(m.files))
 		for id := range m.files {
@@ -2901,7 +3034,7 @@ func (m *TitCommitMutation) AddedIDs(name string) []ent.Value {
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *TitCommitMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 1)
+	edges := make([]string, 0, 2)
 	if m.removedfiles != nil {
 		edges = append(edges, titcommit.EdgeFiles)
 	}
@@ -2924,7 +3057,10 @@ func (m *TitCommitMutation) RemovedIDs(name string) []ent.Value {
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *TitCommitMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 1)
+	edges := make([]string, 0, 2)
+	if m.clearedsection {
+		edges = append(edges, titcommit.EdgeSection)
+	}
 	if m.clearedfiles {
 		edges = append(edges, titcommit.EdgeFiles)
 	}
@@ -2935,6 +3071,8 @@ func (m *TitCommitMutation) ClearedEdges() []string {
 // was cleared in this mutation.
 func (m *TitCommitMutation) EdgeCleared(name string) bool {
 	switch name {
+	case titcommit.EdgeSection:
+		return m.clearedsection
 	case titcommit.EdgeFiles:
 		return m.clearedfiles
 	}
@@ -2945,6 +3083,9 @@ func (m *TitCommitMutation) EdgeCleared(name string) bool {
 // if that edge is not defined in the schema.
 func (m *TitCommitMutation) ClearEdge(name string) error {
 	switch name {
+	case titcommit.EdgeSection:
+		m.ClearSection()
+		return nil
 	}
 	return fmt.Errorf("unknown TitCommit unique edge %s", name)
 }
@@ -2953,6 +3094,9 @@ func (m *TitCommitMutation) ClearEdge(name string) error {
 // It returns an error if the edge is not defined in the schema.
 func (m *TitCommitMutation) ResetEdge(name string) error {
 	switch name {
+	case titcommit.EdgeSection:
+		m.ResetSection()
+		return nil
 	case titcommit.EdgeFiles:
 		m.ResetFiles()
 		return nil

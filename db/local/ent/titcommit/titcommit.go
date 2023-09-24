@@ -16,10 +16,19 @@ const (
 	FieldNumber = "number"
 	// FieldMessage holds the string denoting the message field in the database.
 	FieldMessage = "message"
+	// EdgeSection holds the string denoting the section edge name in mutations.
+	EdgeSection = "section"
 	// EdgeFiles holds the string denoting the files edge name in mutations.
 	EdgeFiles = "files"
 	// Table holds the table name of the titcommit in the database.
 	Table = "tit_commits"
+	// SectionTable is the table that holds the section relation/edge.
+	SectionTable = "tit_commits"
+	// SectionInverseTable is the table name for the Section entity.
+	// It exists in this package in order to avoid circular dependency with the "section" package.
+	SectionInverseTable = "sections"
+	// SectionColumn is the table column denoting the section relation/edge.
+	SectionColumn = "section_commits"
 	// FilesTable is the table that holds the files relation/edge.
 	FilesTable = "committed_files"
 	// FilesInverseTable is the table name for the CommittedFile entity.
@@ -36,10 +45,21 @@ var Columns = []string{
 	FieldMessage,
 }
 
+// ForeignKeys holds the SQL foreign-keys that are owned by the "tit_commits"
+// table and are not defined as standalone fields in the schema.
+var ForeignKeys = []string{
+	"section_commits",
+}
+
 // ValidColumn reports if the column name is valid (part of the table columns).
 func ValidColumn(column string) bool {
 	for i := range Columns {
 		if column == Columns[i] {
+			return true
+		}
+	}
+	for i := range ForeignKeys {
+		if column == ForeignKeys[i] {
 			return true
 		}
 	}
@@ -71,6 +91,13 @@ func ByMessage(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldMessage, opts...).ToFunc()
 }
 
+// BySectionField orders the results by section field.
+func BySectionField(field string, opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newSectionStep(), sql.OrderByField(field, opts...))
+	}
+}
+
 // ByFilesCount orders the results by files count.
 func ByFilesCount(opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
@@ -83,6 +110,13 @@ func ByFiles(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 	return func(s *sql.Selector) {
 		sqlgraph.OrderByNeighborTerms(s, newFilesStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
+}
+func newSectionStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(SectionInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2O, true, SectionTable, SectionColumn),
+	)
 }
 func newFilesStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(

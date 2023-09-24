@@ -168,6 +168,29 @@ func MessageContainsFold(v string) predicate.TitCommit {
 	return predicate.TitCommit(sql.FieldContainsFold(FieldMessage, v))
 }
 
+// HasSection applies the HasEdge predicate on the "section" edge.
+func HasSection() predicate.TitCommit {
+	return predicate.TitCommit(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, SectionTable, SectionColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasSectionWith applies the HasEdge predicate on the "section" edge with a given conditions (other predicates).
+func HasSectionWith(preds ...predicate.Section) predicate.TitCommit {
+	return predicate.TitCommit(func(s *sql.Selector) {
+		step := newSectionStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
 // HasFiles applies the HasEdge predicate on the "files" edge.
 func HasFiles() predicate.TitCommit {
 	return predicate.TitCommit(func(s *sql.Selector) {

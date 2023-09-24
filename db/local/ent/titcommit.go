@@ -8,6 +8,7 @@ import (
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
+	"github.com/Creaft-JP/tit/db/local/ent/section"
 	"github.com/Creaft-JP/tit/db/local/ent/titcommit"
 )
 
@@ -22,23 +23,39 @@ type TitCommit struct {
 	Message string `json:"message,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the TitCommitQuery when eager-loading is set.
-	Edges        TitCommitEdges `json:"edges"`
-	selectValues sql.SelectValues
+	Edges           TitCommitEdges `json:"edges"`
+	section_commits *int
+	selectValues    sql.SelectValues
 }
 
 // TitCommitEdges holds the relations/edges for other nodes in the graph.
 type TitCommitEdges struct {
+	// Section holds the value of the section edge.
+	Section *Section `json:"section,omitempty"`
 	// Files holds the value of the files edge.
 	Files []*CommittedFile `json:"files,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [1]bool
+	loadedTypes [2]bool
+}
+
+// SectionOrErr returns the Section value or an error if the edge
+// was not loaded in eager-loading, or loaded but was not found.
+func (e TitCommitEdges) SectionOrErr() (*Section, error) {
+	if e.loadedTypes[0] {
+		if e.Section == nil {
+			// Edge was loaded but was not found.
+			return nil, &NotFoundError{label: section.Label}
+		}
+		return e.Section, nil
+	}
+	return nil, &NotLoadedError{edge: "section"}
 }
 
 // FilesOrErr returns the Files value or an error if the edge
 // was not loaded in eager-loading.
 func (e TitCommitEdges) FilesOrErr() ([]*CommittedFile, error) {
-	if e.loadedTypes[0] {
+	if e.loadedTypes[1] {
 		return e.Files, nil
 	}
 	return nil, &NotLoadedError{edge: "files"}
@@ -53,6 +70,8 @@ func (*TitCommit) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullInt64)
 		case titcommit.FieldMessage:
 			values[i] = new(sql.NullString)
+		case titcommit.ForeignKeys[0]: // section_commits
+			values[i] = new(sql.NullInt64)
 		default:
 			values[i] = new(sql.UnknownType)
 		}
@@ -86,6 +105,13 @@ func (tc *TitCommit) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				tc.Message = value.String
 			}
+		case titcommit.ForeignKeys[0]:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for edge-field section_commits", value)
+			} else if value.Valid {
+				tc.section_commits = new(int)
+				*tc.section_commits = int(value.Int64)
+			}
 		default:
 			tc.selectValues.Set(columns[i], values[i])
 		}
@@ -97,6 +123,11 @@ func (tc *TitCommit) assignValues(columns []string, values []any) error {
 // This includes values selected through modifiers, order, etc.
 func (tc *TitCommit) Value(name string) (ent.Value, error) {
 	return tc.selectValues.Get(name)
+}
+
+// QuerySection queries the "section" edge of the TitCommit entity.
+func (tc *TitCommit) QuerySection() *SectionQuery {
+	return NewTitCommitClient(tc.config).QuerySection(tc)
 }
 
 // QueryFiles queries the "files" edge of the TitCommit entity.

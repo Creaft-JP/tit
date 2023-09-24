@@ -12,6 +12,7 @@ import (
 	"entgo.io/ent/schema/field"
 	"github.com/Creaft-JP/tit/db/local/ent/committedfile"
 	"github.com/Creaft-JP/tit/db/local/ent/predicate"
+	"github.com/Creaft-JP/tit/db/local/ent/section"
 	"github.com/Creaft-JP/tit/db/local/ent/titcommit"
 )
 
@@ -47,6 +48,25 @@ func (tcu *TitCommitUpdate) SetMessage(s string) *TitCommitUpdate {
 	return tcu
 }
 
+// SetSectionID sets the "section" edge to the Section entity by ID.
+func (tcu *TitCommitUpdate) SetSectionID(id int) *TitCommitUpdate {
+	tcu.mutation.SetSectionID(id)
+	return tcu
+}
+
+// SetNillableSectionID sets the "section" edge to the Section entity by ID if the given value is not nil.
+func (tcu *TitCommitUpdate) SetNillableSectionID(id *int) *TitCommitUpdate {
+	if id != nil {
+		tcu = tcu.SetSectionID(*id)
+	}
+	return tcu
+}
+
+// SetSection sets the "section" edge to the Section entity.
+func (tcu *TitCommitUpdate) SetSection(s *Section) *TitCommitUpdate {
+	return tcu.SetSectionID(s.ID)
+}
+
 // AddFileIDs adds the "files" edge to the CommittedFile entity by IDs.
 func (tcu *TitCommitUpdate) AddFileIDs(ids ...int) *TitCommitUpdate {
 	tcu.mutation.AddFileIDs(ids...)
@@ -65,6 +85,12 @@ func (tcu *TitCommitUpdate) AddFiles(c ...*CommittedFile) *TitCommitUpdate {
 // Mutation returns the TitCommitMutation object of the builder.
 func (tcu *TitCommitUpdate) Mutation() *TitCommitMutation {
 	return tcu.mutation
+}
+
+// ClearSection clears the "section" edge to the Section entity.
+func (tcu *TitCommitUpdate) ClearSection() *TitCommitUpdate {
+	tcu.mutation.ClearSection()
+	return tcu
 }
 
 // ClearFiles clears all "files" edges to the CommittedFile entity.
@@ -151,6 +177,35 @@ func (tcu *TitCommitUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if value, ok := tcu.mutation.Message(); ok {
 		_spec.SetField(titcommit.FieldMessage, field.TypeString, value)
 	}
+	if tcu.mutation.SectionCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   titcommit.SectionTable,
+			Columns: []string{titcommit.SectionColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(section.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := tcu.mutation.SectionIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   titcommit.SectionTable,
+			Columns: []string{titcommit.SectionColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(section.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
 	if tcu.mutation.FilesCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
@@ -235,6 +290,25 @@ func (tcuo *TitCommitUpdateOne) SetMessage(s string) *TitCommitUpdateOne {
 	return tcuo
 }
 
+// SetSectionID sets the "section" edge to the Section entity by ID.
+func (tcuo *TitCommitUpdateOne) SetSectionID(id int) *TitCommitUpdateOne {
+	tcuo.mutation.SetSectionID(id)
+	return tcuo
+}
+
+// SetNillableSectionID sets the "section" edge to the Section entity by ID if the given value is not nil.
+func (tcuo *TitCommitUpdateOne) SetNillableSectionID(id *int) *TitCommitUpdateOne {
+	if id != nil {
+		tcuo = tcuo.SetSectionID(*id)
+	}
+	return tcuo
+}
+
+// SetSection sets the "section" edge to the Section entity.
+func (tcuo *TitCommitUpdateOne) SetSection(s *Section) *TitCommitUpdateOne {
+	return tcuo.SetSectionID(s.ID)
+}
+
 // AddFileIDs adds the "files" edge to the CommittedFile entity by IDs.
 func (tcuo *TitCommitUpdateOne) AddFileIDs(ids ...int) *TitCommitUpdateOne {
 	tcuo.mutation.AddFileIDs(ids...)
@@ -253,6 +327,12 @@ func (tcuo *TitCommitUpdateOne) AddFiles(c ...*CommittedFile) *TitCommitUpdateOn
 // Mutation returns the TitCommitMutation object of the builder.
 func (tcuo *TitCommitUpdateOne) Mutation() *TitCommitMutation {
 	return tcuo.mutation
+}
+
+// ClearSection clears the "section" edge to the Section entity.
+func (tcuo *TitCommitUpdateOne) ClearSection() *TitCommitUpdateOne {
+	tcuo.mutation.ClearSection()
+	return tcuo
 }
 
 // ClearFiles clears all "files" edges to the CommittedFile entity.
@@ -368,6 +448,35 @@ func (tcuo *TitCommitUpdateOne) sqlSave(ctx context.Context) (_node *TitCommit, 
 	}
 	if value, ok := tcuo.mutation.Message(); ok {
 		_spec.SetField(titcommit.FieldMessage, field.TypeString, value)
+	}
+	if tcuo.mutation.SectionCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   titcommit.SectionTable,
+			Columns: []string{titcommit.SectionColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(section.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := tcuo.mutation.SectionIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   titcommit.SectionTable,
+			Columns: []string{titcommit.SectionColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(section.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	if tcuo.mutation.FilesCleared() {
 		edge := &sqlgraph.EdgeSpec{

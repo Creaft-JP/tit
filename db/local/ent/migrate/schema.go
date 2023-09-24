@@ -95,12 +95,21 @@ var (
 		{Name: "id", Type: field.TypeInt, Increment: true},
 		{Name: "number", Type: field.TypeInt},
 		{Name: "message", Type: field.TypeString},
+		{Name: "section_commits", Type: field.TypeInt, Nullable: true},
 	}
 	// TitCommitsTable holds the schema information for the "tit_commits" table.
 	TitCommitsTable = &schema.Table{
 		Name:       "tit_commits",
 		Columns:    TitCommitsColumns,
 		PrimaryKey: []*schema.Column{TitCommitsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "tit_commits_sections_commits",
+				Columns:    []*schema.Column{TitCommitsColumns[3]},
+				RefColumns: []*schema.Column{SectionsColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+		},
 	}
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
@@ -116,4 +125,5 @@ var (
 func init() {
 	CommittedFilesTable.ForeignKeys[0].RefTable = TitCommitsTable
 	SectionsTable.ForeignKeys[0].RefTable = PagesTable
+	TitCommitsTable.ForeignKeys[0].RefTable = SectionsTable
 }

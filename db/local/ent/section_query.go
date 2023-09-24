@@ -4,6 +4,7 @@ package ent
 
 import (
 	"context"
+	"database/sql/driver"
 	"fmt"
 	"math"
 
@@ -13,17 +14,19 @@ import (
 	"github.com/Creaft-JP/tit/db/local/ent/page"
 	"github.com/Creaft-JP/tit/db/local/ent/predicate"
 	"github.com/Creaft-JP/tit/db/local/ent/section"
+	"github.com/Creaft-JP/tit/db/local/ent/titcommit"
 )
 
 // SectionQuery is the builder for querying Section entities.
 type SectionQuery struct {
 	config
-	ctx        *QueryContext
-	order      []section.OrderOption
-	inters     []Interceptor
-	predicates []predicate.Section
-	withPage   *PageQuery
-	withFKs    bool
+	ctx         *QueryContext
+	order       []section.OrderOption
+	inters      []Interceptor
+	predicates  []predicate.Section
+	withPage    *PageQuery
+	withCommits *TitCommitQuery
+	withFKs     bool
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -75,6 +78,28 @@ func (sq *SectionQuery) QueryPage() *PageQuery {
 			sqlgraph.From(section.Table, section.FieldID, selector),
 			sqlgraph.To(page.Table, page.FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, true, section.PageTable, section.PageColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(sq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryCommits chains the current query on the "commits" edge.
+func (sq *SectionQuery) QueryCommits() *TitCommitQuery {
+	query := (&TitCommitClient{config: sq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := sq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := sq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(section.Table, section.FieldID, selector),
+			sqlgraph.To(titcommit.Table, titcommit.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, section.CommitsTable, section.CommitsColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(sq.driver.Dialect(), step)
 		return fromU, nil
@@ -269,12 +294,13 @@ func (sq *SectionQuery) Clone() *SectionQuery {
 		return nil
 	}
 	return &SectionQuery{
-		config:     sq.config,
-		ctx:        sq.ctx.Clone(),
-		order:      append([]section.OrderOption{}, sq.order...),
-		inters:     append([]Interceptor{}, sq.inters...),
-		predicates: append([]predicate.Section{}, sq.predicates...),
-		withPage:   sq.withPage.Clone(),
+		config:      sq.config,
+		ctx:         sq.ctx.Clone(),
+		order:       append([]section.OrderOption{}, sq.order...),
+		inters:      append([]Interceptor{}, sq.inters...),
+		predicates:  append([]predicate.Section{}, sq.predicates...),
+		withPage:    sq.withPage.Clone(),
+		withCommits: sq.withCommits.Clone(),
 		// clone intermediate query.
 		sql:  sq.sql.Clone(),
 		path: sq.path,
@@ -289,6 +315,17 @@ func (sq *SectionQuery) WithPage(opts ...func(*PageQuery)) *SectionQuery {
 		opt(query)
 	}
 	sq.withPage = query
+	return sq
+}
+
+// WithCommits tells the query-builder to eager-load the nodes that are connected to
+// the "commits" edge. The optional arguments are used to configure the query builder of the edge.
+func (sq *SectionQuery) WithCommits(opts ...func(*TitCommitQuery)) *SectionQuery {
+	query := (&TitCommitClient{config: sq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	sq.withCommits = query
 	return sq
 }
 
@@ -371,8 +408,9 @@ func (sq *SectionQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Sect
 		nodes       = []*Section{}
 		withFKs     = sq.withFKs
 		_spec       = sq.querySpec()
-		loadedTypes = [1]bool{
+		loadedTypes = [2]bool{
 			sq.withPage != nil,
+			sq.withCommits != nil,
 		}
 	)
 	if sq.withPage != nil {
@@ -402,6 +440,13 @@ func (sq *SectionQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Sect
 	if query := sq.withPage; query != nil {
 		if err := sq.loadPage(ctx, query, nodes, nil,
 			func(n *Section, e *Page) { n.Edges.Page = e }); err != nil {
+			return nil, err
+		}
+	}
+	if query := sq.withCommits; query != nil {
+		if err := sq.loadCommits(ctx, query, nodes,
+			func(n *Section) { n.Edges.Commits = []*TitCommit{} },
+			func(n *Section, e *TitCommit) { n.Edges.Commits = append(n.Edges.Commits, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -437,6 +482,37 @@ func (sq *SectionQuery) loadPage(ctx context.Context, query *PageQuery, nodes []
 		for i := range nodes {
 			assign(nodes[i], n)
 		}
+	}
+	return nil
+}
+func (sq *SectionQuery) loadCommits(ctx context.Context, query *TitCommitQuery, nodes []*Section, init func(*Section), assign func(*Section, *TitCommit)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*Section)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	query.withFKs = true
+	query.Where(predicate.TitCommit(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(section.CommitsColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.section_commits
+		if fk == nil {
+			return fmt.Errorf(`foreign-key "section_commits" is nil for node %v`, n.ID)
+		}
+		node, ok := nodeids[*fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "section_commits" returned %v for node %v`, *fk, n.ID)
+		}
+		assign(node, n)
 	}
 	return nil
 }

@@ -10,6 +10,7 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/Creaft-JP/tit/db/local/ent/committedfile"
+	"github.com/Creaft-JP/tit/db/local/ent/section"
 	"github.com/Creaft-JP/tit/db/local/ent/titcommit"
 )
 
@@ -30,6 +31,25 @@ func (tcc *TitCommitCreate) SetNumber(i int) *TitCommitCreate {
 func (tcc *TitCommitCreate) SetMessage(s string) *TitCommitCreate {
 	tcc.mutation.SetMessage(s)
 	return tcc
+}
+
+// SetSectionID sets the "section" edge to the Section entity by ID.
+func (tcc *TitCommitCreate) SetSectionID(id int) *TitCommitCreate {
+	tcc.mutation.SetSectionID(id)
+	return tcc
+}
+
+// SetNillableSectionID sets the "section" edge to the Section entity by ID if the given value is not nil.
+func (tcc *TitCommitCreate) SetNillableSectionID(id *int) *TitCommitCreate {
+	if id != nil {
+		tcc = tcc.SetSectionID(*id)
+	}
+	return tcc
+}
+
+// SetSection sets the "section" edge to the Section entity.
+func (tcc *TitCommitCreate) SetSection(s *Section) *TitCommitCreate {
+	return tcc.SetSectionID(s.ID)
 }
 
 // AddFileIDs adds the "files" edge to the CommittedFile entity by IDs.
@@ -130,6 +150,23 @@ func (tcc *TitCommitCreate) createSpec() (*TitCommit, *sqlgraph.CreateSpec) {
 	if value, ok := tcc.mutation.Message(); ok {
 		_spec.SetField(titcommit.FieldMessage, field.TypeString, value)
 		_node.Message = value
+	}
+	if nodes := tcc.mutation.SectionIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   titcommit.SectionTable,
+			Columns: []string{titcommit.SectionColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(section.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_node.section_commits = &nodes[0]
+		_spec.Edges = append(_spec.Edges, edge)
 	}
 	if nodes := tcc.mutation.FilesIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{

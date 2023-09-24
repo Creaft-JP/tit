@@ -731,6 +731,22 @@ func (c *SectionClient) QueryPage(s *Section) *PageQuery {
 	return query
 }
 
+// QueryCommits queries the commits edge of a Section.
+func (c *SectionClient) QueryCommits(s *Section) *TitCommitQuery {
+	query := (&TitCommitClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := s.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(section.Table, section.FieldID, id),
+			sqlgraph.To(titcommit.Table, titcommit.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, section.CommitsTable, section.CommitsColumn),
+		)
+		fromV = sqlgraph.Neighbors(s.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // Hooks returns the client hooks.
 func (c *SectionClient) Hooks() []Hook {
 	return c.hooks.Section
@@ -965,6 +981,22 @@ func (c *TitCommitClient) GetX(ctx context.Context, id int) *TitCommit {
 		panic(err)
 	}
 	return obj
+}
+
+// QuerySection queries the section edge of a TitCommit.
+func (c *TitCommitClient) QuerySection(tc *TitCommit) *SectionQuery {
+	query := (&SectionClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := tc.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(titcommit.Table, titcommit.FieldID, id),
+			sqlgraph.To(section.Table, section.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, titcommit.SectionTable, titcommit.SectionColumn),
+		)
+		fromV = sqlgraph.Neighbors(tc.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
 }
 
 // QueryFiles queries the files edge of a TitCommit.

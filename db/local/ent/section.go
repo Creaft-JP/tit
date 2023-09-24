@@ -36,9 +36,11 @@ type Section struct {
 type SectionEdges struct {
 	// Page holds the value of the page edge.
 	Page *Page `json:"page,omitempty"`
+	// Commits holds the value of the commits edge.
+	Commits []*TitCommit `json:"commits,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [1]bool
+	loadedTypes [2]bool
 }
 
 // PageOrErr returns the Page value or an error if the edge
@@ -52,6 +54,15 @@ func (e SectionEdges) PageOrErr() (*Page, error) {
 		return e.Page, nil
 	}
 	return nil, &NotLoadedError{edge: "page"}
+}
+
+// CommitsOrErr returns the Commits value or an error if the edge
+// was not loaded in eager-loading.
+func (e SectionEdges) CommitsOrErr() ([]*TitCommit, error) {
+	if e.loadedTypes[1] {
+		return e.Commits, nil
+	}
+	return nil, &NotLoadedError{edge: "commits"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -133,6 +144,11 @@ func (s *Section) Value(name string) (ent.Value, error) {
 // QueryPage queries the "page" edge of the Section entity.
 func (s *Section) QueryPage() *PageQuery {
 	return NewSectionClient(s.config).QueryPage(s)
+}
+
+// QueryCommits queries the "commits" edge of the Section entity.
+func (s *Section) QueryCommits() *TitCommitQuery {
+	return NewSectionClient(s.config).QueryCommits(s)
 }
 
 // Update returns a builder for updating this Section.
