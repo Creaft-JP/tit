@@ -6,6 +6,9 @@ import (
 	"entgo.io/ent/dialect/sql"
 )
 
+// CommittedFile is the predicate function for committedfile builders.
+type CommittedFile func(*sql.Selector)
+
 // Page is the predicate function for page builders.
 type Page func(*sql.Selector)
 
@@ -17,3 +20,6 @@ type Section func(*sql.Selector)
 
 // StagedFile is the predicate function for stagedfile builders.
 type StagedFile func(*sql.Selector)
+
+// TitCommit is the predicate function for titcommit builders.
+type TitCommit func(*sql.Selector)

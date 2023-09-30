@@ -23,5 +23,8 @@ func (Section) Fields() []ent.Field {
 
 // Edges of the Section.
 func (Section) Edges() []ent.Edge {
-	return []ent.Edge{edge.From("page", Page.Type).Ref("sections").Unique()}
+	return []ent.Edge{
+		edge.From("page", Page.Type).Ref("sections").Unique(),
+		edge.To("commits", TitCommit.Type),
+	}
 }

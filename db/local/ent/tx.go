@@ -12,6 +12,8 @@ import (
 // Tx is a transactional client that is created by calling Client.Tx().
 type Tx struct {
 	config
+	// CommittedFile is the client for interacting with the CommittedFile builders.
+	CommittedFile *CommittedFileClient
 	// Page is the client for interacting with the Page builders.
 	Page *PageClient
 	// Remote is the client for interacting with the Remote builders.
@@ -20,6 +22,8 @@ type Tx struct {
 	Section *SectionClient
 	// StagedFile is the client for interacting with the StagedFile builders.
 	StagedFile *StagedFileClient
+	// TitCommit is the client for interacting with the TitCommit builders.
+	TitCommit *TitCommitClient
 
 	// lazily loaded.
 	client     *Client
@@ -151,10 +155,12 @@ func (tx *Tx) Client() *Client {
 }
 
 func (tx *Tx) init() {
+	tx.CommittedFile = NewCommittedFileClient(tx.config)
 	tx.Page = NewPageClient(tx.config)
 	tx.Remote = NewRemoteClient(tx.config)
 	tx.Section = NewSectionClient(tx.config)
 	tx.StagedFile = NewStagedFileClient(tx.config)
+	tx.TitCommit = NewTitCommitClient(tx.config)
 }
 
 // txDriver wraps the given dialect.Tx with a nop dialect.Driver implementation.
@@ -164,7 +170,7 @@ func (tx *Tx) init() {
 // of them in order to commit or rollback the transaction.
 //
 // If a closed transaction is embedded in one of the generated entities, and the entity
-// applies a query, for example: Page.QueryXXX(), the query will be executed
+// applies a query, for example: CommittedFile.QueryXXX(), the query will be executed
 // through the driver which created this transaction.
 //
 // Note that txDriver is not goroutine safe.

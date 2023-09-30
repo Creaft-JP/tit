@@ -10,11 +10,13 @@ import (
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
+	"github.com/Creaft-JP/tit/db/local/ent/committedfile"
 	"github.com/Creaft-JP/tit/db/local/ent/page"
 	"github.com/Creaft-JP/tit/db/local/ent/predicate"
 	"github.com/Creaft-JP/tit/db/local/ent/remote"
 	"github.com/Creaft-JP/tit/db/local/ent/section"
 	"github.com/Creaft-JP/tit/db/local/ent/stagedfile"
+	"github.com/Creaft-JP/tit/db/local/ent/titcommit"
 )
 
 const (
@@ -26,11 +28,460 @@ const (
 	OpUpdateOne = ent.OpUpdateOne
 
 	// Node types.
-	TypePage       = "Page"
-	TypeRemote     = "Remote"
-	TypeSection    = "Section"
-	TypeStagedFile = "StagedFile"
+	TypeCommittedFile = "CommittedFile"
+	TypePage          = "Page"
+	TypeRemote        = "Remote"
+	TypeSection       = "Section"
+	TypeStagedFile    = "StagedFile"
+	TypeTitCommit     = "TitCommit"
 )
+
+// CommittedFileMutation represents an operation that mutates the CommittedFile nodes in the graph.
+type CommittedFileMutation struct {
+	config
+	op            Op
+	typ           string
+	id            *int
+	_path         *string
+	content       *string
+	clearedFields map[string]struct{}
+	commit        *int
+	clearedcommit bool
+	done          bool
+	oldValue      func(context.Context) (*CommittedFile, error)
+	predicates    []predicate.CommittedFile
+}
+
+var _ ent.Mutation = (*CommittedFileMutation)(nil)
+
+// committedfileOption allows management of the mutation configuration using functional options.
+type committedfileOption func(*CommittedFileMutation)
+
+// newCommittedFileMutation creates new mutation for the CommittedFile entity.
+func newCommittedFileMutation(c config, op Op, opts ...committedfileOption) *CommittedFileMutation {
+	m := &CommittedFileMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeCommittedFile,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withCommittedFileID sets the ID field of the mutation.
+func withCommittedFileID(id int) committedfileOption {
+	return func(m *CommittedFileMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *CommittedFile
+		)
+		m.oldValue = func(ctx context.Context) (*CommittedFile, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().CommittedFile.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withCommittedFile sets the old CommittedFile of the mutation.
+func withCommittedFile(node *CommittedFile) committedfileOption {
+	return func(m *CommittedFileMutation) {
+		m.oldValue = func(context.Context) (*CommittedFile, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m CommittedFileMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m CommittedFileMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *CommittedFileMutation) ID() (id int, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *CommittedFileMutation) IDs(ctx context.Context) ([]int, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []int{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().CommittedFile.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetPath sets the "path" field.
+func (m *CommittedFileMutation) SetPath(s string) {
+	m._path = &s
+}
+
+// Path returns the value of the "path" field in the mutation.
+func (m *CommittedFileMutation) Path() (r string, exists bool) {
+	v := m._path
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldPath returns the old "path" field's value of the CommittedFile entity.
+// If the CommittedFile object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *CommittedFileMutation) OldPath(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldPath is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldPath requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldPath: %w", err)
+	}
+	return oldValue.Path, nil
+}
+
+// ResetPath resets all changes to the "path" field.
+func (m *CommittedFileMutation) ResetPath() {
+	m._path = nil
+}
+
+// SetContent sets the "content" field.
+func (m *CommittedFileMutation) SetContent(s string) {
+	m.content = &s
+}
+
+// Content returns the value of the "content" field in the mutation.
+func (m *CommittedFileMutation) Content() (r string, exists bool) {
+	v := m.content
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldContent returns the old "content" field's value of the CommittedFile entity.
+// If the CommittedFile object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *CommittedFileMutation) OldContent(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldContent is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldContent requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldContent: %w", err)
+	}
+	return oldValue.Content, nil
+}
+
+// ResetContent resets all changes to the "content" field.
+func (m *CommittedFileMutation) ResetContent() {
+	m.content = nil
+}
+
+// SetCommitID sets the "commit" edge to the TitCommit entity by id.
+func (m *CommittedFileMutation) SetCommitID(id int) {
+	m.commit = &id
+}
+
+// ClearCommit clears the "commit" edge to the TitCommit entity.
+func (m *CommittedFileMutation) ClearCommit() {
+	m.clearedcommit = true
+}
+
+// CommitCleared reports if the "commit" edge to the TitCommit entity was cleared.
+func (m *CommittedFileMutation) CommitCleared() bool {
+	return m.clearedcommit
+}
+
+// CommitID returns the "commit" edge ID in the mutation.
+func (m *CommittedFileMutation) CommitID() (id int, exists bool) {
+	if m.commit != nil {
+		return *m.commit, true
+	}
+	return
+}
+
+// CommitIDs returns the "commit" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// CommitID instead. It exists only for internal usage by the builders.
+func (m *CommittedFileMutation) CommitIDs() (ids []int) {
+	if id := m.commit; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetCommit resets all changes to the "commit" edge.
+func (m *CommittedFileMutation) ResetCommit() {
+	m.commit = nil
+	m.clearedcommit = false
+}
+
+// Where appends a list predicates to the CommittedFileMutation builder.
+func (m *CommittedFileMutation) Where(ps ...predicate.CommittedFile) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the CommittedFileMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *CommittedFileMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.CommittedFile, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *CommittedFileMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *CommittedFileMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (CommittedFile).
+func (m *CommittedFileMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *CommittedFileMutation) Fields() []string {
+	fields := make([]string, 0, 2)
+	if m._path != nil {
+		fields = append(fields, committedfile.FieldPath)
+	}
+	if m.content != nil {
+		fields = append(fields, committedfile.FieldContent)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *CommittedFileMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case committedfile.FieldPath:
+		return m.Path()
+	case committedfile.FieldContent:
+		return m.Content()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *CommittedFileMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case committedfile.FieldPath:
+		return m.OldPath(ctx)
+	case committedfile.FieldContent:
+		return m.OldContent(ctx)
+	}
+	return nil, fmt.Errorf("unknown CommittedFile field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *CommittedFileMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case committedfile.FieldPath:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetPath(v)
+		return nil
+	case committedfile.FieldContent:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetContent(v)
+		return nil
+	}
+	return fmt.Errorf("unknown CommittedFile field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *CommittedFileMutation) AddedFields() []string {
+	return nil
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *CommittedFileMutation) AddedField(name string) (ent.Value, bool) {
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *CommittedFileMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	}
+	return fmt.Errorf("unknown CommittedFile numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *CommittedFileMutation) ClearedFields() []string {
+	return nil
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *CommittedFileMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *CommittedFileMutation) ClearField(name string) error {
+	return fmt.Errorf("unknown CommittedFile nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *CommittedFileMutation) ResetField(name string) error {
+	switch name {
+	case committedfile.FieldPath:
+		m.ResetPath()
+		return nil
+	case committedfile.FieldContent:
+		m.ResetContent()
+		return nil
+	}
+	return fmt.Errorf("unknown CommittedFile field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *CommittedFileMutation) AddedEdges() []string {
+	edges := make([]string, 0, 1)
+	if m.commit != nil {
+		edges = append(edges, committedfile.EdgeCommit)
+	}
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *CommittedFileMutation) AddedIDs(name string) []ent.Value {
+	switch name {
+	case committedfile.EdgeCommit:
+		if id := m.commit; id != nil {
+			return []ent.Value{*id}
+		}
+	}
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *CommittedFileMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 1)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *CommittedFileMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *CommittedFileMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 1)
+	if m.clearedcommit {
+		edges = append(edges, committedfile.EdgeCommit)
+	}
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *CommittedFileMutation) EdgeCleared(name string) bool {
+	switch name {
+	case committedfile.EdgeCommit:
+		return m.clearedcommit
+	}
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *CommittedFileMutation) ClearEdge(name string) error {
+	switch name {
+	case committedfile.EdgeCommit:
+		m.ClearCommit()
+		return nil
+	}
+	return fmt.Errorf("unknown CommittedFile unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *CommittedFileMutation) ResetEdge(name string) error {
+	switch name {
+	case committedfile.EdgeCommit:
+		m.ResetCommit()
+		return nil
+	}
+	return fmt.Errorf("unknown CommittedFile edge %s", name)
+}
 
 // PageMutation represents an operation that mutates the Page nodes in the graph.
 type PageMutation struct {
@@ -1043,6 +1494,9 @@ type SectionMutation struct {
 	clearedFields     map[string]struct{}
 	page              *int
 	clearedpage       bool
+	commits           map[int]struct{}
+	removedcommits    map[int]struct{}
+	clearedcommits    bool
 	done              bool
 	oldValue          func(context.Context) (*Section, error)
 	predicates        []predicate.Section
@@ -1349,6 +1803,60 @@ func (m *SectionMutation) ResetPage() {
 	m.clearedpage = false
 }
 
+// AddCommitIDs adds the "commits" edge to the TitCommit entity by ids.
+func (m *SectionMutation) AddCommitIDs(ids ...int) {
+	if m.commits == nil {
+		m.commits = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.commits[ids[i]] = struct{}{}
+	}
+}
+
+// ClearCommits clears the "commits" edge to the TitCommit entity.
+func (m *SectionMutation) ClearCommits() {
+	m.clearedcommits = true
+}
+
+// CommitsCleared reports if the "commits" edge to the TitCommit entity was cleared.
+func (m *SectionMutation) CommitsCleared() bool {
+	return m.clearedcommits
+}
+
+// RemoveCommitIDs removes the "commits" edge to the TitCommit entity by IDs.
+func (m *SectionMutation) RemoveCommitIDs(ids ...int) {
+	if m.removedcommits == nil {
+		m.removedcommits = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.commits, ids[i])
+		m.removedcommits[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedCommits returns the removed IDs of the "commits" edge to the TitCommit entity.
+func (m *SectionMutation) RemovedCommitsIDs() (ids []int) {
+	for id := range m.removedcommits {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// CommitsIDs returns the "commits" edge IDs in the mutation.
+func (m *SectionMutation) CommitsIDs() (ids []int) {
+	for id := range m.commits {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetCommits resets all changes to the "commits" edge.
+func (m *SectionMutation) ResetCommits() {
+	m.commits = nil
+	m.clearedcommits = false
+	m.removedcommits = nil
+}
+
 // Where appends a list predicates to the SectionMutation builder.
 func (m *SectionMutation) Where(ps ...predicate.Section) {
 	m.predicates = append(m.predicates, ps...)
@@ -1548,9 +2056,12 @@ func (m *SectionMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *SectionMutation) AddedEdges() []string {
-	edges := make([]string, 0, 1)
+	edges := make([]string, 0, 2)
 	if m.page != nil {
 		edges = append(edges, section.EdgePage)
+	}
+	if m.commits != nil {
+		edges = append(edges, section.EdgeCommits)
 	}
 	return edges
 }
@@ -1563,27 +2074,47 @@ func (m *SectionMutation) AddedIDs(name string) []ent.Value {
 		if id := m.page; id != nil {
 			return []ent.Value{*id}
 		}
+	case section.EdgeCommits:
+		ids := make([]ent.Value, 0, len(m.commits))
+		for id := range m.commits {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *SectionMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 1)
+	edges := make([]string, 0, 2)
+	if m.removedcommits != nil {
+		edges = append(edges, section.EdgeCommits)
+	}
 	return edges
 }
 
 // RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
 // the given name in this mutation.
 func (m *SectionMutation) RemovedIDs(name string) []ent.Value {
+	switch name {
+	case section.EdgeCommits:
+		ids := make([]ent.Value, 0, len(m.removedcommits))
+		for id := range m.removedcommits {
+			ids = append(ids, id)
+		}
+		return ids
+	}
 	return nil
 }
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *SectionMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 1)
+	edges := make([]string, 0, 2)
 	if m.clearedpage {
 		edges = append(edges, section.EdgePage)
+	}
+	if m.clearedcommits {
+		edges = append(edges, section.EdgeCommits)
 	}
 	return edges
 }
@@ -1594,6 +2125,8 @@ func (m *SectionMutation) EdgeCleared(name string) bool {
 	switch name {
 	case section.EdgePage:
 		return m.clearedpage
+	case section.EdgeCommits:
+		return m.clearedcommits
 	}
 	return false
 }
@@ -1615,6 +2148,9 @@ func (m *SectionMutation) ResetEdge(name string) error {
 	switch name {
 	case section.EdgePage:
 		m.ResetPage()
+		return nil
+	case section.EdgeCommits:
+		m.ResetCommits()
 		return nil
 	}
 	return fmt.Errorf("unknown Section edge %s", name)
@@ -1998,4 +2534,572 @@ func (m *StagedFileMutation) ClearEdge(name string) error {
 // It returns an error if the edge is not defined in the schema.
 func (m *StagedFileMutation) ResetEdge(name string) error {
 	return fmt.Errorf("unknown StagedFile edge %s", name)
+}
+
+// TitCommitMutation represents an operation that mutates the TitCommit nodes in the graph.
+type TitCommitMutation struct {
+	config
+	op             Op
+	typ            string
+	id             *int
+	number         *int
+	addnumber      *int
+	message        *string
+	clearedFields  map[string]struct{}
+	section        *int
+	clearedsection bool
+	files          map[int]struct{}
+	removedfiles   map[int]struct{}
+	clearedfiles   bool
+	done           bool
+	oldValue       func(context.Context) (*TitCommit, error)
+	predicates     []predicate.TitCommit
+}
+
+var _ ent.Mutation = (*TitCommitMutation)(nil)
+
+// titcommitOption allows management of the mutation configuration using functional options.
+type titcommitOption func(*TitCommitMutation)
+
+// newTitCommitMutation creates new mutation for the TitCommit entity.
+func newTitCommitMutation(c config, op Op, opts ...titcommitOption) *TitCommitMutation {
+	m := &TitCommitMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeTitCommit,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withTitCommitID sets the ID field of the mutation.
+func withTitCommitID(id int) titcommitOption {
+	return func(m *TitCommitMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *TitCommit
+		)
+		m.oldValue = func(ctx context.Context) (*TitCommit, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().TitCommit.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withTitCommit sets the old TitCommit of the mutation.
+func withTitCommit(node *TitCommit) titcommitOption {
+	return func(m *TitCommitMutation) {
+		m.oldValue = func(context.Context) (*TitCommit, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m TitCommitMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m TitCommitMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *TitCommitMutation) ID() (id int, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *TitCommitMutation) IDs(ctx context.Context) ([]int, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []int{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().TitCommit.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetNumber sets the "number" field.
+func (m *TitCommitMutation) SetNumber(i int) {
+	m.number = &i
+	m.addnumber = nil
+}
+
+// Number returns the value of the "number" field in the mutation.
+func (m *TitCommitMutation) Number() (r int, exists bool) {
+	v := m.number
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldNumber returns the old "number" field's value of the TitCommit entity.
+// If the TitCommit object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TitCommitMutation) OldNumber(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldNumber is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldNumber requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldNumber: %w", err)
+	}
+	return oldValue.Number, nil
+}
+
+// AddNumber adds i to the "number" field.
+func (m *TitCommitMutation) AddNumber(i int) {
+	if m.addnumber != nil {
+		*m.addnumber += i
+	} else {
+		m.addnumber = &i
+	}
+}
+
+// AddedNumber returns the value that was added to the "number" field in this mutation.
+func (m *TitCommitMutation) AddedNumber() (r int, exists bool) {
+	v := m.addnumber
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetNumber resets all changes to the "number" field.
+func (m *TitCommitMutation) ResetNumber() {
+	m.number = nil
+	m.addnumber = nil
+}
+
+// SetMessage sets the "message" field.
+func (m *TitCommitMutation) SetMessage(s string) {
+	m.message = &s
+}
+
+// Message returns the value of the "message" field in the mutation.
+func (m *TitCommitMutation) Message() (r string, exists bool) {
+	v := m.message
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldMessage returns the old "message" field's value of the TitCommit entity.
+// If the TitCommit object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TitCommitMutation) OldMessage(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldMessage is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldMessage requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldMessage: %w", err)
+	}
+	return oldValue.Message, nil
+}
+
+// ResetMessage resets all changes to the "message" field.
+func (m *TitCommitMutation) ResetMessage() {
+	m.message = nil
+}
+
+// SetSectionID sets the "section" edge to the Section entity by id.
+func (m *TitCommitMutation) SetSectionID(id int) {
+	m.section = &id
+}
+
+// ClearSection clears the "section" edge to the Section entity.
+func (m *TitCommitMutation) ClearSection() {
+	m.clearedsection = true
+}
+
+// SectionCleared reports if the "section" edge to the Section entity was cleared.
+func (m *TitCommitMutation) SectionCleared() bool {
+	return m.clearedsection
+}
+
+// SectionID returns the "section" edge ID in the mutation.
+func (m *TitCommitMutation) SectionID() (id int, exists bool) {
+	if m.section != nil {
+		return *m.section, true
+	}
+	return
+}
+
+// SectionIDs returns the "section" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// SectionID instead. It exists only for internal usage by the builders.
+func (m *TitCommitMutation) SectionIDs() (ids []int) {
+	if id := m.section; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetSection resets all changes to the "section" edge.
+func (m *TitCommitMutation) ResetSection() {
+	m.section = nil
+	m.clearedsection = false
+}
+
+// AddFileIDs adds the "files" edge to the CommittedFile entity by ids.
+func (m *TitCommitMutation) AddFileIDs(ids ...int) {
+	if m.files == nil {
+		m.files = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.files[ids[i]] = struct{}{}
+	}
+}
+
+// ClearFiles clears the "files" edge to the CommittedFile entity.
+func (m *TitCommitMutation) ClearFiles() {
+	m.clearedfiles = true
+}
+
+// FilesCleared reports if the "files" edge to the CommittedFile entity was cleared.
+func (m *TitCommitMutation) FilesCleared() bool {
+	return m.clearedfiles
+}
+
+// RemoveFileIDs removes the "files" edge to the CommittedFile entity by IDs.
+func (m *TitCommitMutation) RemoveFileIDs(ids ...int) {
+	if m.removedfiles == nil {
+		m.removedfiles = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.files, ids[i])
+		m.removedfiles[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedFiles returns the removed IDs of the "files" edge to the CommittedFile entity.
+func (m *TitCommitMutation) RemovedFilesIDs() (ids []int) {
+	for id := range m.removedfiles {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// FilesIDs returns the "files" edge IDs in the mutation.
+func (m *TitCommitMutation) FilesIDs() (ids []int) {
+	for id := range m.files {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetFiles resets all changes to the "files" edge.
+func (m *TitCommitMutation) ResetFiles() {
+	m.files = nil
+	m.clearedfiles = false
+	m.removedfiles = nil
+}
+
+// Where appends a list predicates to the TitCommitMutation builder.
+func (m *TitCommitMutation) Where(ps ...predicate.TitCommit) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the TitCommitMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *TitCommitMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.TitCommit, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *TitCommitMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *TitCommitMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (TitCommit).
+func (m *TitCommitMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *TitCommitMutation) Fields() []string {
+	fields := make([]string, 0, 2)
+	if m.number != nil {
+		fields = append(fields, titcommit.FieldNumber)
+	}
+	if m.message != nil {
+		fields = append(fields, titcommit.FieldMessage)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *TitCommitMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case titcommit.FieldNumber:
+		return m.Number()
+	case titcommit.FieldMessage:
+		return m.Message()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *TitCommitMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case titcommit.FieldNumber:
+		return m.OldNumber(ctx)
+	case titcommit.FieldMessage:
+		return m.OldMessage(ctx)
+	}
+	return nil, fmt.Errorf("unknown TitCommit field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *TitCommitMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case titcommit.FieldNumber:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetNumber(v)
+		return nil
+	case titcommit.FieldMessage:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetMessage(v)
+		return nil
+	}
+	return fmt.Errorf("unknown TitCommit field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *TitCommitMutation) AddedFields() []string {
+	var fields []string
+	if m.addnumber != nil {
+		fields = append(fields, titcommit.FieldNumber)
+	}
+	return fields
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *TitCommitMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case titcommit.FieldNumber:
+		return m.AddedNumber()
+	}
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *TitCommitMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	case titcommit.FieldNumber:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddNumber(v)
+		return nil
+	}
+	return fmt.Errorf("unknown TitCommit numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *TitCommitMutation) ClearedFields() []string {
+	return nil
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *TitCommitMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *TitCommitMutation) ClearField(name string) error {
+	return fmt.Errorf("unknown TitCommit nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *TitCommitMutation) ResetField(name string) error {
+	switch name {
+	case titcommit.FieldNumber:
+		m.ResetNumber()
+		return nil
+	case titcommit.FieldMessage:
+		m.ResetMessage()
+		return nil
+	}
+	return fmt.Errorf("unknown TitCommit field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *TitCommitMutation) AddedEdges() []string {
+	edges := make([]string, 0, 2)
+	if m.section != nil {
+		edges = append(edges, titcommit.EdgeSection)
+	}
+	if m.files != nil {
+		edges = append(edges, titcommit.EdgeFiles)
+	}
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *TitCommitMutation) AddedIDs(name string) []ent.Value {
+	switch name {
+	case titcommit.EdgeSection:
+		if id := m.section; id != nil {
+			return []ent.Value{*id}
+		}
+	case titcommit.EdgeFiles:
+		ids := make([]ent.Value, 0, len(m.files))
+		for id := range m.files {
+			ids = append(ids, id)
+		}
+		return ids
+	}
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *TitCommitMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 2)
+	if m.removedfiles != nil {
+		edges = append(edges, titcommit.EdgeFiles)
+	}
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *TitCommitMutation) RemovedIDs(name string) []ent.Value {
+	switch name {
+	case titcommit.EdgeFiles:
+		ids := make([]ent.Value, 0, len(m.removedfiles))
+		for id := range m.removedfiles {
+			ids = append(ids, id)
+		}
+		return ids
+	}
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *TitCommitMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 2)
+	if m.clearedsection {
+		edges = append(edges, titcommit.EdgeSection)
+	}
+	if m.clearedfiles {
+		edges = append(edges, titcommit.EdgeFiles)
+	}
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *TitCommitMutation) EdgeCleared(name string) bool {
+	switch name {
+	case titcommit.EdgeSection:
+		return m.clearedsection
+	case titcommit.EdgeFiles:
+		return m.clearedfiles
+	}
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *TitCommitMutation) ClearEdge(name string) error {
+	switch name {
+	case titcommit.EdgeSection:
+		m.ClearSection()
+		return nil
+	}
+	return fmt.Errorf("unknown TitCommit unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *TitCommitMutation) ResetEdge(name string) error {
+	switch name {
+	case titcommit.EdgeSection:
+		m.ResetSection()
+		return nil
+	case titcommit.EdgeFiles:
+		m.ResetFiles()
+		return nil
+	}
+	return fmt.Errorf("unknown TitCommit edge %s", name)
 }

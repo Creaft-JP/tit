@@ -11,6 +11,7 @@ import (
 	"entgo.io/ent/schema/field"
 	"github.com/Creaft-JP/tit/db/local/ent/page"
 	"github.com/Creaft-JP/tit/db/local/ent/section"
+	"github.com/Creaft-JP/tit/db/local/ent/titcommit"
 )
 
 // SectionCreate is the builder for creating a Section entity.
@@ -61,6 +62,21 @@ func (sc *SectionCreate) SetNillablePageID(id *int) *SectionCreate {
 // SetPage sets the "page" edge to the Page entity.
 func (sc *SectionCreate) SetPage(p *Page) *SectionCreate {
 	return sc.SetPageID(p.ID)
+}
+
+// AddCommitIDs adds the "commits" edge to the TitCommit entity by IDs.
+func (sc *SectionCreate) AddCommitIDs(ids ...int) *SectionCreate {
+	sc.mutation.AddCommitIDs(ids...)
+	return sc
+}
+
+// AddCommits adds the "commits" edges to the TitCommit entity.
+func (sc *SectionCreate) AddCommits(t ...*TitCommit) *SectionCreate {
+	ids := make([]int, len(t))
+	for i := range t {
+		ids[i] = t[i].ID
+	}
+	return sc.AddCommitIDs(ids...)
 }
 
 // Mutation returns the SectionMutation object of the builder.
@@ -181,6 +197,22 @@ func (sc *SectionCreate) createSpec() (*Section, *sqlgraph.CreateSpec) {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_node.page_sections = &nodes[0]
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := sc.mutation.CommitsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   section.CommitsTable,
+			Columns: []string{section.CommitsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(titcommit.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec

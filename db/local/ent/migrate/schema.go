@@ -8,6 +8,27 @@ import (
 )
 
 var (
+	// CommittedFilesColumns holds the columns for the "committed_files" table.
+	CommittedFilesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "path", Type: field.TypeString},
+		{Name: "content", Type: field.TypeString},
+		{Name: "tit_commit_files", Type: field.TypeInt, Nullable: true},
+	}
+	// CommittedFilesTable holds the schema information for the "committed_files" table.
+	CommittedFilesTable = &schema.Table{
+		Name:       "committed_files",
+		Columns:    CommittedFilesColumns,
+		PrimaryKey: []*schema.Column{CommittedFilesColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "committed_files_tit_commits_files",
+				Columns:    []*schema.Column{CommittedFilesColumns[3]},
+				RefColumns: []*schema.Column{TitCommitsColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+		},
+	}
 	// PagesColumns holds the columns for the "pages" table.
 	PagesColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
@@ -69,15 +90,40 @@ var (
 		Columns:    StagedFilesColumns,
 		PrimaryKey: []*schema.Column{StagedFilesColumns[0]},
 	}
+	// TitCommitsColumns holds the columns for the "tit_commits" table.
+	TitCommitsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "number", Type: field.TypeInt},
+		{Name: "message", Type: field.TypeString},
+		{Name: "section_commits", Type: field.TypeInt, Nullable: true},
+	}
+	// TitCommitsTable holds the schema information for the "tit_commits" table.
+	TitCommitsTable = &schema.Table{
+		Name:       "tit_commits",
+		Columns:    TitCommitsColumns,
+		PrimaryKey: []*schema.Column{TitCommitsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "tit_commits_sections_commits",
+				Columns:    []*schema.Column{TitCommitsColumns[3]},
+				RefColumns: []*schema.Column{SectionsColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+		},
+	}
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
+		CommittedFilesTable,
 		PagesTable,
 		RemotesTable,
 		SectionsTable,
 		StagedFilesTable,
+		TitCommitsTable,
 	}
 )
 
 func init() {
+	CommittedFilesTable.ForeignKeys[0].RefTable = TitCommitsTable
 	SectionsTable.ForeignKeys[0].RefTable = PagesTable
+	TitCommitsTable.ForeignKeys[0].RefTable = SectionsTable
 }

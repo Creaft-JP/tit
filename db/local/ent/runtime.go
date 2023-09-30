@@ -3,17 +3,25 @@
 package ent
 
 import (
+	"github.com/Creaft-JP/tit/db/local/ent/committedfile"
 	"github.com/Creaft-JP/tit/db/local/ent/page"
 	"github.com/Creaft-JP/tit/db/local/ent/remote"
 	"github.com/Creaft-JP/tit/db/local/ent/schema"
 	"github.com/Creaft-JP/tit/db/local/ent/section"
 	"github.com/Creaft-JP/tit/db/local/ent/stagedfile"
+	"github.com/Creaft-JP/tit/db/local/ent/titcommit"
 )
 
 // The init function reads all schema descriptors with runtime code
 // (default values, validators, hooks and policies) and stitches it
 // to their package variables.
 func init() {
+	committedfileFields := schema.CommittedFile{}.Fields()
+	_ = committedfileFields
+	// committedfileDescPath is the schema descriptor for path field.
+	committedfileDescPath := committedfileFields[0].Descriptor()
+	// committedfile.PathValidator is a validator for the "path" field. It is called by the builders before save.
+	committedfile.PathValidator = committedfileDescPath.Validators[0].(func(string) error)
 	pageFields := schema.Page{}.Fields()
 	_ = pageFields
 	// pageDescPathname is the schema descriptor for pathname field.
@@ -50,4 +58,14 @@ func init() {
 	stagedfileDescPath := stagedfileFields[0].Descriptor()
 	// stagedfile.PathValidator is a validator for the "path" field. It is called by the builders before save.
 	stagedfile.PathValidator = stagedfileDescPath.Validators[0].(func(string) error)
+	titcommitFields := schema.TitCommit{}.Fields()
+	_ = titcommitFields
+	// titcommitDescNumber is the schema descriptor for number field.
+	titcommitDescNumber := titcommitFields[0].Descriptor()
+	// titcommit.NumberValidator is a validator for the "number" field. It is called by the builders before save.
+	titcommit.NumberValidator = titcommitDescNumber.Validators[0].(func(int) error)
+	// titcommitDescMessage is the schema descriptor for message field.
+	titcommitDescMessage := titcommitFields[1].Descriptor()
+	// titcommit.MessageValidator is a validator for the "message" field. It is called by the builders before save.
+	titcommit.MessageValidator = titcommitDescMessage.Validators[0].(func(string) error)
 }

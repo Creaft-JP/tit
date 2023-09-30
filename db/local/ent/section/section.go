@@ -22,6 +22,8 @@ const (
 	FieldNumber = "number"
 	// EdgePage holds the string denoting the page edge name in mutations.
 	EdgePage = "page"
+	// EdgeCommits holds the string denoting the commits edge name in mutations.
+	EdgeCommits = "commits"
 	// Table holds the table name of the section in the database.
 	Table = "sections"
 	// PageTable is the table that holds the page relation/edge.
@@ -31,6 +33,13 @@ const (
 	PageInverseTable = "pages"
 	// PageColumn is the table column denoting the page relation/edge.
 	PageColumn = "page_sections"
+	// CommitsTable is the table that holds the commits relation/edge.
+	CommitsTable = "tit_commits"
+	// CommitsInverseTable is the table name for the TitCommit entity.
+	// It exists in this package in order to avoid circular dependency with the "titcommit" package.
+	CommitsInverseTable = "tit_commits"
+	// CommitsColumn is the table column denoting the commits relation/edge.
+	CommitsColumn = "section_commits"
 )
 
 // Columns holds all SQL columns for section fields.
@@ -106,10 +115,31 @@ func ByPageField(field string, opts ...sql.OrderTermOption) OrderOption {
 		sqlgraph.OrderByNeighborTerms(s, newPageStep(), sql.OrderByField(field, opts...))
 	}
 }
+
+// ByCommitsCount orders the results by commits count.
+func ByCommitsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newCommitsStep(), opts...)
+	}
+}
+
+// ByCommits orders the results by commits terms.
+func ByCommits(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newCommitsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
 func newPageStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(PageInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.M2O, true, PageTable, PageColumn),
+	)
+}
+func newCommitsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(CommitsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, CommitsTable, CommitsColumn),
 	)
 }
