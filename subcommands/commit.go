@@ -15,6 +15,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 )
 
 const commitMessageDefault = "_tit_commit_message_default_value"
@@ -42,7 +43,7 @@ func Commit(args []string, cl *ent.Client, ctx context.Context) error {
 		if err != nil {
 			return failure.Translate(err, e.File)
 		}
-		*message = string(content)
+		*message = strings.TrimSpace(string(content))
 		if err := os.Remove(tmp); err != nil {
 			return failure.Translate(err, e.File)
 		}
