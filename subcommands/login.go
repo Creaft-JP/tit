@@ -7,6 +7,7 @@ import (
 	"flag"
 	"fmt"
 	"github.com/Creaft-JP/tit/db/global/ent"
+	"github.com/Creaft-JP/tit/db/global/ent/globalconfig"
 	"github.com/Creaft-JP/tit/db/global/ent/logintoken"
 	e "github.com/Creaft-JP/tit/error"
 	"github.com/morikuni/failure"
@@ -50,6 +51,25 @@ func Login(args []string, r io.Reader, w io.Writer, cl *ent.Client, ctx context.
 	}
 	if _, err := transaction.LoginToken.Create().SetSignInUserSlug(*slug).SetCliLoginToken(string(token)).Save(ctx); err != nil {
 		return multierr.Append(failure.Translate(err, e.Database), failure.Translate(transaction.Rollback(), e.Database))
+	}
+	cntslg, err := transaction.LoginToken.Query().Where(logintoken.SignInUserSlug(*slug)).Count(ctx)
+	if err != nil {
+		return multierr.Append(failure.Translate(err, e.Database), failure.Translate(transaction.Rollback(), e.Database))
+	}
+	cnt, err := transaction.LoginToken.Query().Count(ctx)
+	if err != nil {
+		return multierr.Append(failure.Translate(err, e.Database), failure.Translate(transaction.Rollback(), e.Database))
+	}
+	if cntslg == cnt {
+		if _, err := transaction.GlobalConfig.Delete().
+			Where(globalconfig.Key("default-sign-in-user-slug")).Exec(ctx); err != nil {
+			return multierr.Append(failure.Translate(err, e.Database), failure.Translate(transaction.Rollback(), e.Database))
+		}
+		if _, err := transaction.GlobalConfig.Create().
+			SetKey("default-sign-in-user-slug").
+			SetValue(*slug).Save(ctx); err != nil {
+			return multierr.Append(failure.Translate(err, e.Database), failure.Translate(transaction.Rollback(), e.Database))
+		}
 	}
 	return failure.Translate(transaction.Commit(), e.Database)
 }
