@@ -94,12 +94,10 @@ func Push(args []string, gcl *gent.Client, lcl *lent.Client, ctx context.Context
 		)),
 	)
 	request.Header.Set("Content-Type", "application/json")
-	fmt.Println(request)
 	response, err := http.DefaultClient.Do(request)
 	if err != nil {
 		return failure.Translate(err, e.Network)
 	}
-	fmt.Println(response)
 	defer func(r *http.Response) {
 		ret = multierr.Append(ret, r.Body.Close())
 	}(response)
