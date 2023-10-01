@@ -56,9 +56,12 @@ func route(args []string, gcl *gent.Client, ctx context.Context) (ret error) {
 		return failure.New(e.Operation, failure.Message("subcommand must be specified"))
 	}
 
-	// init is exceptional
-	if args[0] == "init" {
+	// subcommands which don't require a repository
+	switch args[0] {
+	case "init":
 		return failure.Wrap(initRoute(ctx))
+	case "login":
+		return failure.Wrap(loginRoute(args[1:], gcl, ctx))
 	}
 
 	isInitialized, err := directories.Exists(skeleton.Path)
@@ -82,12 +85,10 @@ func route(args []string, gcl *gent.Client, ctx context.Context) (ret error) {
 		return
 	}
 
-	// Routing
+	// subcommands which require a repository
 	switch args[0] {
 	case "remote":
 		return failure.Wrap(remoteRoute(args[1:], lcl, ctx))
-	case "login":
-		return failure.Wrap(loginRoute(args[1:], gcl, ctx))
 	case "add":
 		return failure.Wrap(addRoute(args[1:], lcl, ctx))
 	case "status":
