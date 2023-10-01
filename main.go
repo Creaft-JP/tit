@@ -94,6 +94,8 @@ func route(args []string, gcl *gent.Client, ctx context.Context) (ret error) {
 		return failure.Wrap(statusRoute(lcl, ctx))
 	case "commit":
 		return failure.Wrap(commitRoute(args[1:], lcl, ctx))
+	case "push":
+		return failure.Wrap(pushRoute(args[1:], gcl, lcl, ctx))
 	default:
 		return failure.New(e.Operation, failure.Messagef("subcommand: \"%s\" does not exits", args[0]))
 	}
@@ -131,4 +133,8 @@ func statusRoute(cl *lent.Client, ctx context.Context) error {
 
 func commitRoute(args []string, cl *lent.Client, ctx context.Context) error {
 	return failure.Wrap(subcommands.Commit(args, cl, ctx))
+}
+
+func pushRoute(args []string, gcl *gent.Client, lcl *lent.Client, ctx context.Context) error {
+	return failure.Wrap(subcommands.Push(args, gcl, lcl, ctx))
 }
