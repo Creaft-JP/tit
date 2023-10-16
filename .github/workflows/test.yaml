@@ -13,7 +13,7 @@ jobs:
       - name: Install Packages for SQLite3 and Cross Compiler
         run: |
           sudo apt update
-          sudo apt install -y clang gcc-multilib g++-multilib build-essential gcc-aarch64-linux-gnu
+          sudo apt install -y clang build-essential gcc-aarch64-linux-gnu g++-aarch64-linux-gnu
       - name: Set CGO_ENABLED for SQLite3
         run: echo "CGO_ENABLED=1" >> $GITHUB_ENV
       - name: Install go-sqlite3
