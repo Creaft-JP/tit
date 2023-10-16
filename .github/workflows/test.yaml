@@ -10,17 +10,10 @@ jobs:
       - uses: actions/setup-go@v3
         with:
           go-version-file: go.mod
-      - name: Install clang and cross-compiler
+      - name: GCC multilib
         run: |
-          sudo apt-get update
-          sudo apt-get install -y clang
-          sudo apt-get install -y gcc-aarch64-linux-gnu g++-aarch64-linux-gnu
+          sudo apt-get install gcc-multilib g++-multilib
       - run: go test ./... -v
-      - name: Set up environment for cross-compiling
-        run: |
-          echo "CGO_ENABLED=1" >> $GITHUB_ENV
-          echo "CC=aarch64-linux-gnu-gcc" >> $GITHUB_ENV
-          echo "CXX=aarch64-linux-gnu-g++" >> $GITHUB_ENV
       - uses: goreleaser/goreleaser-action@v4
         with:
           args: release --snapshot
