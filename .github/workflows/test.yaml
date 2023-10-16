@@ -13,11 +13,15 @@ jobs:
       - name: Install Packages for SQLite3
         run: |
           sudo apt update
-          sudo apt install -y clang 
-          sudo apt install gcc-multilib g++-multilib
-          sudo apt install build-essential
-          CGO_ENABLED=1
-          go install github.com/mattn/go-sqlite3
+          sudo apt install -y clang gcc-multilib g++-multilib build-essential
+      - name: Set CGO_ENABLED for SQLite3
+        run: echo "CGO_ENABLED=1" >> $GITHUB_ENV
+      - name: Install go-sqlite3
+        run: go install github.com/mattn/go-sqlite3
+      - name: Set up environment for cross-compiling
+        run: |
+          echo "CC=aarch64-linux-gnu-gcc" >> $GITHUB_ENV
+          echo "CXX=aarch64-linux-gnu-g++" >> $GITHUB_ENV
       - run: go test ./... -v
       - uses: goreleaser/goreleaser-action@v4
         with:
