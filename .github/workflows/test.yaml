@@ -10,9 +10,9 @@ jobs:
       - uses: actions/setup-go@v3
         with:
           go-version-file: go.mod
-      - name: GCC multilib
+      - name: Install Packages for SQLite3
         run: |
-          sudo apt-get install gcc-multilib g++-multilib
+          sudo apt-get install build-essential
       - run: go test ./... -v
       - uses: goreleaser/goreleaser-action@v4
         with:
