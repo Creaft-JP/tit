@@ -13,6 +13,11 @@ jobs:
       - name: Install clang
         run: sudo apt-get install -y clang
       - run: go test ./... -v
+      - name: Set up environment for cross-compiling
+        run: |
+          echo "CGO_ENABLED=1" >> $GITHUB_ENV
+          echo "CC=aarch64-linux-gnu-gcc" >> $GITHUB_ENV
+          echo "CXX=aarch64-linux-gnu-g++" >> $GITHUB_ENV
       - uses: goreleaser/goreleaser-action@v4
         with:
           args: release --snapshot
