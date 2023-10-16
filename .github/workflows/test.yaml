@@ -20,6 +20,7 @@ jobs:
         run: go install github.com/mattn/go-sqlite3
       - name: Set up environment for cross-compiling
         run: |
+          echo "GOARCH=arm64" >> $GITHUB_ENV
           echo "CC=aarch64-linux-gnu-gcc" >> $GITHUB_ENV
           echo "CXX=aarch64-linux-gnu-g++" >> $GITHUB_ENV
       - run: go test ./... -v
