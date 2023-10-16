@@ -12,10 +12,10 @@ jobs:
           go-version-file: go.mod
       - name: Install Packages for SQLite3
         run: |
-          apt-get update
-          apt-get install -y clang 
-          apt-get install gcc-multilib g++-multilib
-          apt install build-essential
+          sudo apt update
+          sudo apt install -y clang 
+          sudo apt install gcc-multilib g++-multilib
+          sudo apt install build-essential
           CGO_ENABLED=1
           go install github.com/mattn/go-sqlite3
       - run: go test ./... -v
