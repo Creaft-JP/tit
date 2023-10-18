@@ -4,21 +4,23 @@ on:
       - release
 jobs:
   test:
-    runs-on: macos-latest
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-go@v3
         with:
           go-version-file: go.mod
-
+      - name: Install for CGO
+        run: |
+          sudo apt-get -y install gcc clang gcc-aarch64-linux-gnu
       - name: Set CGO_ENABLED for SQLite3
         run: echo "CGO_ENABLED=1" >> $GITHUB_ENV
       - name: Install go-sqlite3
         run: go install github.com/mattn/go-sqlite3
       - name: Set up environment for cross-compiling
         run: |
-          echo "CC=clang" >> $GITHUB_ENV
-          echo "CXX=clang" >> $GITHUB_ENV
+          echo "CC=gcc" >> $GITHUB_ENV
+          echo "CXX=gcc" >> $GITHUB_ENV
       - run: go test ./... -v
       - uses: goreleaser/goreleaser-action@v4
         with:
