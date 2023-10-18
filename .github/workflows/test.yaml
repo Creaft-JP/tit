@@ -11,11 +11,6 @@ jobs:
         with:
           go-version-file: go.mod
 
-      - name: Install GCC and other necessary packages for SQLite3 and Cross Compiler
-        run: |
-          sudo apt update
-          sudo apt -y clang build-essential
-
       - name: Set CGO_ENABLED for SQLite3
         run: echo "CGO_ENABLED=1" >> $GITHUB_ENV
       - name: Install go-sqlite3
