@@ -7,7 +7,10 @@ before:
 builds:
   - env:
       - CGO_ENABLED=1
-      - CC=aarch64-linux-gnu-gcc
+      - >-
+        {{- if eq .Arch "arm64" }}
+          CC=aarch64-linux-gnu-gcc
+        {{- end }}
     goos:
       - linux
     goarch:
