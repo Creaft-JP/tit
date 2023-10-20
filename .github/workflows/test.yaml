@@ -16,12 +16,11 @@ jobs:
           sudo apt-get install -y gcc-aarch64-linux-gnu
           aarch64-linux-gnu-gcc --version
       - run: go test ./... -v
-      - run: go build -v -x
+      - run: go build
         env:
           GOARCH: arm
           GOOS: linux
           CGO_ENABLED: 1
-          CC: aarch64-linux-gnu-gcc
           CC_FOR_linux_arm: aarch64-linux-gnu-gcc
       - uses: goreleaser/goreleaser-action@v4
         with:
