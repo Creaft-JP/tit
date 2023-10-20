@@ -25,4 +25,4 @@ jobs:
         with:
           args: release --snapshot
         env:
-          CC_FOR_linux_arm64: aarch64-linux-gnu-gcc
+          CC: aarch64-linux-gnu-gcc
