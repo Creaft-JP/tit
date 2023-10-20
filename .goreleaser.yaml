@@ -10,8 +10,9 @@ builds:
       - CC=aarch64-linux-gnu-gcc
     goos:
       - linux
-      - windows
-      - darwin
+    goarch:
+      - arm64
+      - amd64
 
 archives:
   - format: tar.gz
