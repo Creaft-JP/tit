@@ -14,10 +14,9 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y gcc-aarch64-linux-gnu
-          aarch64-linux-gnu-gcc --version
       - run: go build
         env:
-          GOARCH: arm
+          GOARCH: arm64
           GOOS: linux
           CGO_ENABLED: 1
           CC: aarch64-linux-gnu-gcc
