@@ -21,7 +21,7 @@ jobs:
           GOARCH: arm
           GOOS: linux
           CGO_ENABLED: 1
-          CC_FOR_linux_arm: aarch64-linux-gnu-gcc
+          CC: aarch64-linux-gnu-gcc
       - uses: goreleaser/goreleaser-action@v4
         with:
           args: release --snapshot
