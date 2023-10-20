@@ -14,7 +14,10 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y gcc-aarch64-linux-gnu
-      - run: go build
+      - name: cross compile without GoReleaser
+        run: |
+          go build
+          file tit
         env:
           GOARCH: arm64
           GOOS: linux
