@@ -22,7 +22,7 @@ jobs:
           GOARCH: arm64
           GOOS: linux
           CGO_ENABLED: 1
-          CC_FOR_linux_arm64: aarch64-linux-gnu-gcc
+          CC: aarch64-linux-gnu-gcc
       - run: go test ./... -v
       - uses: goreleaser/goreleaser-action@v4
         with:
