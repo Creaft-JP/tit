@@ -8,10 +8,7 @@ jobs:
     container: goreleaser/goreleaser-cross
     steps:
       - uses: actions/checkout@v3
-      - run: |
-          id "$(whoami)"
-          getent group
-      - run: chown -R "$(whoami):$(whoami)" ./
+      - run: chown -R root:root ./
       - uses: actions/setup-go@v3
         with:
           go-version-file: go.mod
