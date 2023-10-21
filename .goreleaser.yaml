@@ -5,7 +5,10 @@ before:
     # You may remove this if you don't use go modules.
     - go mod tidy
 builds:
-  - goos:
+  - goarch:
+      - amd64
+      - arm64
+    goos:
       - linux
       - windows
       - darwin
