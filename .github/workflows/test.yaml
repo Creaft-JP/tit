@@ -8,6 +8,7 @@ jobs:
     container: goreleaser/goreleaser-cross
     steps:
       - uses: actions/checkout@v3
+      - run: echo "${USER}"
       - run: sudo chown -R ${USER} ./
       - uses: actions/setup-go@v3
         with:
