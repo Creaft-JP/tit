@@ -8,7 +8,6 @@ import (
 	"github.com/Creaft-JP/tit/directories"
 	e "github.com/Creaft-JP/tit/error"
 	"github.com/Creaft-JP/tit/skeleton"
-	_ "github.com/mattn/go-sqlite3"
 	"github.com/morikuni/failure"
 	"go.uber.org/multierr"
 	"os"

@@ -4,7 +4,6 @@ import (
 	"github.com/Creaft-JP/tit/db/local/ent/remote"
 	e "github.com/Creaft-JP/tit/error"
 	"github.com/Creaft-JP/tit/test"
-	_ "github.com/mattn/go-sqlite3"
 	"github.com/morikuni/failure"
 	"testing"
 )

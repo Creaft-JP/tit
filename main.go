@@ -4,12 +4,13 @@ import (
 	"context"
 	gdb "github.com/Creaft-JP/tit/db/global"
 	gent "github.com/Creaft-JP/tit/db/global/ent"
-	"github.com/Creaft-JP/tit/db/local"
+	ldb "github.com/Creaft-JP/tit/db/local"
 	lent "github.com/Creaft-JP/tit/db/local/ent"
 	"github.com/Creaft-JP/tit/directories"
 	e "github.com/Creaft-JP/tit/error"
 	g "github.com/Creaft-JP/tit/global"
 	"github.com/Creaft-JP/tit/skeleton"
+	"github.com/Creaft-JP/tit/sqlite"
 	"github.com/Creaft-JP/tit/subcommands"
 	"github.com/Creaft-JP/tit/subcommands/remote"
 	"github.com/morikuni/failure"
@@ -44,7 +45,7 @@ func main() {
 			return
 		}
 	}
-
+	e.Handle(sqlite.Register(gdb.FilePath))
 	if err := route(args[1:], client, ctx); err != nil {
 		e.Handle(err)
 		return
@@ -73,14 +74,14 @@ func route(args []string, gcl *gent.Client, ctx context.Context) (ret error) {
 	}
 
 	// Prepare Database
-	lcl, err := local.MakeClient(local.FilePath)
+	lcl, err := ldb.MakeClient(ldb.FilePath)
 	if err != nil {
 		return failure.Wrap(err)
 	}
 	defer func(client *lent.Client) {
 		ret = multierr.Append(ret, failure.Translate(client.Close(), e.Database))
 	}(lcl)
-	if err := local.Migrate(lcl, ctx); err != nil {
+	if err := ldb.Migrate(lcl, ctx); err != nil {
 		e.Handle(err)
 		return
 	}

@@ -4,10 +4,10 @@ import (
 	"context"
 	"entgo.io/ent/dialect"
 	"fmt"
+	"github.com/Creaft-JP/tit/db"
 	"github.com/Creaft-JP/tit/db/local/ent"
 	e "github.com/Creaft-JP/tit/error"
 	"github.com/Creaft-JP/tit/skeleton"
-	_ "github.com/mattn/go-sqlite3"
 	"github.com/morikuni/failure"
 	"path/filepath"
 )
@@ -18,7 +18,7 @@ var FilePath = filepath.Join(skeleton.Path, "database")
 //
 // if there isn't file on the filePath, automatically make new file
 func MakeClient(filePath string) (*ent.Client, error) {
-	name := fmt.Sprintf("%s?_fk=1", filePath)
+	name := fmt.Sprintf("%s?%s", filePath, db.Parameters)
 	client, err := ent.Open(dialect.SQLite, name)
 	return client, failure.Translate(err, e.Database)
 }

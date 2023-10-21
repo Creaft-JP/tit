@@ -5,16 +5,18 @@ import (
 	"context"
 	"entgo.io/ent/dialect"
 	"fmt"
+	"github.com/Creaft-JP/tit/db"
 	"github.com/Creaft-JP/tit/db/local"
 	"github.com/Creaft-JP/tit/db/local/ent"
 	"github.com/Creaft-JP/tit/db/local/ent/enttest"
+	"github.com/Creaft-JP/tit/sqlite"
 	"os"
 	"path/filepath"
 	"testing"
 )
 
 var prevd string
-var dsn = fmt.Sprintf("%s?_fk=1", local.FilePath)
+var dsn = fmt.Sprintf("%s?%s", local.FilePath, db.Parameters)
 
 // SetUp returns ent.Client, io.Writer for console and context.Context
 func SetUp(t *testing.T) (*ent.Client, *bytes.Buffer, context.Context) {
@@ -30,6 +32,9 @@ func SetUp(t *testing.T) (*ent.Client, *bytes.Buffer, context.Context) {
 		t.Fatal(err)
 	}
 	if err := os.Mkdir(".tit", 0755); err != nil {
+		t.Fatal(err)
+	}
+	if err := sqlite.Register(dsn); err != nil {
 		t.Fatal(err)
 	}
 	return enttest.Open(t, dialect.SQLite, dsn), bytes.NewBuffer([]byte{}), context.Background()
