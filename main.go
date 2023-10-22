@@ -33,6 +33,10 @@ func main() {
 			return
 		}
 	}
+	if err := sqlite.Register(gdb.FilePath); err != nil {
+		e.Handle(err)
+		return
+	}
 	client, err := gdb.MakeClient(gdb.FilePath)
 	defer func(c *gent.Client) {
 		if err := c.Close(); err != nil {
@@ -45,7 +49,6 @@ func main() {
 			return
 		}
 	}
-	e.Handle(sqlite.Register(gdb.FilePath))
 	if err := route(args[1:], client, ctx); err != nil {
 		e.Handle(err)
 		return
