@@ -10,6 +10,7 @@ import (
 	"github.com/Creaft-JP/tit/db/local/ent/section"
 	e "github.com/Creaft-JP/tit/error"
 	"github.com/Creaft-JP/tit/skeleton"
+	"github.com/mattn/go-shellwords"
 	"github.com/morikuni/failure"
 	"go.uber.org/multierr"
 	"os"
@@ -29,17 +30,16 @@ func Commit(args []string, cl *ent.Client, ctx context.Context) error {
 	if *message == commitMessageDefault {
 		editor, ok := os.LookupEnv("EDITOR")
 		if !ok {
-			editor = "vi"
+			return failure.New(e.Operation, failure.Message("please specify EDITOR what you edit the message on"))
 		}
 		tmp := filepath.Join(skeleton.Path, fmt.Sprintf("commit message (%d)", os.Getpid()))
-		file, err := os.Create(tmp)
+		line := fmt.Sprintf("%s '%s'", editor, tmp)
+		environments, words, err := shellwords.ParseWithEnvs(line)
 		if err != nil {
-			return failure.Translate(err, e.File)
+			return failure.Translate(err, e.Operation, failure.Messagef("failed to parse \"%s\" to shell words", line))
 		}
-		if err := file.Close(); err != nil {
-			return failure.Translate(err, e.File)
-		}
-		command := exec.Command(editor, tmp)
+		command := exec.Command(words[0], words[1:]...)
+		command.Env = append(command.Environ(), environments...)
 		command.Stdin = os.Stdin
 		command.Stdout = os.Stdout
 		command.Stderr = os.Stderr
