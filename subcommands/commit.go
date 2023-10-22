@@ -32,6 +32,13 @@ func Commit(args []string, cl *ent.Client, ctx context.Context) error {
 			editor = "vi"
 		}
 		tmp := filepath.Join(skeleton.Path, fmt.Sprintf("commit message (%d)", os.Getpid()))
+		file, err := os.Create(tmp)
+		if err != nil {
+			return failure.Translate(err, e.File)
+		}
+		if err := file.Close(); err != nil {
+			return failure.Translate(err, e.File)
+		}
 		command := exec.Command(editor, tmp)
 		command.Stdin = os.Stdin
 		command.Stdout = os.Stdout
