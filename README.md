@@ -1,2 +1,2 @@
 # tit
-a Git-Like CLI creating tutrials
+a Git-Like CLI creating tutorials
