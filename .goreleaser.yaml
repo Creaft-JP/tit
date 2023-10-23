@@ -6,7 +6,6 @@ before:
     - go mod tidy
 builds:
   - env:
-      - PATH=/llvm-mingw/bin:{{ .Env.PATH }}
       - CGO_ENABLED=1
       - >-
         CC=
