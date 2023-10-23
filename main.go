@@ -23,7 +23,7 @@ func main() {
 
 	initialized, err := directories.Exists(g.Path)
 	if err != nil {
-		e.Handle(err)
+		e.Handle(failure.Wrap(err))
 		return
 	}
 	if !initialized {
@@ -33,20 +33,22 @@ func main() {
 		}
 	}
 	client, err := gdb.MakeClient(gdb.FilePath)
-	defer func(c *gent.Client) {
-		if err := c.Close(); err != nil {
-			e.Handle(err)
-		}
+	if err != nil {
+		e.Handle(failure.Wrap(err))
+		return
+	}
+	defer func(cl *gent.Client) {
+		e.Handle(failure.Translate(cl.Close(), e.Database))
 	}(client)
 	if !initialized {
 		if err := gdb.Migrate(client, ctx); err != nil {
-			e.Handle(err)
+			e.Handle(failure.Wrap(err))
 			return
 		}
 	}
 
 	if err := route(args[1:], client, ctx); err != nil {
-		e.Handle(err)
+		e.Handle(failure.Wrap(err))
 		return
 	}
 }
