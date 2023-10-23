@@ -17,7 +17,6 @@ require (
 	github.com/go-openapi/inflect v0.19.0 // indirect
 	github.com/google/go-cmp v0.6.0 // indirect
 	github.com/google/uuid v1.3.1 // indirect
-	github.com/hashicorp/hcl/v2 v2.18.0 // indirect
 	github.com/mattn/go-shellwords v1.0.12 // indirect
 	github.com/hashicorp/hcl/v2 v2.19.1 // indirect
 	github.com/mitchellh/go-wordwrap v1.0.1 // indirect
