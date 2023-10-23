@@ -5,15 +5,15 @@ on:
 jobs:
   release:
     runs-on: ubuntu-latest
+    container: goreleaser/goreleaser-cross
     permissions:
       contents: write
     steps:
       - uses: actions/checkout@v3
         with:
           fetch-depth: 0
-      - uses: actions/setup-go@v3
-        with:
-          go-version-file: go.mod
+      - run: chown -R root:root ./
+      - run: go mod tidy
       - uses: goreleaser/goreleaser-action@v4
         with:
           args: release
