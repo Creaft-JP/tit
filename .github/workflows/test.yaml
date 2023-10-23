@@ -5,11 +5,11 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    container: goreleaser/goreleaser-cross
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/setup-go@v3
-        with:
-          go-version-file: go.mod
+      - run: chown -R root:root ./
+      - run: go mod tidy
       - run: go test ./... -v
       - uses: goreleaser/goreleaser-action@v4
         with:
