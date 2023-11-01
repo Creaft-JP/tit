@@ -14,6 +14,8 @@ type Tx struct {
 	config
 	// CommittedFile is the client for interacting with the CommittedFile builders.
 	CommittedFile *CommittedFileClient
+	// Image is the client for interacting with the Image builders.
+	Image *ImageClient
 	// Page is the client for interacting with the Page builders.
 	Page *PageClient
 	// Remote is the client for interacting with the Remote builders.
@@ -156,6 +158,7 @@ func (tx *Tx) Client() *Client {
 
 func (tx *Tx) init() {
 	tx.CommittedFile = NewCommittedFileClient(tx.config)
+	tx.Image = NewImageClient(tx.config)
 	tx.Page = NewPageClient(tx.config)
 	tx.Remote = NewRemoteClient(tx.config)
 	tx.Section = NewSectionClient(tx.config)

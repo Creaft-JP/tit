@@ -12,9 +12,11 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/Creaft-JP/tit/db/local/ent/committedfile"
+	"github.com/Creaft-JP/tit/db/local/ent/image"
 	"github.com/Creaft-JP/tit/db/local/ent/predicate"
 	"github.com/Creaft-JP/tit/db/local/ent/section"
 	"github.com/Creaft-JP/tit/db/local/ent/titcommit"
+	"github.com/google/uuid"
 )
 
 // TitCommitQuery is the builder for querying TitCommit entities.
@@ -26,6 +28,7 @@ type TitCommitQuery struct {
 	predicates  []predicate.TitCommit
 	withSection *SectionQuery
 	withFiles   *CommittedFileQuery
+	withImages  *ImageQuery
 	withFKs     bool
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
@@ -100,6 +103,28 @@ func (tcq *TitCommitQuery) QueryFiles() *CommittedFileQuery {
 			sqlgraph.From(titcommit.Table, titcommit.FieldID, selector),
 			sqlgraph.To(committedfile.Table, committedfile.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, titcommit.FilesTable, titcommit.FilesColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(tcq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryImages chains the current query on the "images" edge.
+func (tcq *TitCommitQuery) QueryImages() *ImageQuery {
+	query := (&ImageClient{config: tcq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := tcq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := tcq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(titcommit.Table, titcommit.FieldID, selector),
+			sqlgraph.To(image.Table, image.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, false, titcommit.ImagesTable, titcommit.ImagesPrimaryKey...),
 		)
 		fromU = sqlgraph.SetNeighbors(tcq.driver.Dialect(), step)
 		return fromU, nil
@@ -301,6 +326,7 @@ func (tcq *TitCommitQuery) Clone() *TitCommitQuery {
 		predicates:  append([]predicate.TitCommit{}, tcq.predicates...),
 		withSection: tcq.withSection.Clone(),
 		withFiles:   tcq.withFiles.Clone(),
+		withImages:  tcq.withImages.Clone(),
 		// clone intermediate query.
 		sql:  tcq.sql.Clone(),
 		path: tcq.path,
@@ -326,6 +352,17 @@ func (tcq *TitCommitQuery) WithFiles(opts ...func(*CommittedFileQuery)) *TitComm
 		opt(query)
 	}
 	tcq.withFiles = query
+	return tcq
+}
+
+// WithImages tells the query-builder to eager-load the nodes that are connected to
+// the "images" edge. The optional arguments are used to configure the query builder of the edge.
+func (tcq *TitCommitQuery) WithImages(opts ...func(*ImageQuery)) *TitCommitQuery {
+	query := (&ImageClient{config: tcq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	tcq.withImages = query
 	return tcq
 }
 
@@ -408,9 +445,10 @@ func (tcq *TitCommitQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*T
 		nodes       = []*TitCommit{}
 		withFKs     = tcq.withFKs
 		_spec       = tcq.querySpec()
-		loadedTypes = [2]bool{
+		loadedTypes = [3]bool{
 			tcq.withSection != nil,
 			tcq.withFiles != nil,
+			tcq.withImages != nil,
 		}
 	)
 	if tcq.withSection != nil {
@@ -447,6 +485,13 @@ func (tcq *TitCommitQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*T
 		if err := tcq.loadFiles(ctx, query, nodes,
 			func(n *TitCommit) { n.Edges.Files = []*CommittedFile{} },
 			func(n *TitCommit, e *CommittedFile) { n.Edges.Files = append(n.Edges.Files, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := tcq.withImages; query != nil {
+		if err := tcq.loadImages(ctx, query, nodes,
+			func(n *TitCommit) { n.Edges.Images = []*Image{} },
+			func(n *TitCommit, e *Image) { n.Edges.Images = append(n.Edges.Images, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -513,6 +558,67 @@ func (tcq *TitCommitQuery) loadFiles(ctx context.Context, query *CommittedFileQu
 			return fmt.Errorf(`unexpected referenced foreign-key "tit_commit_files" returned %v for node %v`, *fk, n.ID)
 		}
 		assign(node, n)
+	}
+	return nil
+}
+func (tcq *TitCommitQuery) loadImages(ctx context.Context, query *ImageQuery, nodes []*TitCommit, init func(*TitCommit), assign func(*TitCommit, *Image)) error {
+	edgeIDs := make([]driver.Value, len(nodes))
+	byID := make(map[int]*TitCommit)
+	nids := make(map[uuid.UUID]map[*TitCommit]struct{})
+	for i, node := range nodes {
+		edgeIDs[i] = node.ID
+		byID[node.ID] = node
+		if init != nil {
+			init(node)
+		}
+	}
+	query.Where(func(s *sql.Selector) {
+		joinT := sql.Table(titcommit.ImagesTable)
+		s.Join(joinT).On(s.C(image.FieldID), joinT.C(titcommit.ImagesPrimaryKey[1]))
+		s.Where(sql.InValues(joinT.C(titcommit.ImagesPrimaryKey[0]), edgeIDs...))
+		columns := s.SelectedColumns()
+		s.Select(joinT.C(titcommit.ImagesPrimaryKey[0]))
+		s.AppendSelect(columns...)
+		s.SetDistinct(false)
+	})
+	if err := query.prepareQuery(ctx); err != nil {
+		return err
+	}
+	qr := QuerierFunc(func(ctx context.Context, q Query) (Value, error) {
+		return query.sqlAll(ctx, func(_ context.Context, spec *sqlgraph.QuerySpec) {
+			assign := spec.Assign
+			values := spec.ScanValues
+			spec.ScanValues = func(columns []string) ([]any, error) {
+				values, err := values(columns[1:])
+				if err != nil {
+					return nil, err
+				}
+				return append([]any{new(sql.NullInt64)}, values...), nil
+			}
+			spec.Assign = func(columns []string, values []any) error {
+				outValue := int(values[0].(*sql.NullInt64).Int64)
+				inValue := *values[1].(*uuid.UUID)
+				if nids[inValue] == nil {
+					nids[inValue] = map[*TitCommit]struct{}{byID[outValue]: {}}
+					return assign(columns[1:], values[1:])
+				}
+				nids[inValue][byID[outValue]] = struct{}{}
+				return nil
+			}
+		})
+	})
+	neighbors, err := withInterceptors[[]*Image](ctx, query, qr, query.inters)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		nodes, ok := nids[n.ID]
+		if !ok {
+			return fmt.Errorf(`unexpected "images" node returned %v`, n.ID)
+		}
+		for kn := range nodes {
+			assign(kn, n)
+		}
 	}
 	return nil
 }

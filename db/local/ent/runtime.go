@@ -4,12 +4,14 @@ package ent
 
 import (
 	"github.com/Creaft-JP/tit/db/local/ent/committedfile"
+	"github.com/Creaft-JP/tit/db/local/ent/image"
 	"github.com/Creaft-JP/tit/db/local/ent/page"
 	"github.com/Creaft-JP/tit/db/local/ent/remote"
 	"github.com/Creaft-JP/tit/db/local/ent/schema"
 	"github.com/Creaft-JP/tit/db/local/ent/section"
 	"github.com/Creaft-JP/tit/db/local/ent/stagedfile"
 	"github.com/Creaft-JP/tit/db/local/ent/titcommit"
+	"github.com/google/uuid"
 )
 
 // The init function reads all schema descriptors with runtime code
@@ -22,6 +24,16 @@ func init() {
 	committedfileDescPath := committedfileFields[0].Descriptor()
 	// committedfile.PathValidator is a validator for the "path" field. It is called by the builders before save.
 	committedfile.PathValidator = committedfileDescPath.Validators[0].(func(string) error)
+	imageFields := schema.Image{}.Fields()
+	_ = imageFields
+	// imageDescExtension is the schema descriptor for extension field.
+	imageDescExtension := imageFields[1].Descriptor()
+	// image.ExtensionValidator is a validator for the "extension" field. It is called by the builders before save.
+	image.ExtensionValidator = imageDescExtension.Validators[0].(func(string) error)
+	// imageDescID is the schema descriptor for id field.
+	imageDescID := imageFields[0].Descriptor()
+	// image.DefaultID holds the default value on creation for the id field.
+	image.DefaultID = imageDescID.Default.(func() uuid.UUID)
 	pageFields := schema.Page{}.Fields()
 	_ = pageFields
 	// pageDescPathname is the schema descriptor for pathname field.

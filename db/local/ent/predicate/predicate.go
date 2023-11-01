@@ -9,6 +9,9 @@ import (
 // CommittedFile is the predicate function for committedfile builders.
 type CommittedFile func(*sql.Selector)
 
+// Image is the predicate function for image builders.
+type Image func(*sql.Selector)
+
 // Page is the predicate function for page builders.
 type Page func(*sql.Selector)
 

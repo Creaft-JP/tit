@@ -29,6 +29,19 @@ var (
 			},
 		},
 	}
+	// ImagesColumns holds the columns for the "images" table.
+	ImagesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID, Unique: true},
+		{Name: "extension", Type: field.TypeString},
+		{Name: "contents", Type: field.TypeBytes},
+		{Name: "description", Type: field.TypeString},
+	}
+	// ImagesTable holds the schema information for the "images" table.
+	ImagesTable = &schema.Table{
+		Name:       "images",
+		Columns:    ImagesColumns,
+		PrimaryKey: []*schema.Column{ImagesColumns[0]},
+	}
 	// PagesColumns holds the columns for the "pages" table.
 	PagesColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
@@ -111,14 +124,41 @@ var (
 			},
 		},
 	}
+	// TitCommitImagesColumns holds the columns for the "tit_commit_images" table.
+	TitCommitImagesColumns = []*schema.Column{
+		{Name: "tit_commit_id", Type: field.TypeInt},
+		{Name: "image_id", Type: field.TypeUUID},
+	}
+	// TitCommitImagesTable holds the schema information for the "tit_commit_images" table.
+	TitCommitImagesTable = &schema.Table{
+		Name:       "tit_commit_images",
+		Columns:    TitCommitImagesColumns,
+		PrimaryKey: []*schema.Column{TitCommitImagesColumns[0], TitCommitImagesColumns[1]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "tit_commit_images_tit_commit_id",
+				Columns:    []*schema.Column{TitCommitImagesColumns[0]},
+				RefColumns: []*schema.Column{TitCommitsColumns[0]},
+				OnDelete:   schema.Cascade,
+			},
+			{
+				Symbol:     "tit_commit_images_image_id",
+				Columns:    []*schema.Column{TitCommitImagesColumns[1]},
+				RefColumns: []*schema.Column{ImagesColumns[0]},
+				OnDelete:   schema.Cascade,
+			},
+		},
+	}
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
 		CommittedFilesTable,
+		ImagesTable,
 		PagesTable,
 		RemotesTable,
 		SectionsTable,
 		StagedFilesTable,
 		TitCommitsTable,
+		TitCommitImagesTable,
 	}
 )
 
@@ -126,4 +166,6 @@ func init() {
 	CommittedFilesTable.ForeignKeys[0].RefTable = TitCommitsTable
 	SectionsTable.ForeignKeys[0].RefTable = PagesTable
 	TitCommitsTable.ForeignKeys[0].RefTable = SectionsTable
+	TitCommitImagesTable.ForeignKeys[0].RefTable = TitCommitsTable
+	TitCommitImagesTable.ForeignKeys[1].RefTable = ImagesTable
 }

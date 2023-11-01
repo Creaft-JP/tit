@@ -221,11 +221,15 @@ func (sc *SectionCreate) createSpec() (*Section, *sqlgraph.CreateSpec) {
 // SectionCreateBulk is the builder for creating many Section entities in bulk.
 type SectionCreateBulk struct {
 	config
+	err      error
 	builders []*SectionCreate
 }
 
 // Save creates the Section entities in the database.
 func (scb *SectionCreateBulk) Save(ctx context.Context) ([]*Section, error) {
+	if scb.err != nil {
+		return nil, scb.err
+	}
 	specs := make([]*sqlgraph.CreateSpec, len(scb.builders))
 	nodes := make([]*Section, len(scb.builders))
 	mutators := make([]Mutator, len(scb.builders))

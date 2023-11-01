@@ -7,14 +7,17 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"reflect"
 
 	"github.com/Creaft-JP/tit/db/local/ent/migrate"
+	"github.com/google/uuid"
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect"
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"github.com/Creaft-JP/tit/db/local/ent/committedfile"
+	"github.com/Creaft-JP/tit/db/local/ent/image"
 	"github.com/Creaft-JP/tit/db/local/ent/page"
 	"github.com/Creaft-JP/tit/db/local/ent/remote"
 	"github.com/Creaft-JP/tit/db/local/ent/section"
@@ -29,6 +32,8 @@ type Client struct {
 	Schema *migrate.Schema
 	// CommittedFile is the client for interacting with the CommittedFile builders.
 	CommittedFile *CommittedFileClient
+	// Image is the client for interacting with the Image builders.
+	Image *ImageClient
 	// Page is the client for interacting with the Page builders.
 	Page *PageClient
 	// Remote is the client for interacting with the Remote builders.
@@ -53,6 +58,7 @@ func NewClient(opts ...Option) *Client {
 func (c *Client) init() {
 	c.Schema = migrate.NewSchema(c.driver)
 	c.CommittedFile = NewCommittedFileClient(c.config)
+	c.Image = NewImageClient(c.config)
 	c.Page = NewPageClient(c.config)
 	c.Remote = NewRemoteClient(c.config)
 	c.Section = NewSectionClient(c.config)
@@ -125,11 +131,14 @@ func Open(driverName, dataSourceName string, options ...Option) (*Client, error)
 	}
 }
 
+// ErrTxStarted is returned when trying to start a new transaction from a transactional client.
+var ErrTxStarted = errors.New("ent: cannot start a transaction within a transaction")
+
 // Tx returns a new transactional client. The provided context
 // is used until the transaction is committed or rolled back.
 func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 	if _, ok := c.driver.(*txDriver); ok {
-		return nil, errors.New("ent: cannot start a transaction within a transaction")
+		return nil, ErrTxStarted
 	}
 	tx, err := newTx(ctx, c.driver)
 	if err != nil {
@@ -141,6 +150,7 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		ctx:           ctx,
 		config:        cfg,
 		CommittedFile: NewCommittedFileClient(cfg),
+		Image:         NewImageClient(cfg),
 		Page:          NewPageClient(cfg),
 		Remote:        NewRemoteClient(cfg),
 		Section:       NewSectionClient(cfg),
@@ -166,6 +176,7 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		ctx:           ctx,
 		config:        cfg,
 		CommittedFile: NewCommittedFileClient(cfg),
+		Image:         NewImageClient(cfg),
 		Page:          NewPageClient(cfg),
 		Remote:        NewRemoteClient(cfg),
 		Section:       NewSectionClient(cfg),
@@ -200,7 +211,8 @@ func (c *Client) Close() error {
 // In order to add hooks to a specific client, call: `client.Node.Use(...)`.
 func (c *Client) Use(hooks ...Hook) {
 	for _, n := range []interface{ Use(...Hook) }{
-		c.CommittedFile, c.Page, c.Remote, c.Section, c.StagedFile, c.TitCommit,
+		c.CommittedFile, c.Image, c.Page, c.Remote, c.Section, c.StagedFile,
+		c.TitCommit,
 	} {
 		n.Use(hooks...)
 	}
@@ -210,7 +222,8 @@ func (c *Client) Use(hooks ...Hook) {
 // In order to add interceptors to a specific client, call: `client.Node.Intercept(...)`.
 func (c *Client) Intercept(interceptors ...Interceptor) {
 	for _, n := range []interface{ Intercept(...Interceptor) }{
-		c.CommittedFile, c.Page, c.Remote, c.Section, c.StagedFile, c.TitCommit,
+		c.CommittedFile, c.Image, c.Page, c.Remote, c.Section, c.StagedFile,
+		c.TitCommit,
 	} {
 		n.Intercept(interceptors...)
 	}
@@ -221,6 +234,8 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 	switch m := m.(type) {
 	case *CommittedFileMutation:
 		return c.CommittedFile.mutate(ctx, m)
+	case *ImageMutation:
+		return c.Image.mutate(ctx, m)
 	case *PageMutation:
 		return c.Page.mutate(ctx, m)
 	case *RemoteMutation:
@@ -266,6 +281,21 @@ func (c *CommittedFileClient) Create() *CommittedFileCreate {
 
 // CreateBulk returns a builder for creating a bulk of CommittedFile entities.
 func (c *CommittedFileClient) CreateBulk(builders ...*CommittedFileCreate) *CommittedFileCreateBulk {
+	return &CommittedFileCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *CommittedFileClient) MapCreateBulk(slice any, setFunc func(*CommittedFileCreate, int)) *CommittedFileCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &CommittedFileCreateBulk{err: fmt.Errorf("calling to CommittedFileClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*CommittedFileCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
 	return &CommittedFileCreateBulk{config: c.config, builders: builders}
 }
 
@@ -370,6 +400,155 @@ func (c *CommittedFileClient) mutate(ctx context.Context, m *CommittedFileMutati
 	}
 }
 
+// ImageClient is a client for the Image schema.
+type ImageClient struct {
+	config
+}
+
+// NewImageClient returns a client for the Image from the given config.
+func NewImageClient(c config) *ImageClient {
+	return &ImageClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `image.Hooks(f(g(h())))`.
+func (c *ImageClient) Use(hooks ...Hook) {
+	c.hooks.Image = append(c.hooks.Image, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `image.Intercept(f(g(h())))`.
+func (c *ImageClient) Intercept(interceptors ...Interceptor) {
+	c.inters.Image = append(c.inters.Image, interceptors...)
+}
+
+// Create returns a builder for creating a Image entity.
+func (c *ImageClient) Create() *ImageCreate {
+	mutation := newImageMutation(c.config, OpCreate)
+	return &ImageCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of Image entities.
+func (c *ImageClient) CreateBulk(builders ...*ImageCreate) *ImageCreateBulk {
+	return &ImageCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *ImageClient) MapCreateBulk(slice any, setFunc func(*ImageCreate, int)) *ImageCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &ImageCreateBulk{err: fmt.Errorf("calling to ImageClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*ImageCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &ImageCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for Image.
+func (c *ImageClient) Update() *ImageUpdate {
+	mutation := newImageMutation(c.config, OpUpdate)
+	return &ImageUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *ImageClient) UpdateOne(i *Image) *ImageUpdateOne {
+	mutation := newImageMutation(c.config, OpUpdateOne, withImage(i))
+	return &ImageUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *ImageClient) UpdateOneID(id uuid.UUID) *ImageUpdateOne {
+	mutation := newImageMutation(c.config, OpUpdateOne, withImageID(id))
+	return &ImageUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for Image.
+func (c *ImageClient) Delete() *ImageDelete {
+	mutation := newImageMutation(c.config, OpDelete)
+	return &ImageDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *ImageClient) DeleteOne(i *Image) *ImageDeleteOne {
+	return c.DeleteOneID(i.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *ImageClient) DeleteOneID(id uuid.UUID) *ImageDeleteOne {
+	builder := c.Delete().Where(image.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &ImageDeleteOne{builder}
+}
+
+// Query returns a query builder for Image.
+func (c *ImageClient) Query() *ImageQuery {
+	return &ImageQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeImage},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a Image entity by its id.
+func (c *ImageClient) Get(ctx context.Context, id uuid.UUID) (*Image, error) {
+	return c.Query().Where(image.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *ImageClient) GetX(ctx context.Context, id uuid.UUID) *Image {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryCommit queries the commit edge of a Image.
+func (c *ImageClient) QueryCommit(i *Image) *TitCommitQuery {
+	query := (&TitCommitClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := i.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(image.Table, image.FieldID, id),
+			sqlgraph.To(titcommit.Table, titcommit.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, true, image.CommitTable, image.CommitPrimaryKey...),
+		)
+		fromV = sqlgraph.Neighbors(i.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *ImageClient) Hooks() []Hook {
+	return c.hooks.Image
+}
+
+// Interceptors returns the client interceptors.
+func (c *ImageClient) Interceptors() []Interceptor {
+	return c.inters.Image
+}
+
+func (c *ImageClient) mutate(ctx context.Context, m *ImageMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&ImageCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&ImageUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&ImageUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&ImageDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown Image mutation op: %q", m.Op())
+	}
+}
+
 // PageClient is a client for the Page schema.
 type PageClient struct {
 	config
@@ -400,6 +579,21 @@ func (c *PageClient) Create() *PageCreate {
 
 // CreateBulk returns a builder for creating a bulk of Page entities.
 func (c *PageClient) CreateBulk(builders ...*PageCreate) *PageCreateBulk {
+	return &PageCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *PageClient) MapCreateBulk(slice any, setFunc func(*PageCreate, int)) *PageCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &PageCreateBulk{err: fmt.Errorf("calling to PageClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*PageCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
 	return &PageCreateBulk{config: c.config, builders: builders}
 }
 
@@ -537,6 +731,21 @@ func (c *RemoteClient) CreateBulk(builders ...*RemoteCreate) *RemoteCreateBulk {
 	return &RemoteCreateBulk{config: c.config, builders: builders}
 }
 
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *RemoteClient) MapCreateBulk(slice any, setFunc func(*RemoteCreate, int)) *RemoteCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &RemoteCreateBulk{err: fmt.Errorf("calling to RemoteClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*RemoteCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &RemoteCreateBulk{config: c.config, builders: builders}
+}
+
 // Update returns an update builder for Remote.
 func (c *RemoteClient) Update() *RemoteUpdate {
 	mutation := newRemoteMutation(c.config, OpUpdate)
@@ -652,6 +861,21 @@ func (c *SectionClient) Create() *SectionCreate {
 
 // CreateBulk returns a builder for creating a bulk of Section entities.
 func (c *SectionClient) CreateBulk(builders ...*SectionCreate) *SectionCreateBulk {
+	return &SectionCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *SectionClient) MapCreateBulk(slice any, setFunc func(*SectionCreate, int)) *SectionCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &SectionCreateBulk{err: fmt.Errorf("calling to SectionClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*SectionCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
 	return &SectionCreateBulk{config: c.config, builders: builders}
 }
 
@@ -805,6 +1029,21 @@ func (c *StagedFileClient) CreateBulk(builders ...*StagedFileCreate) *StagedFile
 	return &StagedFileCreateBulk{config: c.config, builders: builders}
 }
 
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *StagedFileClient) MapCreateBulk(slice any, setFunc func(*StagedFileCreate, int)) *StagedFileCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &StagedFileCreateBulk{err: fmt.Errorf("calling to StagedFileClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*StagedFileCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &StagedFileCreateBulk{config: c.config, builders: builders}
+}
+
 // Update returns an update builder for StagedFile.
 func (c *StagedFileClient) Update() *StagedFileUpdate {
 	mutation := newStagedFileMutation(c.config, OpUpdate)
@@ -923,6 +1162,21 @@ func (c *TitCommitClient) CreateBulk(builders ...*TitCommitCreate) *TitCommitCre
 	return &TitCommitCreateBulk{config: c.config, builders: builders}
 }
 
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *TitCommitClient) MapCreateBulk(slice any, setFunc func(*TitCommitCreate, int)) *TitCommitCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &TitCommitCreateBulk{err: fmt.Errorf("calling to TitCommitClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*TitCommitCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &TitCommitCreateBulk{config: c.config, builders: builders}
+}
+
 // Update returns an update builder for TitCommit.
 func (c *TitCommitClient) Update() *TitCommitUpdate {
 	mutation := newTitCommitMutation(c.config, OpUpdate)
@@ -1015,6 +1269,22 @@ func (c *TitCommitClient) QueryFiles(tc *TitCommit) *CommittedFileQuery {
 	return query
 }
 
+// QueryImages queries the images edge of a TitCommit.
+func (c *TitCommitClient) QueryImages(tc *TitCommit) *ImageQuery {
+	query := (&ImageClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := tc.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(titcommit.Table, titcommit.FieldID, id),
+			sqlgraph.To(image.Table, image.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, false, titcommit.ImagesTable, titcommit.ImagesPrimaryKey...),
+		)
+		fromV = sqlgraph.Neighbors(tc.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // Hooks returns the client hooks.
 func (c *TitCommitClient) Hooks() []Hook {
 	return c.hooks.TitCommit
@@ -1043,9 +1313,10 @@ func (c *TitCommitClient) mutate(ctx context.Context, m *TitCommitMutation) (Val
 // hooks and interceptors per client, for fast access.
 type (
 	hooks struct {
-		CommittedFile, Page, Remote, Section, StagedFile, TitCommit []ent.Hook
+		CommittedFile, Image, Page, Remote, Section, StagedFile, TitCommit []ent.Hook
 	}
 	inters struct {
-		CommittedFile, Page, Remote, Section, StagedFile, TitCommit []ent.Interceptor
+		CommittedFile, Image, Page, Remote, Section, StagedFile,
+		TitCommit []ent.Interceptor
 	}
 )

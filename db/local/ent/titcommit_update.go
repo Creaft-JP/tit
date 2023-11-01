@@ -11,9 +11,11 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/Creaft-JP/tit/db/local/ent/committedfile"
+	"github.com/Creaft-JP/tit/db/local/ent/image"
 	"github.com/Creaft-JP/tit/db/local/ent/predicate"
 	"github.com/Creaft-JP/tit/db/local/ent/section"
 	"github.com/Creaft-JP/tit/db/local/ent/titcommit"
+	"github.com/google/uuid"
 )
 
 // TitCommitUpdate is the builder for updating TitCommit entities.
@@ -82,6 +84,21 @@ func (tcu *TitCommitUpdate) AddFiles(c ...*CommittedFile) *TitCommitUpdate {
 	return tcu.AddFileIDs(ids...)
 }
 
+// AddImageIDs adds the "images" edge to the Image entity by IDs.
+func (tcu *TitCommitUpdate) AddImageIDs(ids ...uuid.UUID) *TitCommitUpdate {
+	tcu.mutation.AddImageIDs(ids...)
+	return tcu
+}
+
+// AddImages adds the "images" edges to the Image entity.
+func (tcu *TitCommitUpdate) AddImages(i ...*Image) *TitCommitUpdate {
+	ids := make([]uuid.UUID, len(i))
+	for j := range i {
+		ids[j] = i[j].ID
+	}
+	return tcu.AddImageIDs(ids...)
+}
+
 // Mutation returns the TitCommitMutation object of the builder.
 func (tcu *TitCommitUpdate) Mutation() *TitCommitMutation {
 	return tcu.mutation
@@ -112,6 +129,27 @@ func (tcu *TitCommitUpdate) RemoveFiles(c ...*CommittedFile) *TitCommitUpdate {
 		ids[i] = c[i].ID
 	}
 	return tcu.RemoveFileIDs(ids...)
+}
+
+// ClearImages clears all "images" edges to the Image entity.
+func (tcu *TitCommitUpdate) ClearImages() *TitCommitUpdate {
+	tcu.mutation.ClearImages()
+	return tcu
+}
+
+// RemoveImageIDs removes the "images" edge to Image entities by IDs.
+func (tcu *TitCommitUpdate) RemoveImageIDs(ids ...uuid.UUID) *TitCommitUpdate {
+	tcu.mutation.RemoveImageIDs(ids...)
+	return tcu
+}
+
+// RemoveImages removes "images" edges to Image entities.
+func (tcu *TitCommitUpdate) RemoveImages(i ...*Image) *TitCommitUpdate {
+	ids := make([]uuid.UUID, len(i))
+	for j := range i {
+		ids[j] = i[j].ID
+	}
+	return tcu.RemoveImageIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -251,6 +289,51 @@ func (tcu *TitCommitUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
+	if tcu.mutation.ImagesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   titcommit.ImagesTable,
+			Columns: titcommit.ImagesPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(image.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := tcu.mutation.RemovedImagesIDs(); len(nodes) > 0 && !tcu.mutation.ImagesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   titcommit.ImagesTable,
+			Columns: titcommit.ImagesPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(image.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := tcu.mutation.ImagesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   titcommit.ImagesTable,
+			Columns: titcommit.ImagesPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(image.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
 	if n, err = sqlgraph.UpdateNodes(ctx, tcu.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{titcommit.Label}
@@ -324,6 +407,21 @@ func (tcuo *TitCommitUpdateOne) AddFiles(c ...*CommittedFile) *TitCommitUpdateOn
 	return tcuo.AddFileIDs(ids...)
 }
 
+// AddImageIDs adds the "images" edge to the Image entity by IDs.
+func (tcuo *TitCommitUpdateOne) AddImageIDs(ids ...uuid.UUID) *TitCommitUpdateOne {
+	tcuo.mutation.AddImageIDs(ids...)
+	return tcuo
+}
+
+// AddImages adds the "images" edges to the Image entity.
+func (tcuo *TitCommitUpdateOne) AddImages(i ...*Image) *TitCommitUpdateOne {
+	ids := make([]uuid.UUID, len(i))
+	for j := range i {
+		ids[j] = i[j].ID
+	}
+	return tcuo.AddImageIDs(ids...)
+}
+
 // Mutation returns the TitCommitMutation object of the builder.
 func (tcuo *TitCommitUpdateOne) Mutation() *TitCommitMutation {
 	return tcuo.mutation
@@ -354,6 +452,27 @@ func (tcuo *TitCommitUpdateOne) RemoveFiles(c ...*CommittedFile) *TitCommitUpdat
 		ids[i] = c[i].ID
 	}
 	return tcuo.RemoveFileIDs(ids...)
+}
+
+// ClearImages clears all "images" edges to the Image entity.
+func (tcuo *TitCommitUpdateOne) ClearImages() *TitCommitUpdateOne {
+	tcuo.mutation.ClearImages()
+	return tcuo
+}
+
+// RemoveImageIDs removes the "images" edge to Image entities by IDs.
+func (tcuo *TitCommitUpdateOne) RemoveImageIDs(ids ...uuid.UUID) *TitCommitUpdateOne {
+	tcuo.mutation.RemoveImageIDs(ids...)
+	return tcuo
+}
+
+// RemoveImages removes "images" edges to Image entities.
+func (tcuo *TitCommitUpdateOne) RemoveImages(i ...*Image) *TitCommitUpdateOne {
+	ids := make([]uuid.UUID, len(i))
+	for j := range i {
+		ids[j] = i[j].ID
+	}
+	return tcuo.RemoveImageIDs(ids...)
 }
 
 // Where appends a list predicates to the TitCommitUpdate builder.
@@ -516,6 +635,51 @@ func (tcuo *TitCommitUpdateOne) sqlSave(ctx context.Context) (_node *TitCommit, 
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(committedfile.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if tcuo.mutation.ImagesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   titcommit.ImagesTable,
+			Columns: titcommit.ImagesPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(image.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := tcuo.mutation.RemovedImagesIDs(); len(nodes) > 0 && !tcuo.mutation.ImagesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   titcommit.ImagesTable,
+			Columns: titcommit.ImagesPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(image.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := tcuo.mutation.ImagesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   titcommit.ImagesTable,
+			Columns: titcommit.ImagesPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(image.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {

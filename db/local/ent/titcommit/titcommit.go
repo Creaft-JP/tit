@@ -20,6 +20,8 @@ const (
 	EdgeSection = "section"
 	// EdgeFiles holds the string denoting the files edge name in mutations.
 	EdgeFiles = "files"
+	// EdgeImages holds the string denoting the images edge name in mutations.
+	EdgeImages = "images"
 	// Table holds the table name of the titcommit in the database.
 	Table = "tit_commits"
 	// SectionTable is the table that holds the section relation/edge.
@@ -36,6 +38,11 @@ const (
 	FilesInverseTable = "committed_files"
 	// FilesColumn is the table column denoting the files relation/edge.
 	FilesColumn = "tit_commit_files"
+	// ImagesTable is the table that holds the images relation/edge. The primary key declared below.
+	ImagesTable = "tit_commit_images"
+	// ImagesInverseTable is the table name for the Image entity.
+	// It exists in this package in order to avoid circular dependency with the "image" package.
+	ImagesInverseTable = "images"
 )
 
 // Columns holds all SQL columns for titcommit fields.
@@ -50,6 +57,12 @@ var Columns = []string{
 var ForeignKeys = []string{
 	"section_commits",
 }
+
+var (
+	// ImagesPrimaryKey and ImagesColumn2 are the table columns denoting the
+	// primary key for the images relation (M2M).
+	ImagesPrimaryKey = []string{"tit_commit_id", "image_id"}
+)
 
 // ValidColumn reports if the column name is valid (part of the table columns).
 func ValidColumn(column string) bool {
@@ -111,6 +124,20 @@ func ByFiles(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 		sqlgraph.OrderByNeighborTerms(s, newFilesStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
+
+// ByImagesCount orders the results by images count.
+func ByImagesCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newImagesStep(), opts...)
+	}
+}
+
+// ByImages orders the results by images terms.
+func ByImages(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newImagesStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
 func newSectionStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
@@ -123,5 +150,12 @@ func newFilesStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(FilesInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, false, FilesTable, FilesColumn),
+	)
+}
+func newImagesStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(ImagesInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2M, false, ImagesTable, ImagesPrimaryKey...),
 	)
 }

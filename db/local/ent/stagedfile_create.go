@@ -116,11 +116,15 @@ func (sfc *StagedFileCreate) createSpec() (*StagedFile, *sqlgraph.CreateSpec) {
 // StagedFileCreateBulk is the builder for creating many StagedFile entities in bulk.
 type StagedFileCreateBulk struct {
 	config
+	err      error
 	builders []*StagedFileCreate
 }
 
 // Save creates the StagedFile entities in the database.
 func (sfcb *StagedFileCreateBulk) Save(ctx context.Context) ([]*StagedFile, error) {
+	if sfcb.err != nil {
+		return nil, sfcb.err
+	}
 	specs := make([]*sqlgraph.CreateSpec, len(sfcb.builders))
 	nodes := make([]*StagedFile, len(sfcb.builders))
 	mutators := make([]Mutator, len(sfcb.builders))

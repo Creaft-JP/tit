@@ -10,8 +10,10 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/Creaft-JP/tit/db/local/ent/committedfile"
+	"github.com/Creaft-JP/tit/db/local/ent/image"
 	"github.com/Creaft-JP/tit/db/local/ent/section"
 	"github.com/Creaft-JP/tit/db/local/ent/titcommit"
+	"github.com/google/uuid"
 )
 
 // TitCommitCreate is the builder for creating a TitCommit entity.
@@ -65,6 +67,21 @@ func (tcc *TitCommitCreate) AddFiles(c ...*CommittedFile) *TitCommitCreate {
 		ids[i] = c[i].ID
 	}
 	return tcc.AddFileIDs(ids...)
+}
+
+// AddImageIDs adds the "images" edge to the Image entity by IDs.
+func (tcc *TitCommitCreate) AddImageIDs(ids ...uuid.UUID) *TitCommitCreate {
+	tcc.mutation.AddImageIDs(ids...)
+	return tcc
+}
+
+// AddImages adds the "images" edges to the Image entity.
+func (tcc *TitCommitCreate) AddImages(i ...*Image) *TitCommitCreate {
+	ids := make([]uuid.UUID, len(i))
+	for j := range i {
+		ids[j] = i[j].ID
+	}
+	return tcc.AddImageIDs(ids...)
 }
 
 // Mutation returns the TitCommitMutation object of the builder.
@@ -184,17 +201,37 @@ func (tcc *TitCommitCreate) createSpec() (*TitCommit, *sqlgraph.CreateSpec) {
 		}
 		_spec.Edges = append(_spec.Edges, edge)
 	}
+	if nodes := tcc.mutation.ImagesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   titcommit.ImagesTable,
+			Columns: titcommit.ImagesPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(image.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
 	return _node, _spec
 }
 
 // TitCommitCreateBulk is the builder for creating many TitCommit entities in bulk.
 type TitCommitCreateBulk struct {
 	config
+	err      error
 	builders []*TitCommitCreate
 }
 
 // Save creates the TitCommit entities in the database.
 func (tccb *TitCommitCreateBulk) Save(ctx context.Context) ([]*TitCommit, error) {
+	if tccb.err != nil {
+		return nil, tccb.err
+	}
 	specs := make([]*sqlgraph.CreateSpec, len(tccb.builders))
 	nodes := make([]*TitCommit, len(tccb.builders))
 	mutators := make([]Mutator, len(tccb.builders))

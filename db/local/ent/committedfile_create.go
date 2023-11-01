@@ -153,11 +153,15 @@ func (cfc *CommittedFileCreate) createSpec() (*CommittedFile, *sqlgraph.CreateSp
 // CommittedFileCreateBulk is the builder for creating many CommittedFile entities in bulk.
 type CommittedFileCreateBulk struct {
 	config
+	err      error
 	builders []*CommittedFileCreate
 }
 
 // Save creates the CommittedFile entities in the database.
 func (cfcb *CommittedFileCreateBulk) Save(ctx context.Context) ([]*CommittedFile, error) {
+	if cfcb.err != nil {
+		return nil, cfcb.err
+	}
 	specs := make([]*sqlgraph.CreateSpec, len(cfcb.builders))
 	nodes := make([]*CommittedFile, len(cfcb.builders))
 	mutators := make([]Mutator, len(cfcb.builders))

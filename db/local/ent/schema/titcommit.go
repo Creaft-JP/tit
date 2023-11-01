@@ -21,5 +21,6 @@ func (TitCommit) Edges() []ent.Edge {
 	return []ent.Edge{
 		edge.From("section", Section.Type).Ref("commits").Unique(),
 		edge.To("files", CommittedFile.Type),
+		edge.To("images", Image.Type),
 	}
 }

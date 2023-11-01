@@ -13,6 +13,7 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"github.com/Creaft-JP/tit/db/local/ent/committedfile"
+	"github.com/Creaft-JP/tit/db/local/ent/image"
 	"github.com/Creaft-JP/tit/db/local/ent/page"
 	"github.com/Creaft-JP/tit/db/local/ent/remote"
 	"github.com/Creaft-JP/tit/db/local/ent/section"
@@ -79,6 +80,7 @@ func checkColumn(table, column string) error {
 	initCheck.Do(func() {
 		columnCheck = sql.NewColumnCheck(map[string]func(string) bool{
 			committedfile.Table: committedfile.ValidColumn,
+			image.Table:         image.ValidColumn,
 			page.Table:          page.ValidColumn,
 			remote.Table:        remote.ValidColumn,
 			section.Table:       section.ValidColumn,

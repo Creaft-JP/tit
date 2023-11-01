@@ -116,11 +116,15 @@ func (rc *RemoteCreate) createSpec() (*Remote, *sqlgraph.CreateSpec) {
 // RemoteCreateBulk is the builder for creating many Remote entities in bulk.
 type RemoteCreateBulk struct {
 	config
+	err      error
 	builders []*RemoteCreate
 }
 
 // Save creates the Remote entities in the database.
 func (rcb *RemoteCreateBulk) Save(ctx context.Context) ([]*Remote, error) {
+	if rcb.err != nil {
+		return nil, rcb.err
+	}
 	specs := make([]*sqlgraph.CreateSpec, len(rcb.builders))
 	nodes := make([]*Remote, len(rcb.builders))
 	mutators := make([]Mutator, len(rcb.builders))

@@ -34,9 +34,11 @@ type TitCommitEdges struct {
 	Section *Section `json:"section,omitempty"`
 	// Files holds the value of the files edge.
 	Files []*CommittedFile `json:"files,omitempty"`
+	// Images holds the value of the images edge.
+	Images []*Image `json:"images,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [2]bool
+	loadedTypes [3]bool
 }
 
 // SectionOrErr returns the Section value or an error if the edge
@@ -59,6 +61,15 @@ func (e TitCommitEdges) FilesOrErr() ([]*CommittedFile, error) {
 		return e.Files, nil
 	}
 	return nil, &NotLoadedError{edge: "files"}
+}
+
+// ImagesOrErr returns the Images value or an error if the edge
+// was not loaded in eager-loading.
+func (e TitCommitEdges) ImagesOrErr() ([]*Image, error) {
+	if e.loadedTypes[2] {
+		return e.Images, nil
+	}
+	return nil, &NotLoadedError{edge: "images"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -133,6 +144,11 @@ func (tc *TitCommit) QuerySection() *SectionQuery {
 // QueryFiles queries the "files" edge of the TitCommit entity.
 func (tc *TitCommit) QueryFiles() *CommittedFileQuery {
 	return NewTitCommitClient(tc.config).QueryFiles(tc)
+}
+
+// QueryImages queries the "images" edge of the TitCommit entity.
+func (tc *TitCommit) QueryImages() *ImageQuery {
+	return NewTitCommitClient(tc.config).QueryImages(tc)
 }
 
 // Update returns a builder for updating this TitCommit.

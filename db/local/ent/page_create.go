@@ -179,11 +179,15 @@ func (pc *PageCreate) createSpec() (*Page, *sqlgraph.CreateSpec) {
 // PageCreateBulk is the builder for creating many Page entities in bulk.
 type PageCreateBulk struct {
 	config
+	err      error
 	builders []*PageCreate
 }
 
 // Save creates the Page entities in the database.
 func (pcb *PageCreateBulk) Save(ctx context.Context) ([]*Page, error) {
+	if pcb.err != nil {
+		return nil, pcb.err
+	}
 	specs := make([]*sqlgraph.CreateSpec, len(pcb.builders))
 	nodes := make([]*Page, len(pcb.builders))
 	mutators := make([]Mutator, len(pcb.builders))
