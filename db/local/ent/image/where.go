@@ -64,6 +64,11 @@ func Contents(v []byte) predicate.Image {
 	return predicate.Image(sql.FieldEQ(FieldContents, v))
 }
 
+// Number applies equality check predicate on the "number" field. It's identical to NumberEQ.
+func Number(v int) predicate.Image {
+	return predicate.Image(sql.FieldEQ(FieldNumber, v))
+}
+
 // Description applies equality check predicate on the "description" field. It's identical to DescriptionEQ.
 func Description(v string) predicate.Image {
 	return predicate.Image(sql.FieldEQ(FieldDescription, v))
@@ -172,6 +177,46 @@ func ContentsLT(v []byte) predicate.Image {
 // ContentsLTE applies the LTE predicate on the "contents" field.
 func ContentsLTE(v []byte) predicate.Image {
 	return predicate.Image(sql.FieldLTE(FieldContents, v))
+}
+
+// NumberEQ applies the EQ predicate on the "number" field.
+func NumberEQ(v int) predicate.Image {
+	return predicate.Image(sql.FieldEQ(FieldNumber, v))
+}
+
+// NumberNEQ applies the NEQ predicate on the "number" field.
+func NumberNEQ(v int) predicate.Image {
+	return predicate.Image(sql.FieldNEQ(FieldNumber, v))
+}
+
+// NumberIn applies the In predicate on the "number" field.
+func NumberIn(vs ...int) predicate.Image {
+	return predicate.Image(sql.FieldIn(FieldNumber, vs...))
+}
+
+// NumberNotIn applies the NotIn predicate on the "number" field.
+func NumberNotIn(vs ...int) predicate.Image {
+	return predicate.Image(sql.FieldNotIn(FieldNumber, vs...))
+}
+
+// NumberGT applies the GT predicate on the "number" field.
+func NumberGT(v int) predicate.Image {
+	return predicate.Image(sql.FieldGT(FieldNumber, v))
+}
+
+// NumberGTE applies the GTE predicate on the "number" field.
+func NumberGTE(v int) predicate.Image {
+	return predicate.Image(sql.FieldGTE(FieldNumber, v))
+}
+
+// NumberLT applies the LT predicate on the "number" field.
+func NumberLT(v int) predicate.Image {
+	return predicate.Image(sql.FieldLT(FieldNumber, v))
+}
+
+// NumberLTE applies the LTE predicate on the "number" field.
+func NumberLTE(v int) predicate.Image {
+	return predicate.Image(sql.FieldLTE(FieldNumber, v))
 }
 
 // DescriptionEQ applies the EQ predicate on the "description" field.

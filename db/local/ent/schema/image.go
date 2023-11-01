@@ -18,6 +18,7 @@ func (Image) Fields() []ent.Field {
 		field.UUID("id", uuid.New()).Unique().Default(uuid.New),
 		field.String("extension").NotEmpty(),
 		field.Bytes("contents"),
+		field.Int("number"),
 		field.String("description"),
 	}
 }

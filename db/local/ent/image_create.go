@@ -33,6 +33,12 @@ func (ic *ImageCreate) SetContents(b []byte) *ImageCreate {
 	return ic
 }
 
+// SetNumber sets the "number" field.
+func (ic *ImageCreate) SetNumber(i int) *ImageCreate {
+	ic.mutation.SetNumber(i)
+	return ic
+}
+
 // SetDescription sets the "description" field.
 func (ic *ImageCreate) SetDescription(s string) *ImageCreate {
 	ic.mutation.SetDescription(s)
@@ -122,6 +128,9 @@ func (ic *ImageCreate) check() error {
 	if _, ok := ic.mutation.Contents(); !ok {
 		return &ValidationError{Name: "contents", err: errors.New(`ent: missing required field "Image.contents"`)}
 	}
+	if _, ok := ic.mutation.Number(); !ok {
+		return &ValidationError{Name: "number", err: errors.New(`ent: missing required field "Image.number"`)}
+	}
 	if _, ok := ic.mutation.Description(); !ok {
 		return &ValidationError{Name: "description", err: errors.New(`ent: missing required field "Image.description"`)}
 	}
@@ -167,6 +176,10 @@ func (ic *ImageCreate) createSpec() (*Image, *sqlgraph.CreateSpec) {
 	if value, ok := ic.mutation.Contents(); ok {
 		_spec.SetField(image.FieldContents, field.TypeBytes, value)
 		_node.Contents = value
+	}
+	if value, ok := ic.mutation.Number(); ok {
+		_spec.SetField(image.FieldNumber, field.TypeInt, value)
+		_node.Number = value
 	}
 	if value, ok := ic.mutation.Description(); ok {
 		_spec.SetField(image.FieldDescription, field.TypeString, value)

@@ -17,6 +17,8 @@ const (
 	FieldExtension = "extension"
 	// FieldContents holds the string denoting the contents field in the database.
 	FieldContents = "contents"
+	// FieldNumber holds the string denoting the number field in the database.
+	FieldNumber = "number"
 	// FieldDescription holds the string denoting the description field in the database.
 	FieldDescription = "description"
 	// EdgeCommit holds the string denoting the commit edge name in mutations.
@@ -35,6 +37,7 @@ var Columns = []string{
 	FieldID,
 	FieldExtension,
 	FieldContents,
+	FieldNumber,
 	FieldDescription,
 }
 
@@ -72,6 +75,11 @@ func ByID(opts ...sql.OrderTermOption) OrderOption {
 // ByExtension orders the results by the extension field.
 func ByExtension(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldExtension, opts...).ToFunc()
+}
+
+// ByNumber orders the results by the number field.
+func ByNumber(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldNumber, opts...).ToFunc()
 }
 
 // ByDescription orders the results by the description field.

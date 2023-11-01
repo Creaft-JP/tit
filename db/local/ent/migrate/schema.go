@@ -34,6 +34,7 @@ var (
 		{Name: "id", Type: field.TypeUUID, Unique: true},
 		{Name: "extension", Type: field.TypeString},
 		{Name: "contents", Type: field.TypeBytes},
+		{Name: "number", Type: field.TypeInt},
 		{Name: "description", Type: field.TypeString},
 	}
 	// ImagesTable holds the schema information for the "images" table.

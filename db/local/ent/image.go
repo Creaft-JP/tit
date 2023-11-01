@@ -21,6 +21,8 @@ type Image struct {
 	Extension string `json:"extension,omitempty"`
 	// Contents holds the value of the "contents" field.
 	Contents []byte `json:"contents,omitempty"`
+	// Number holds the value of the "number" field.
+	Number int `json:"number,omitempty"`
 	// Description holds the value of the "description" field.
 	Description string `json:"description,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
@@ -54,6 +56,8 @@ func (*Image) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case image.FieldContents:
 			values[i] = new([]byte)
+		case image.FieldNumber:
+			values[i] = new(sql.NullInt64)
 		case image.FieldExtension, image.FieldDescription:
 			values[i] = new(sql.NullString)
 		case image.FieldID:
@@ -90,6 +94,12 @@ func (i *Image) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field contents", values[j])
 			} else if value != nil {
 				i.Contents = *value
+			}
+		case image.FieldNumber:
+			if value, ok := values[j].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field number", values[j])
+			} else if value.Valid {
+				i.Number = int(value.Int64)
 			}
 		case image.FieldDescription:
 			if value, ok := values[j].(*sql.NullString); !ok {
@@ -143,6 +153,9 @@ func (i *Image) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("contents=")
 	builder.WriteString(fmt.Sprintf("%v", i.Contents))
+	builder.WriteString(", ")
+	builder.WriteString("number=")
+	builder.WriteString(fmt.Sprintf("%v", i.Number))
 	builder.WriteString(", ")
 	builder.WriteString("description=")
 	builder.WriteString(i.Description)

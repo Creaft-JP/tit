@@ -40,6 +40,19 @@ func (iu *ImageUpdate) SetContents(b []byte) *ImageUpdate {
 	return iu
 }
 
+// SetNumber sets the "number" field.
+func (iu *ImageUpdate) SetNumber(i int) *ImageUpdate {
+	iu.mutation.ResetNumber()
+	iu.mutation.SetNumber(i)
+	return iu
+}
+
+// AddNumber adds i to the "number" field.
+func (iu *ImageUpdate) AddNumber(i int) *ImageUpdate {
+	iu.mutation.AddNumber(i)
+	return iu
+}
+
 // SetDescription sets the "description" field.
 func (iu *ImageUpdate) SetDescription(s string) *ImageUpdate {
 	iu.mutation.SetDescription(s)
@@ -142,6 +155,12 @@ func (iu *ImageUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if value, ok := iu.mutation.Contents(); ok {
 		_spec.SetField(image.FieldContents, field.TypeBytes, value)
 	}
+	if value, ok := iu.mutation.Number(); ok {
+		_spec.SetField(image.FieldNumber, field.TypeInt, value)
+	}
+	if value, ok := iu.mutation.AddedNumber(); ok {
+		_spec.AddField(image.FieldNumber, field.TypeInt, value)
+	}
 	if value, ok := iu.mutation.Description(); ok {
 		_spec.SetField(image.FieldDescription, field.TypeString, value)
 	}
@@ -219,6 +238,19 @@ func (iuo *ImageUpdateOne) SetExtension(s string) *ImageUpdateOne {
 // SetContents sets the "contents" field.
 func (iuo *ImageUpdateOne) SetContents(b []byte) *ImageUpdateOne {
 	iuo.mutation.SetContents(b)
+	return iuo
+}
+
+// SetNumber sets the "number" field.
+func (iuo *ImageUpdateOne) SetNumber(i int) *ImageUpdateOne {
+	iuo.mutation.ResetNumber()
+	iuo.mutation.SetNumber(i)
+	return iuo
+}
+
+// AddNumber adds i to the "number" field.
+func (iuo *ImageUpdateOne) AddNumber(i int) *ImageUpdateOne {
+	iuo.mutation.AddNumber(i)
 	return iuo
 }
 
@@ -353,6 +385,12 @@ func (iuo *ImageUpdateOne) sqlSave(ctx context.Context) (_node *Image, err error
 	}
 	if value, ok := iuo.mutation.Contents(); ok {
 		_spec.SetField(image.FieldContents, field.TypeBytes, value)
+	}
+	if value, ok := iuo.mutation.Number(); ok {
+		_spec.SetField(image.FieldNumber, field.TypeInt, value)
+	}
+	if value, ok := iuo.mutation.AddedNumber(); ok {
+		_spec.AddField(image.FieldNumber, field.TypeInt, value)
 	}
 	if value, ok := iuo.mutation.Description(); ok {
 		_spec.SetField(image.FieldDescription, field.TypeString, value)
