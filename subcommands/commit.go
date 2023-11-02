@@ -55,9 +55,9 @@ func Commit(args []string, cl *ent.Client, ctx context.Context) error {
 			return failure.Translate(err, e.File)
 		}
 	}
-	return failure.Wrap(commit(*message, cl, ctx))
+	return failure.Wrap(commit(*message, nil, cl, ctx))
 }
-func commit(me string, cl *ent.Client, ctx context.Context) error {
+func commit(me string, re []string, cl *ent.Client, ctx context.Context) error {
 	if me == "" {
 		return failure.New(e.Operation, failure.Message("aborting commit due to empty commit message"))
 	}
@@ -86,23 +86,80 @@ func commit(me string, cl *ent.Client, ctx context.Context) error {
 	if err != nil {
 		return failure.Translate(err, e.Database)
 	}
-	var builders []*ent.CommittedFileCreate
+	var cfc []*ent.CommittedFileCreate
 	for _, file := range sf {
-		builders = append(builders, transaction.CommittedFile.Create().SetPath(file.Path).SetContent(file.Content))
+		cfc = append(cfc, transaction.CommittedFile.Create().SetPath(file.Path).SetContent(file.Content))
 	}
-	cf, err := transaction.CommittedFile.CreateBulk(builders...).Save(ctx)
+	cf, err := transaction.CommittedFile.CreateBulk(cfc...).Save(ctx)
 	if err != nil {
-		return multierr.Append(failure.Translate(err, e.Database), transaction.Rollback())
+		return multierr.Append(
+			failure.Translate(err, e.Database),
+			failure.Translate(transaction.Rollback(), e.Database),
+		)
 	}
-	commit, err := transaction.TitCommit.Create().SetNumber(number).SetMessage(me).AddFiles(cf...).Save(ctx)
+	var ic []*ent.ImageCreate
+	for i, in := range re {
+		status, err := os.Stat(in)
+		if err != nil {
+			if os.IsNotExist(err) {
+				return multierr.Append(
+					failure.Translate(err, e.Operation, failure.Messagef("image \"%s\" isn't found", in)),
+					failure.Translate(transaction.Rollback(), e.Database),
+				)
+			} else {
+				return multierr.Append(
+					failure.Translate(err, e.File),
+					failure.Translate(transaction.Rollback(), e.Database),
+				)
+			}
+		}
+		if status.IsDir() {
+			return multierr.Append(
+				failure.New(e.Operation, failure.Messagef("image \"%s\" is a directory", in)),
+				failure.Translate(transaction.Rollback(), e.Database),
+			)
+		}
+		extension := filepath.Ext(in)
+		if extension == "" {
+			return multierr.Append(
+				failure.New(e.Operation, failure.Messagef("image \"%s\" doesn't have an extension", in)),
+				failure.Translate(transaction.Rollback(), e.Database),
+			)
+		}
+		contents, err := os.ReadFile(in)
+		if err != nil {
+			return multierr.Append(
+				failure.Translate(err, e.File),
+				failure.Translate(transaction.Rollback(), e.Database),
+			)
+		}
+		ic = append(ic, transaction.Image.Create().SetNumber(i+1).SetExtension(extension).SetContents(contents).SetDescription(in))
+	}
+	i, err := transaction.Image.CreateBulk(ic...).Save(ctx)
 	if err != nil {
-		return multierr.Append(failure.Translate(err, e.Database), transaction.Rollback())
+		return multierr.Append(
+			failure.Translate(err, e.Database),
+			failure.Translate(transaction.Rollback(), e.Database),
+		)
+	}
+	commit, err := transaction.TitCommit.Create().SetNumber(number).SetMessage(me).AddFiles(cf...).AddImages(i...).Save(ctx)
+	if err != nil {
+		return multierr.Append(
+			failure.Translate(err, e.Database),
+			failure.Translate(transaction.Rollback(), e.Database),
+		)
 	}
 	if _, err := transaction.Section.UpdateOne(sect).AddCommits(commit).Save(ctx); err != nil {
-		return multierr.Append(failure.Translate(err, e.Database), transaction.Rollback())
+		return multierr.Append(
+			failure.Translate(err, e.Database),
+			failure.Translate(transaction.Rollback(), e.Database),
+		)
 	}
 	if _, err := transaction.StagedFile.Delete().Exec(ctx); err != nil {
-		return multierr.Append(failure.Translate(err, e.Database), transaction.Rollback())
+		return multierr.Append(
+			failure.Translate(err, e.Database),
+			failure.Translate(transaction.Rollback(), e.Database),
+		)
 	}
 	return transaction.Commit()
 }
