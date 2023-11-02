@@ -21,9 +21,25 @@ import (
 
 const commitMessageDefault = "_tit_commit_message_default_value"
 
+type fileNames []string
+
+func (fn *fileNames) String() string {
+	if fn == nil || len(*fn) == 0 {
+		return "[]"
+	}
+	return fmt.Sprintf("[\"%s\"]", strings.Join(*fn, "\", \""))
+}
+
+func (fn *fileNames) Set(s string) error {
+	*fn = append(*fn, s)
+	return nil
+}
+
 func Commit(args []string, cl *ent.Client, ctx context.Context) error {
 	fs := flag.NewFlagSet("commit", flag.ContinueOnError)
 	message := fs.String("m", commitMessageDefault, "commit message")
+	var fn fileNames
+	fs.Var(&fn, "r", "paths to images describing the commit")
 	if err := parse(fs, args); err != nil {
 		return failure.Wrap(err)
 	}
@@ -55,7 +71,7 @@ func Commit(args []string, cl *ent.Client, ctx context.Context) error {
 			return failure.Translate(err, e.File)
 		}
 	}
-	return failure.Wrap(commit(*message, nil, cl, ctx))
+	return failure.Wrap(commit(*message, fn, cl, ctx))
 }
 func commit(me string, re []string, cl *ent.Client, ctx context.Context) error {
 	if me == "" {

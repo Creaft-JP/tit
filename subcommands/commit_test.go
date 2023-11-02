@@ -15,6 +15,7 @@ import (
 	li "image"
 	"image/png"
 	"os"
+	"reflect"
 	"testing"
 )
 
@@ -631,5 +632,44 @@ func createEmptyImage(t *testing.T, i string, w int, h int) {
 	}(t, imfl)
 	if err := png.Encode(imfl, li.NewRGBA(li.Rect(0, 0, w, h))); err != nil {
 		t.Fatal(err)
+	}
+}
+func TestFileNamesString(t *testing.T) {
+	var fn *fileNames = nil
+	want := "[]"
+	if fn.String() != want {
+		t.Errorf("expected \"%s\", but got %s", want, fn.String())
+	}
+	fn = &fileNames{}
+	if fn.String() != want {
+		t.Errorf("expected \"%s\", but got %s", want, fn.String())
+	}
+	*fn = fileNames{"hello"}
+	want = "[\"hello\"]"
+	if fn.String() != want {
+		t.Errorf("expected \"%s\", but got %s", want, fn.String())
+	}
+	*fn = fileNames{"hello", "world"}
+	want = "[\"hello\", \"world\"]"
+	if fn.String() != want {
+		t.Errorf("expected \"%s\", but got %s", want, fn.String())
+	}
+}
+func TestFileNamesSet(t *testing.T) {
+	var fn fileNames
+	pfn := &fn
+	if err := pfn.Set("hello"); err != nil {
+		t.Fatal(err)
+	}
+	want := fileNames{"hello"}
+	if !reflect.DeepEqual(fn, want) {
+		t.Fatalf("expected %s, but got %s", (&want).String(), (&fn).String())
+	}
+	if err := pfn.Set("world"); err != nil {
+		t.Fatal(err)
+	}
+	want = fileNames{"hello", "world"}
+	if !reflect.DeepEqual(fn, want) {
+		t.Fatalf("expected %s, but got %s", (&want).String(), (&fn).String())
 	}
 }
