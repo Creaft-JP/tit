@@ -30,6 +30,10 @@ func init() {
 	imageDescExtension := imageFields[1].Descriptor()
 	// image.ExtensionValidator is a validator for the "extension" field. It is called by the builders before save.
 	image.ExtensionValidator = imageDescExtension.Validators[0].(func(string) error)
+	// imageDescNumber is the schema descriptor for number field.
+	imageDescNumber := imageFields[3].Descriptor()
+	// image.NumberValidator is a validator for the "number" field. It is called by the builders before save.
+	image.NumberValidator = imageDescNumber.Validators[0].(func(int) error)
 	// imageDescID is the schema descriptor for id field.
 	imageDescID := imageFields[0].Descriptor()
 	// image.DefaultID holds the default value on creation for the id field.

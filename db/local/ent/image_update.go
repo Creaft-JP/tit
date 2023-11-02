@@ -134,6 +134,11 @@ func (iu *ImageUpdate) check() error {
 			return &ValidationError{Name: "extension", err: fmt.Errorf(`ent: validator failed for field "Image.extension": %w`, err)}
 		}
 	}
+	if v, ok := iu.mutation.Number(); ok {
+		if err := image.NumberValidator(v); err != nil {
+			return &ValidationError{Name: "number", err: fmt.Errorf(`ent: validator failed for field "Image.number": %w`, err)}
+		}
+	}
 	return nil
 }
 
@@ -346,6 +351,11 @@ func (iuo *ImageUpdateOne) check() error {
 	if v, ok := iuo.mutation.Extension(); ok {
 		if err := image.ExtensionValidator(v); err != nil {
 			return &ValidationError{Name: "extension", err: fmt.Errorf(`ent: validator failed for field "Image.extension": %w`, err)}
+		}
+	}
+	if v, ok := iuo.mutation.Number(); ok {
+		if err := image.NumberValidator(v); err != nil {
+			return &ValidationError{Name: "number", err: fmt.Errorf(`ent: validator failed for field "Image.number": %w`, err)}
 		}
 	}
 	return nil

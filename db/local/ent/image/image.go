@@ -60,6 +60,8 @@ func ValidColumn(column string) bool {
 var (
 	// ExtensionValidator is a validator for the "extension" field. It is called by the builders before save.
 	ExtensionValidator func(string) error
+	// NumberValidator is a validator for the "number" field. It is called by the builders before save.
+	NumberValidator func(int) error
 	// DefaultID holds the default value on creation for the "id" field.
 	DefaultID func() uuid.UUID
 )

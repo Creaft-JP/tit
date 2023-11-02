@@ -131,6 +131,11 @@ func (ic *ImageCreate) check() error {
 	if _, ok := ic.mutation.Number(); !ok {
 		return &ValidationError{Name: "number", err: errors.New(`ent: missing required field "Image.number"`)}
 	}
+	if v, ok := ic.mutation.Number(); ok {
+		if err := image.NumberValidator(v); err != nil {
+			return &ValidationError{Name: "number", err: fmt.Errorf(`ent: validator failed for field "Image.number": %w`, err)}
+		}
+	}
 	if _, ok := ic.mutation.Description(); !ok {
 		return &ValidationError{Name: "description", err: errors.New(`ent: missing required field "Image.description"`)}
 	}
