@@ -1,4 +1,4 @@
-package json
+package mb
 
 type File struct {
 	Path    string `json:"path"`
