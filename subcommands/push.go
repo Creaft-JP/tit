@@ -134,6 +134,9 @@ func uploadImages(rem *lent.Remote, av string, lcl *lent.Client, ctx context.Con
 		if err != nil {
 			return failure.Translate(err, e.Network)
 		}
+		if err := getErrorFrom(ures); err != nil {
+			return failure.Wrap(err)
+		}
 		defer func(rc io.ReadCloser) {
 			ret = multierr.Append(ret, failure.Translate(rc.Close(), e.Network))
 		}(ures.Body)
