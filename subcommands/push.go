@@ -44,6 +44,9 @@ func Push(args []string, gcl *gent.Client, lcl *lent.Client, ctx context.Context
 	if err != nil {
 		return failure.Wrap(err)
 	}
+	if err := uploadImages(rem, av, lcl, ctx); err != nil {
+		return failure.Wrap(err)
+	}
 	if err := uploadMainBody(rem.URL, av, lcl, ctx); err != nil {
 		return failure.Wrap(err)
 	}
