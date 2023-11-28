@@ -119,7 +119,19 @@ func uploadImages(rem *lent.Remote, av string, lcl *lent.Client, ctx context.Con
 		if err != nil {
 			return failure.Translate(err, e.Database)
 		}
-		ureq, err := http.NewRequest("POST", i.UploadUrl, generateMultipartBody(model))
+
+		buffer := bytes.NewBuffer([]byte{})
+		writer := multipart.NewWriter(buffer)
+		file, _ := writer.CreateFormFile("file", filepath.Base(model.Description))
+		_, _ = io.Copy(file, bytes.NewReader(model.Contents))
+
+		_ = writer.Close()
+
+		fmt.Println(buffer.String())
+
+		ureq, err := http.NewRequest("POST", i.UploadUrl, buffer)
+		ureq.Header.Set("Content-Type", writer.FormDataContentType())
+
 		ures, err := http.DefaultClient.Do(ureq)
 		if err != nil {
 			return failure.Translate(err, e.Network)
@@ -132,16 +144,6 @@ func uploadImages(rem *lent.Remote, av string, lcl *lent.Client, ctx context.Con
 		}
 	}
 	return nil
-}
-func generateMultipartBody(mo *lent.Image) io.Reader {
-	buffer := bytes.NewBuffer([]byte{})
-	writer := multipart.NewWriter(buffer)
-	defer func(w *multipart.Writer) {
-		_ = w.Close()
-	}(writer)
-	file, _ := writer.CreateFormFile("file", filepath.Base(mo.Description))
-	_, _ = io.Copy(file, bytes.NewReader(mo.Contents))
-	return buffer
 }
 func uploadMainBody(rem string, av string, lcl *lent.Client, ctx context.Context) (ret error) {
 	root := mb.Root{Repository: mb.Repository{Pages: []mb.Page{}}}
