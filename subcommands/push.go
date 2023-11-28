@@ -82,7 +82,7 @@ func generateAuthorizationValue(gcl *gent.Client, ctx context.Context) (string, 
 		[]byte(fmt.Sprintf("%s:%s", user.Value, token.CliLoginToken)),
 	)), nil
 }
-func uploadImages(rem string, av string, lcl *lent.Client, ctx context.Context) (ret error) {
+func uploadImages(rem *lent.Remote, av string, lcl *lent.Client, ctx context.Context) (ret error) {
 	root := reqi.Root{Resources: []reqi.Resource{}}
 	resources, err := lcl.Image.Query().All(ctx)
 	if err != nil {
@@ -94,7 +94,7 @@ func uploadImages(rem string, av string, lcl *lent.Client, ctx context.Context) 
 	body, _ := json.Marshal(root)
 	lreq, err := http.NewRequest(
 		"POST",
-		fmt.Sprintf("%s/images", rem),
+		fmt.Sprintf("%s/images", rem.URL),
 		bytes.NewReader(body),
 	)
 	lreq.Header.Set("Authorization", av)
