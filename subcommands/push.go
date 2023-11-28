@@ -127,8 +127,6 @@ func uploadImages(rem *lent.Remote, av string, lcl *lent.Client, ctx context.Con
 
 		_ = writer.Close()
 
-		fmt.Println(buffer.String())
-
 		ureq, err := http.NewRequest("POST", i.UploadUrl, buffer)
 		ureq.Header.Set("Content-Type", writer.FormDataContentType())
 
