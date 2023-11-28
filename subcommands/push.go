@@ -200,7 +200,7 @@ func uploadMainBody(rem string, av string, lcl *lent.Client, ctx context.Context
 	return failure.Wrap(getErrorFrom(res))
 }
 func getErrorFrom(re *http.Response) error {
-	if re.StatusCode == 204 {
+	if re.StatusCode/100 == 2 {
 		return nil
 	} else {
 		decoder := json.NewDecoder(re.Body)
